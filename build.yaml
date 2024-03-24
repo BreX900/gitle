@@ -1,0 +1,25 @@
+
+
+targets:
+  $default:
+    builders:
+      source_gen:combining_builder:
+        generate_for:
+          - '**/*_dto.dart'
+          - '**/*_model.dart'
+        options:
+          ignore_for_file:
+            - cast_nullable_to_non_nullable
+            - avoid_annotating_with_dynamic
+
+      mek_data_class_generator|data_class:
+        generate_for:
+          - '**/*_dto.dart'
+          - '**/*_model.dart'
+        options:
+          page_width: 100
+          comparable: true
+          stringify: true
+          copyable: false
+          changeable: false
+          changes_visible: false

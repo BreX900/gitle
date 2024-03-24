@@ -1,0 +1,46 @@
+name: integration
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: gitle
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    if: ${{ github.event_name == 'push' || github.event.pull_request.merged == true }}
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          path: gitle
+      - uses: actions/checkout@v3
+        with:
+          path: packages
+          repository: doonties/packages
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.19.x
+      - name: Resolve dependencies
+        run: flutter pub get --enforce-lockfile
+        timeout-minutes: 2
+
+      - name: Activate rps package
+        run: dart pub global activate rps
+
+      - name: Check code formatting
+        run: rps check-format
+      - name: Analyze code
+        run: rps analyze
