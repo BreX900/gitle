@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:git/git.dart';
@@ -27,7 +26,7 @@ class _BranchRenameDialogState extends ConsumerState<BranchRenameDialog> {
     context.nav.pop();
   });
 
-  final _typeFb = FieldBloc(initialValue: <BranchType>{});
+  final _typeFb = FieldBloc<BranchType?>(initialValue: null);
   final _newNameFb = FieldBloc(
     initialValue: '',
     validator: const TextValidation(minLength: 3),
@@ -39,7 +38,7 @@ class _BranchRenameDialogState extends ConsumerState<BranchRenameDialog> {
   void initState() {
     super.initState();
     final values = BranchType.from(widget.branchName);
-    _typeFb.updateInitialValue({if (values.$1 != null) values.$1!});
+    _typeFb.updateInitialValue(values.$1);
     _newNameFb.updateInitialValue(values.$2);
   }
 
@@ -49,7 +48,7 @@ class _BranchRenameDialogState extends ConsumerState<BranchRenameDialog> {
     super.dispose();
   }
 
-  String _resolveBranchName() => _typeFb.state.value.singleOrNull.toName(_newNameFb.state.value);
+  String _resolveBranchName() => _typeFb.state.value.toName(_newNameFb.state.value);
 
   @override
   Widget build(BuildContext context) {
@@ -72,6 +71,7 @@ class _BranchRenameDialogState extends ConsumerState<BranchRenameDialog> {
             FieldSegmentedButton(
               fieldBloc: _typeFb,
               emptySelectionAllowed: true,
+              converter: _typeFb.transform(const SetFieldConverter<BranchType>()),
               segments: BranchType.values.map((type) {
                 return ButtonSegment(
                   value: type,

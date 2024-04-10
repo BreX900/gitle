@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:git/git.dart';
@@ -29,7 +28,7 @@ class _BranchCreateDialogState extends ConsumerState<BranchCreateDialog> {
     context.nav.pop();
   });
 
-  final _typeFb = FieldBloc(initialValue: <BranchType>{});
+  final _typeFb = FieldBloc<BranchType?>(initialValue: null);
   final _nameFb = FieldBloc(initialValue: '');
   final _checkoutFb = FieldBloc(initialValue: false);
 
@@ -41,7 +40,7 @@ class _BranchCreateDialogState extends ConsumerState<BranchCreateDialog> {
     super.dispose();
   }
 
-  String _resolveBranchName() => _typeFb.state.value.singleOrNull.toName(_nameFb.state.value);
+  String _resolveBranchName() => _typeFb.state.value.toName(_nameFb.state.value);
 
   @override
   Widget build(BuildContext context) {
@@ -61,9 +60,10 @@ class _BranchCreateDialogState extends ConsumerState<BranchCreateDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            FieldSegmentedButton(
+            FieldSegmentedButton<BranchType>(
               fieldBloc: _typeFb,
               emptySelectionAllowed: true,
+              converter: _typeFb.transform(const SetFieldConverter<BranchType>()),
               segments: BranchType.values.map((type) {
                 return ButtonSegment(
                   value: type,

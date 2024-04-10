@@ -37,6 +37,12 @@ class _GitScreenState extends ConsumerState<GitScreen> {
       content: Text(message),
     ));
   });
+  late final _removeRepository =
+      ref.mutation(RepositoriesProviders.remove, onSuccess: (_, message) {
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('Removed repository!'),
+    ));
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +50,7 @@ class _GitScreenState extends ConsumerState<GitScreen> {
     final textTheme = theme.textTheme;
     final colors = theme.colorScheme;
 
+    final state = ref.watch(RepositoriesProviders.current);
     final repository = ref.watch(RepositoriesProviders.current.select((state) {
       return state.valueOrNull;
     }));
@@ -229,7 +236,35 @@ class _GitScreenState extends ConsumerState<GitScreen> {
       ),
       drawer: const RepositoriesDrawerAtom(),
       endDrawer: repository != null ? RepositorySettingsDrawer(repository: repository) : null,
-      body: repository != null ? buildRepository(repository) : null,
+      body: state.whenOrNull(
+        error: (error, _) {
+          if (error is InvalidGitDirFailure) {
+            return InfoTile(
+              title: const Text('Invalid repository!'),
+              description: Text(error.path),
+              actions: [
+                OutlinedButton.icon(
+                  onPressed: () => _removeRepository(error.path),
+                  icon: const Icon(Icons.delete_outline),
+                  label: const Text('Remove'),
+                ),
+              ],
+            );
+          }
+          return DataBuilders.buildError(context, error);
+        },
+        data: (repository) {
+          if (repository == null) {
+            return Builder(builder: (context) {
+              return InfoTile(
+                onTap: () => Scaffold.of(context).openDrawer(),
+                title: const Text('Select repository'),
+              );
+            });
+          }
+          return buildRepository(repository);
+        },
+      ),
     );
   }
 }

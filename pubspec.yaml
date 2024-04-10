@@ -21,8 +21,7 @@ scripts:
   deploy: >-
     flutter build macos &&
     rm -r ~/Desktop/Gitle.app &&
-    mv ./build/macos/Build/Products/Release/gitle.app ~/Desktop/Gitle.app &&
-    rps bootstrap
+    mv ./build/macos/Build/Products/Release/Gitle.app ~/Desktop/Gitle.app
 
   recreate-project: flutter create --platforms=windows,macos --org=com.doonties --project-name=hasd .
 
