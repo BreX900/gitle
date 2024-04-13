@@ -24,12 +24,11 @@ class BranchCreateDialog extends ConsumerStatefulWidget with TypedWidgetMixin<vo
 }
 
 class _BranchCreateDialogState extends ConsumerState<BranchCreateDialog> {
-  late final _createBranch = ref.mutation(GitProviders.createBranch, onSuccess: (_, __) {
-    context.nav.pop();
-  });
-
   final _typeFb = FieldBloc<BranchType?>(initialValue: null);
-  final _nameFb = FieldBloc(initialValue: '');
+  final _nameFb = FieldBloc(
+    initialValue: '',
+    validator: const TextValidation(minLength: 1),
+  );
   final _checkoutFb = FieldBloc(initialValue: false);
 
   late final _form = ListFieldBloc(fieldBlocs: [_typeFb, _nameFb, _checkoutFb]);
@@ -40,12 +39,25 @@ class _BranchCreateDialogState extends ConsumerState<BranchCreateDialog> {
     super.dispose();
   }
 
+  late final _createBranch = ref.mutation((ref, _) {
+    return GitProviders.createBranch(
+      ref,
+      gitDir: widget.gitDir,
+      branchName: _resolveBranchName(),
+      startPoint: widget.startPoint,
+      checkout: _checkoutFb.state.value,
+    );
+  }, onSuccess: (_, __) {
+    context.nav.pop();
+  });
+
   String _resolveBranchName() => _typeFb.state.value.toName(_nameFb.state.value);
 
   @override
   Widget build(BuildContext context) {
     final isIdle = ref.watchIdle(mutations: [_createBranch]);
-    final canSubmit = ref.watchCanSubmit(_form);
+    final canSubmit = ref.watchCanSubmit2(_form, shouldDirty: false);
+    final createBranch = context.handleSubmit(_form, () async => _createBranch.run(null));
 
     return AlertDialog(
       title: Row(
@@ -60,10 +72,10 @@ class _BranchCreateDialogState extends ConsumerState<BranchCreateDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            FieldSegmentedButton<BranchType>(
+            FieldSegmentedButton<BranchType?>(
               fieldBloc: _typeFb,
               emptySelectionAllowed: true,
-              converter: _typeFb.transform(const SetFieldConverter<BranchType>()),
+              converter: _typeFb.transform(const SetFieldConverter<BranchType?>(emptyIfNull: true)),
               segments: BranchType.values.map((type) {
                 return ButtonSegment(
                   value: type,
@@ -92,14 +104,7 @@ class _BranchCreateDialogState extends ConsumerState<BranchCreateDialog> {
           child: const Text('Cancel'),
         ),
         ElevatedButton(
-          onPressed: isIdle && canSubmit
-              ? () => _createBranch((
-                    gitDir: widget.gitDir,
-                    branchName: _resolveBranchName(),
-                    startPoint: widget.startPoint,
-                    checkout: _checkoutFb.state.value,
-                  ))
-              : null,
+          onPressed: isIdle && canSubmit ? createBranch : null,
           child: const Text('Create'),
         ),
       ],

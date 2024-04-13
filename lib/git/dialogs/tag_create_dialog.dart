@@ -23,12 +23,11 @@ class TagCreateDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void>
 }
 
 class _TagCreateDialogState extends ConsumerState<TagCreateDialog> {
-  late final _createTag = ref.mutation(GitProviders.createTag, onSuccess: (_, __) {
-    context.nav.pop();
-  });
-
   // final _typeFb = FieldBloc(initialValue: <_BranchType>{});
-  final _nameFb = FieldBloc(initialValue: '');
+  final _nameFb = FieldBloc(
+    initialValue: '',
+    validator: const TextValidation(minLength: 1),
+  );
   final _messageFb = FieldBloc(initialValue: '');
   final _pushableToRemoteFb = FieldBloc(isEnabled: false, initialValue: true);
 
@@ -40,10 +39,24 @@ class _TagCreateDialogState extends ConsumerState<TagCreateDialog> {
     super.dispose();
   }
 
+  late final _createTag = ref.mutation((ref, void _) async {
+    await GitProviders.createTag(
+      ref,
+      gitDir: widget.gitDir,
+      commitSha: widget.startPoint,
+      name: _nameFb.state.value,
+      message: _messageFb.state.value,
+    );
+  }, onSuccess: (_, __) {
+    context.nav.pop();
+  });
+
   @override
   Widget build(BuildContext context) {
     final isIdle = ref.watchIdle(mutations: [_createTag]);
-    final canSubmit = ref.watchCanSubmit(_form);
+    final canSubmit = ref.watchCanSubmit2(_form, shouldDirty: false);
+    final createTag = context.handleSubmit(_form, () async => _createTag.run(null),
+        canEnableFormAfterSubmit: false);
 
     return AlertDialog(
       title: Row(
@@ -83,14 +96,7 @@ class _TagCreateDialogState extends ConsumerState<TagCreateDialog> {
           child: const Text('Cancel'),
         ),
         ElevatedButton(
-          onPressed: isIdle && canSubmit
-              ? () => _createTag((
-                    gitDir: widget.gitDir,
-                    commitSha: widget.startPoint,
-                    name: _nameFb.state.value,
-                    message: _messageFb.state.value
-                  ))
-              : null,
+          onPressed: isIdle && canSubmit ? createTag : null,
           child: const Text('Create'),
         ),
       ],

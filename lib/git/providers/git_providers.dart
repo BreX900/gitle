@@ -47,18 +47,17 @@ abstract class GitProviders {
   }
 
   static Future<void> createBranch(
-      Ref ref,
-      ({
-        GitDir gitDir,
-        String startPoint,
-        String branchName,
-        bool checkout,
-      }) args) async {
+    Ref ref, {
+    required GitDir gitDir,
+    required String startPoint,
+    required String branchName,
+    required bool checkout,
+  }) async {
     try {
-      if (args.checkout) {
-        await args.gitDir.checkout(args.startPoint, newBranchName: args.branchName);
+      if (checkout) {
+        await gitDir.checkout(startPoint, newBranchName: branchName);
       } else {
-        await args.gitDir.branch(args.branchName, startPoint: args.startPoint);
+        await gitDir.branch(branchName, startPoint: startPoint);
       }
     } finally {
       ref.invalidate(RepositoriesProviders.current);
@@ -66,25 +65,28 @@ abstract class GitProviders {
   }
 
   static Future<void> renameBranch(
-      Ref ref, ({GitDir gitDir, String currentName, String newName}) args) async {
+    Ref ref, {
+    required GitDir gitDir,
+    required String currentName,
+    required String newName,
+  }) async {
     try {
-      await args.gitDir.branchRename(args.currentName, args.newName);
+      await gitDir.branchRename(currentName, newName);
     } finally {
       ref.invalidate(RepositoriesProviders.current);
     }
   }
 
   static Future<void> deleteBranch(
-      Ref ref,
-      ({
-        GitDir gitDir,
-        String branchName,
-        bool remote,
-        bool force,
-      }) args) async {
+    Ref ref, {
+    required GitDir gitDir,
+    required String branchName,
+    required bool remote,
+    required bool force,
+  }) async {
     try {
-      if (args.remote) await args.gitDir.pushDelete(args.branchName);
-      await args.gitDir.branchDelete(args.branchName, force: args.force);
+      if (remote) await gitDir.pushDelete(branchName);
+      await gitDir.branchDelete(branchName, force: force);
     } finally {
       ref.invalidate(RepositoriesProviders.current);
     }
@@ -168,14 +170,19 @@ abstract class GitProviders {
   }
 
   static Future<void> createTag(
-      Ref ref, ({GitDir gitDir, String? commitSha, String name, String? message}) args) async {
+    Ref ref, {
+    required GitDir gitDir,
+    required String? commitSha,
+    required String name,
+    required String? message,
+  }) async {
     try {
-      await args.gitDir.createAnnotatedTag(
-        args.name,
-        commit: args.commitSha,
-        message: args.message,
+      await gitDir.createAnnotatedTag(
+        name,
+        commit: commitSha,
+        message: message,
       );
-      await args.gitDir.push(toOrigin: true, referenceName: args.name);
+      await gitDir.push(toOrigin: true, referenceName: name);
     } finally {
       ref.invalidate(RepositoriesProviders.current);
     }

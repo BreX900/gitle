@@ -121,6 +121,7 @@ class _GitScreenState extends ConsumerState<GitScreen> {
       branchesDropdown = FieldMultiDropdown(
         fieldBloc: ref.watch(RepositoriesProviders.pathsFb(repository.gitDir.path)),
         constraints: const BoxConstraints.tightFor(width: 384.0),
+        padding: EdgeInsets.zero,
         decoration: const InputDecoration.collapsed(
           hintText: null,
           border: OutlineInputBorder(),

@@ -21,10 +21,6 @@ class BranchDeleteDialog extends ConsumerStatefulWidget {
 }
 
 class _BranchDeleteDialogState extends ConsumerState<BranchDeleteDialog> {
-  late final _deleteBranch = ref.mutation(GitProviders.deleteBranch, onSuccess: (_, __) {
-    context.nav.pop();
-  });
-
   final _forceFb = FieldBloc(initialValue: false);
   final _remotesFb = FieldBloc(initialValue: false);
 
@@ -36,10 +32,23 @@ class _BranchDeleteDialogState extends ConsumerState<BranchDeleteDialog> {
     super.dispose();
   }
 
+  late final _deleteBranch = ref.mutation((ref, _) {
+    return GitProviders.deleteBranch(
+      ref,
+      gitDir: widget.gitDir,
+      branchName: widget.branchName,
+      force: _forceFb.state.value,
+      remote: _remotesFb.state.value,
+    );
+  }, onSuccess: (_, __) {
+    context.nav.pop();
+  });
+
   @override
   Widget build(BuildContext context) {
     final isIdle = ref.watchIdle(mutations: [_deleteBranch]);
-    final canSubmit = ref.watchCanSubmit(_form);
+    final canSubmit = ref.watchCanSubmit2(_form, shouldDirty: false);
+    final deleteBranch = context.handleSubmit(_form, () async => _deleteBranch.run(null));
 
     return AlertDialog(
       title: Text(
@@ -69,14 +78,7 @@ class _BranchDeleteDialogState extends ConsumerState<BranchDeleteDialog> {
           child: const Text('Cancel'),
         ),
         ElevatedButton(
-          onPressed: isIdle && canSubmit
-              ? () => _deleteBranch((
-                    gitDir: widget.gitDir,
-                    branchName: widget.branchName,
-                    force: _forceFb.state.value,
-                    remote: _remotesFb.state.value,
-                  ))
-              : null,
+          onPressed: isIdle && canSubmit ? deleteBranch : null,
           child: const Text('Delete'),
         ),
       ],

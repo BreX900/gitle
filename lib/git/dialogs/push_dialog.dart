@@ -67,7 +67,7 @@ class _PushDialogState extends ConsumerState<PushDialog> {
   @override
   Widget build(BuildContext context) {
     final isIdle = ref.watchIdle(mutations: [_push]);
-    final canSubmit = ref.watchCanSubmit(_form);
+    final canSubmit = ref.watchCanSubmit2(_form, shouldDirty: false);
 
     return AlertDialog(
       title: Text('Push ${widget.branchName}'),

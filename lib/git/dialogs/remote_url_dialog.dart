@@ -49,7 +49,7 @@ class _RemoteUrlDialogState extends ConsumerState<RemoteUrlDialog> {
   @override
   Widget build(BuildContext context) {
     final isDataIdle = ref.watchIdle(mutations: [_updateRemoteOriginUrl]);
-    final canSubmit = ref.watchCanSubmit(_urlFieldBloc);
+    final canSubmit = ref.watchCanSubmit2(_urlFieldBloc, shouldHasNotUpdatedValue: true);
 
     return AlertDialog(
       title: const Text('Remote origin url'),
