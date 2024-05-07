@@ -67,7 +67,7 @@ class _PushDialogState extends ConsumerState<PushDialog> {
   @override
   Widget build(BuildContext context) {
     final isIdle = ref.watchIdle(mutations: [_push]);
-    final canSubmit = ref.watchCanSubmit2(_form, shouldDirty: false);
+    final canSubmit = ref.watchIsValid(_form);
 
     return AlertDialog(
       title: Text('Push ${widget.branchName}'),
@@ -78,19 +78,22 @@ class _PushDialogState extends ConsumerState<PushDialog> {
           children: [
             FieldGroupBuilder(
               fieldBloc: _pushForceFb,
-              valuesCount: _PushType.values.length,
-              valueBuilder: (state, index) {
-                final value = _PushType.values[index];
-                final isEnabled = state.isEnabled;
+              builder: (context, state) => GroupView(
+                style: const GroupStyle.table(),
+                count: _PushType.values.length,
+                builder: (context, index) {
+                  final value = _PushType.values[index];
+                  final isEnabled = state.isEnabled;
 
-                return RadioListTile(
-                  groupValue: state.value,
-                  toggleable: true,
-                  value: value,
-                  onChanged: isEnabled ? _pushForceFb.changeValue : null,
-                  title: Text(value.translate()),
-                );
-              },
+                  return RadioListTile(
+                    groupValue: state.value,
+                    toggleable: true,
+                    value: value,
+                    onChanged: isEnabled ? _pushForceFb.changeValue : null,
+                    title: Text(value.translate()),
+                  );
+                },
+              ),
             ),
           ],
         ),

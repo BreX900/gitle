@@ -39,7 +39,7 @@ class _TagCreateDialogState extends ConsumerState<TagCreateDialog> {
     super.dispose();
   }
 
-  late final _createTag = ref.mutation((ref, void _) async {
+  late final _createTag = ref.mutation((ref, Nil _) async {
     await GitProviders.createTag(
       ref,
       gitDir: widget.gitDir,
@@ -54,9 +54,7 @@ class _TagCreateDialogState extends ConsumerState<TagCreateDialog> {
   @override
   Widget build(BuildContext context) {
     final isIdle = ref.watchIdle(mutations: [_createTag]);
-    final canSubmit = ref.watchCanSubmit2(_form, shouldDirty: false);
-    final createTag = context.handleSubmit(_form, () async => _createTag.run(null),
-        canEnableFormAfterSubmit: false);
+    final createTag = context.handleSubmit(_form, _createTag.run, canEnableFormAfterSubmit: false);
 
     return AlertDialog(
       title: Row(
@@ -96,7 +94,7 @@ class _TagCreateDialogState extends ConsumerState<TagCreateDialog> {
           child: const Text('Cancel'),
         ),
         ElevatedButton(
-          onPressed: isIdle && canSubmit ? createTag : null,
+          onPressed: isIdle ? () => createTag(nil) : null,
           child: const Text('Create'),
         ),
       ],

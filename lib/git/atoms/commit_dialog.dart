@@ -164,20 +164,22 @@ class _FormCommitAtomState extends ConsumerState<FormCommitAtom> {
         const Divider(),
         FieldGroupBuilder(
           fieldBloc: _typeFb,
-          style: const GroupStyle.table(),
-          valuesCount: _PushType.values.length,
-          valueBuilder: (state, index) {
-            final value = _PushType.values[index];
-            final isEnabled = state.isEnabled;
+          builder: (context, state) => GroupView(
+            style: const GroupStyle.table(),
+            count: _PushType.values.length,
+            builder: (context, index) {
+              final value = _PushType.values[index];
+              final isEnabled = state.isEnabled;
 
-            return RadioListTile(
-              groupValue: state.value,
-              toggleable: true,
-              value: value,
-              onChanged: isEnabled ? _typeFb.changeValue : null,
-              title: Text(value.translate()),
-            );
-          },
+              return RadioListTile(
+                groupValue: state.value,
+                toggleable: true,
+                value: value,
+                onChanged: isEnabled ? _typeFb.changeValue : null,
+                title: Text(value.translate()),
+              );
+            },
+          ),
         ),
         Padding(
           padding: const EdgeInsets.all(8.0),

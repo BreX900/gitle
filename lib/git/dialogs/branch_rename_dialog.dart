@@ -44,7 +44,7 @@ class _BranchRenameDialogState extends ConsumerState<BranchRenameDialog> {
     super.dispose();
   }
 
-  late final _renameBranch = ref.mutation((ref, _) {
+  late final _renameBranch = ref.mutation((ref, Nil _) {
     return GitProviders.renameBranch(
       ref,
       gitDir: widget.gitDir,
@@ -60,8 +60,8 @@ class _BranchRenameDialogState extends ConsumerState<BranchRenameDialog> {
   @override
   Widget build(BuildContext context) {
     final isIdle = ref.watchIdle(mutations: [_renameBranch]);
-    final canSubmit = ref.watchCanSubmit2(_form, shouldHasNotUpdatedValue: true);
-    final renameBranch = context.handleSubmit(_form, () async => _renameBranch.run(null));
+    final canSubmit = ref.watchCanUpsert(_form, isCreate: false);
+    final renameBranch = context.handleSubmit(_form, _renameBranch.run);
 
     return AlertDialog(
       title: Row(
@@ -104,7 +104,7 @@ class _BranchRenameDialogState extends ConsumerState<BranchRenameDialog> {
           child: const Text('Cancel'),
         ),
         ElevatedButton(
-          onPressed: isIdle && canSubmit ? renameBranch : null,
+          onPressed: isIdle && canSubmit ? () => renameBranch(nil) : null,
           child: const Text('Rename'),
         ),
       ],

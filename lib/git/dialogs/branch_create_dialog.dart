@@ -39,7 +39,7 @@ class _BranchCreateDialogState extends ConsumerState<BranchCreateDialog> {
     super.dispose();
   }
 
-  late final _createBranch = ref.mutation((ref, _) {
+  late final _createBranch = ref.mutation((ref, Nil _) {
     return GitProviders.createBranch(
       ref,
       gitDir: widget.gitDir,
@@ -56,8 +56,7 @@ class _BranchCreateDialogState extends ConsumerState<BranchCreateDialog> {
   @override
   Widget build(BuildContext context) {
     final isIdle = ref.watchIdle(mutations: [_createBranch]);
-    final canSubmit = ref.watchCanSubmit2(_form, shouldDirty: false);
-    final createBranch = context.handleSubmit(_form, () async => _createBranch.run(null));
+    final createBranch = context.handleSubmit(_form, _createBranch.run);
 
     return AlertDialog(
       title: Row(
@@ -104,7 +103,7 @@ class _BranchCreateDialogState extends ConsumerState<BranchCreateDialog> {
           child: const Text('Cancel'),
         ),
         ElevatedButton(
-          onPressed: isIdle && canSubmit ? createBranch : null,
+          onPressed: isIdle ? () => createBranch(nil) : null,
           child: const Text('Create'),
         ),
       ],

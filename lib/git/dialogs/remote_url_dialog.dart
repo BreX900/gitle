@@ -39,7 +39,7 @@ class _RemoteUrlDialogState extends ConsumerState<RemoteUrlDialog> {
     _urlFieldBloc.updateInitialValue(remoteUrl.stdout as String);
   }
 
-  late final _updateRemoteOriginUrl = ref.mutation((ref, _) async {
+  late final _updateRemoteOriginUrl = ref.mutation((ref, Nil _) async {
     await widget.repository.gitDir
         .runEffect(['remote', 'set-url', 'origin', _urlFieldBloc.state.value]);
   }, onSuccess: (_, __) {
@@ -49,7 +49,7 @@ class _RemoteUrlDialogState extends ConsumerState<RemoteUrlDialog> {
   @override
   Widget build(BuildContext context) {
     final isDataIdle = ref.watchIdle(mutations: [_updateRemoteOriginUrl]);
-    final canSubmit = ref.watchCanSubmit2(_urlFieldBloc, shouldHasNotUpdatedValue: true);
+    final canSubmit = ref.watchCanUpsert(_urlFieldBloc, isCreate: false);
 
     return AlertDialog(
       title: const Text('Remote origin url'),
@@ -64,7 +64,7 @@ class _RemoteUrlDialogState extends ConsumerState<RemoteUrlDialog> {
           child: const Text('Cancel'),
         ),
         ElevatedButton(
-          onPressed: isDataIdle && canSubmit ? () => _updateRemoteOriginUrl(null) : null,
+          onPressed: isDataIdle && canSubmit ? () => _updateRemoteOriginUrl(nil) : null,
           child: const Text('Change'),
         ),
       ],

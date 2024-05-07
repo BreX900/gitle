@@ -43,7 +43,7 @@ abstract class RepositoriesProviders {
   });
 
   static final pathsFb = Provider.autoDispose.family((ref, String _) {
-    return FieldBloc<IList<String>>(initialValue: const IListConst([]));
+    return FieldBloc<ISet<String>>(initialValue: const ISet.empty());
   });
 
   static final current = FutureProvider.autoDispose((ref) async {

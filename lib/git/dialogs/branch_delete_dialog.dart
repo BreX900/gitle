@@ -32,7 +32,7 @@ class _BranchDeleteDialogState extends ConsumerState<BranchDeleteDialog> {
     super.dispose();
   }
 
-  late final _deleteBranch = ref.mutation((ref, _) {
+  late final _deleteBranch = ref.mutation((ref, Nil _) {
     return GitProviders.deleteBranch(
       ref,
       gitDir: widget.gitDir,
@@ -47,8 +47,7 @@ class _BranchDeleteDialogState extends ConsumerState<BranchDeleteDialog> {
   @override
   Widget build(BuildContext context) {
     final isIdle = ref.watchIdle(mutations: [_deleteBranch]);
-    final canSubmit = ref.watchCanSubmit2(_form, shouldDirty: false);
-    final deleteBranch = context.handleSubmit(_form, () async => _deleteBranch.run(null));
+    final deleteBranch = context.handleSubmit(_form, _deleteBranch.run);
 
     return AlertDialog(
       title: Text(
@@ -78,7 +77,7 @@ class _BranchDeleteDialogState extends ConsumerState<BranchDeleteDialog> {
           child: const Text('Cancel'),
         ),
         ElevatedButton(
-          onPressed: isIdle && canSubmit ? deleteBranch : null,
+          onPressed: isIdle ? () => deleteBranch(nil) : null,
           child: const Text('Delete'),
         ),
       ],

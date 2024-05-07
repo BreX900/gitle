@@ -1,3 +1,4 @@
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:flutter/material.dart' hide Notification;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gitle/git/atoms/commit_dialog.dart';
@@ -120,13 +121,14 @@ class _GitScreenState extends ConsumerState<GitScreen> {
     if (repository != null) {
       branchesDropdown = FieldMultiDropdown(
         fieldBloc: ref.watch(RepositoriesProviders.pathsFb(repository.gitDir.path)),
+        converter: const DefaultFieldConverter<ISet<String>>(),
         constraints: const BoxConstraints.tightFor(width: 384.0),
         padding: EdgeInsets.zero,
         decoration: const InputDecoration.collapsed(
           hintText: null,
           border: OutlineInputBorder(),
         ),
-        itemBuilder: (context, selection) {
+        itemsBuilder: (context, selection) {
           return repository.references.where((e) => e.isLocal || e.isRemote).map((e) {
             return CheckedPopupMenuItem(
               value: e.name,

@@ -40,16 +40,23 @@ class _MyAppState extends ConsumerState<GitleApp> with WindowListener {
   Widget build(BuildContext context) {
     ref.listen(GitHubProviders.notifications, (previous, next) {});
 
+    final theme = MekTheme.build();
+
     return MaterialApp(
       title: 'Gitle',
       debugShowCheckedModeBanner: false,
-      theme: MekTheme.build(),
+      theme: theme.copyWith(
+        extensions: {
+          ...theme.extensions.values,
+          const DataBuilders(errorListener: T.showSnackBarError),
+        },
+      ),
       locale: const Locale('it', 'IT'),
       supportedLocales: kWidgetsSupportedLanguages.map(Locale.new),
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
       builder: (context, child) {
         final colors = Theme.of(context).colorScheme;
-        child = MultiSplitViewTheme(
+        return MultiSplitViewTheme(
           data: MultiSplitViewThemeData(
             dividerPainter: DividerPainter(
               backgroundColor: Colors.grey[800],
@@ -58,13 +65,6 @@ class _MyAppState extends ConsumerState<GitleApp> with WindowListener {
           ),
           child: child!,
         );
-        child = MultiDispenser(
-          dispensable: const [
-            DataBuilders(errorListener: T.showSnackBarError),
-          ],
-          child: child,
-        );
-        return child;
       },
       home: const GitScreen(),
     );
