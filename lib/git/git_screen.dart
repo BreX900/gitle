@@ -242,7 +242,7 @@ class _GitScreenState extends ConsumerState<GitScreen> {
       body: state.whenOrNull(
         error: (error, _) {
           if (error is InvalidGitDirFailure) {
-            return InfoTile(
+            return InfoView(
               title: const Text('Invalid repository!'),
               description: Text(error.path),
               actions: [
@@ -259,7 +259,7 @@ class _GitScreenState extends ConsumerState<GitScreen> {
         data: (repository) {
           if (repository == null) {
             return Builder(builder: (context) {
-              return InfoTile(
+              return InfoView(
                 onTap: () => Scaffold.of(context).openDrawer(),
                 title: const Text('Select repository'),
               );

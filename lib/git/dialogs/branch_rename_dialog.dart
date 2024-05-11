@@ -79,7 +79,7 @@ class _BranchRenameDialogState extends ConsumerState<BranchRenameDialog> {
             FieldSegmentedButton(
               fieldBloc: _typeFb,
               emptySelectionAllowed: true,
-              converter: _typeFb.transform(const SetFieldConverter<BranchType>()),
+              converter: _typeFb.transform(const SetFieldConverter<BranchType?>(emptyIfNull: true)),
               segments: BranchType.values.map((type) {
                 return ButtonSegment(
                   value: type,

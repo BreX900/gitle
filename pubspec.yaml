@@ -99,3 +99,4 @@ flutter:
 flutter_launcher_icons:
   image_path: _/launcher_icons/gitle_circle.png
   macos: { generate: true }
+  windows: { generate: true }

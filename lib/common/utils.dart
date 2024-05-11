@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 abstract final class Utils {
-  static final String homeDirPath = Platform.environment['HOME']!;
+  static final String homeDirPath = Platform.isWindows
+      ? '${Platform.environment['HOMEDRIVE']!}${Platform.environment['HOMEPATH']!}'
+      : Platform.environment['HOME']!;
 
   static String removeHomePath(String path) {
     return path.replaceFirst(RegExp(r'\/Volumes\/[^/]+'), '').replaceFirst(homeDirPath, '~');

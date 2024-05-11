@@ -2,10 +2,10 @@ import 'package:collection/collection.dart';
 import 'package:flutter/services.dart';
 
 enum BranchType {
-  feature,
+  feat,
   fix,
   chore,
-  release,
+  build,
   tmp;
 
   static (BranchType?, String) from(String branchName) {

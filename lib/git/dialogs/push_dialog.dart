@@ -78,11 +78,9 @@ class _PushDialogState extends ConsumerState<PushDialog> {
           children: [
             FieldGroupBuilder(
               fieldBloc: _pushForceFb,
-              builder: (context, state) => GroupView(
-                style: const GroupStyle.table(),
-                count: _PushType.values.length,
-                builder: (context, index) {
-                  final value = _PushType.values[index];
+              decoration: null,
+              builder: (context, state) => Column(
+                children: _PushType.values.map((value) {
                   final isEnabled = state.isEnabled;
 
                   return RadioListTile(
@@ -92,7 +90,7 @@ class _PushDialogState extends ConsumerState<PushDialog> {
                     onChanged: isEnabled ? _pushForceFb.changeValue : null,
                     title: Text(value.translate()),
                   );
-                },
+                }).toList(),
               ),
             ),
           ],
