@@ -189,7 +189,7 @@ class GitGraph<T> extends StatelessWidget {
 
         return CustomPaint(
           foregroundPainter: _LinePainter(
-            color: colors.onBackground,
+            color: colors.onSurface,
             shouldDrawLine: nodes.length - 1 != index,
             lineSpace: 24.0,
             targetHeightPos: parentDistance,

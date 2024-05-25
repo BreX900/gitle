@@ -68,8 +68,8 @@ class _GitScreenState extends ConsumerState<GitScreen> {
         children: [
           MultiSplitView(
             initialAreas: [
-              Area(minimalSize: kMinInteractiveDimension * 7),
-              Area(minimalSize: kMinInteractiveDimension * 7)
+              Area(minimalSize: kMinInteractiveDimension * 6),
+              Area(minimalSize: kMinInteractiveDimension * 9)
             ],
             children: [
               Material(
@@ -202,7 +202,6 @@ class _GitScreenState extends ConsumerState<GitScreen> {
             IconButton(
               onPressed: () async => showTypedDialog(
                 context: context,
-                fallbackValue: null,
                 builder: (context) => RemoteUrlDialog(repository: repository),
               ),
               icon: const Icon(Icons.cloud),

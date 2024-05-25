@@ -40,7 +40,7 @@ class _MyAppState extends ConsumerState<GitleApp> with WindowListener {
   Widget build(BuildContext context) {
     ref.listen(GitHubProviders.notifications, (previous, next) {});
 
-    final theme = MekTheme.build();
+    final theme = MekTheme.build(context: context);
 
     return MaterialApp(
       title: 'Gitle',

@@ -4,7 +4,7 @@ import 'package:git/git.dart';
 import 'package:gitle/git/providers/git_providers.dart';
 import 'package:mek/mek.dart';
 
-class BranchPullDialog extends ConsumerStatefulWidget {
+class BranchPullDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void> {
   final GitDir gitDir;
   final String localBranch;
   final String remoteBranchName;

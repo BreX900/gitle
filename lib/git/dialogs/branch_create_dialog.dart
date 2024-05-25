@@ -56,7 +56,7 @@ class _BranchCreateDialogState extends ConsumerState<BranchCreateDialog> {
   @override
   Widget build(BuildContext context) {
     final isIdle = ref.watchIdle(mutations: [_createBranch]);
-    final createBranch = context.handleSubmit(_form, _createBranch.run);
+    final createBranch = context.handleMutation(_form, _createBranch);
 
     return AlertDialog(
       title: Row(
@@ -73,8 +73,9 @@ class _BranchCreateDialogState extends ConsumerState<BranchCreateDialog> {
           children: [
             FieldSegmentedButton<BranchType?>(
               fieldBloc: _typeFb,
-              emptySelectionAllowed: true,
               converter: _typeFb.transform(const SetFieldConverter<BranchType?>(emptyIfNull: true)),
+              emptySelectionAllowed: true,
+              showSelectedIcon: false,
               segments: BranchType.values.map((type) {
                 return ButtonSegment(
                   value: type,

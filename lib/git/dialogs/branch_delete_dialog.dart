@@ -6,7 +6,7 @@ import 'package:git/git.dart';
 import 'package:gitle/git/providers/git_providers.dart';
 import 'package:mek/mek.dart';
 
-class BranchDeleteDialog extends ConsumerStatefulWidget {
+class BranchDeleteDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void> {
   final GitDir gitDir;
   final String branchName;
 
@@ -47,7 +47,7 @@ class _BranchDeleteDialogState extends ConsumerState<BranchDeleteDialog> {
   @override
   Widget build(BuildContext context) {
     final isIdle = ref.watchIdle(mutations: [_deleteBranch]);
-    final deleteBranch = context.handleSubmit(_form, _deleteBranch.run);
+    final deleteBranch = context.handleMutation(_form, _deleteBranch);
 
     return AlertDialog(
       title: Text(

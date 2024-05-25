@@ -61,7 +61,7 @@ class _BranchRenameDialogState extends ConsumerState<BranchRenameDialog> {
   Widget build(BuildContext context) {
     final isIdle = ref.watchIdle(mutations: [_renameBranch]);
     final canSubmit = ref.watchCanUpsert(_form, isCreate: false);
-    final renameBranch = context.handleSubmit(_form, _renameBranch.run);
+    final renameBranch = context.handleMutation(_form, _renameBranch);
 
     return AlertDialog(
       title: Row(
@@ -78,8 +78,9 @@ class _BranchRenameDialogState extends ConsumerState<BranchRenameDialog> {
           children: [
             FieldSegmentedButton(
               fieldBloc: _typeFb,
-              emptySelectionAllowed: true,
               converter: _typeFb.transform(const SetFieldConverter<BranchType?>(emptyIfNull: true)),
+              emptySelectionAllowed: true,
+              showSelectedIcon: false,
               segments: BranchType.values.map((type) {
                 return ButtonSegment(
                   value: type,

@@ -46,7 +46,6 @@ class _GitGraphAtomState extends ConsumerState<GitGraphAtom> {
   Future<void> _showTagCreateDialog(GitDir gitDir, Sha commit) async {
     await showTypedDialog(
       context: context,
-      fallbackValue: null,
       builder: (context) => TagCreateDialog(
         gitDir: gitDir,
         startPoint: commit,
@@ -55,7 +54,7 @@ class _GitGraphAtomState extends ConsumerState<GitGraphAtom> {
   }
 
   Future<void> _showBranchPushDialog(GitDir gitDir, {required String branchName}) async {
-    await showDialog(
+    await showTypedDialog(
       context: context,
       builder: (context) => PushDialog(
         gitDir: gitDir,
@@ -69,7 +68,7 @@ class _GitGraphAtomState extends ConsumerState<GitGraphAtom> {
     required String localBranchName,
     required String remoteBranchName,
   }) async {
-    await showDialog(
+    await showTypedDialog(
       context: context,
       builder: (context) => BranchPullDialog(
         gitDir: gitDir,
@@ -82,7 +81,6 @@ class _GitGraphAtomState extends ConsumerState<GitGraphAtom> {
   Future<void> _showBranchCreateDialog(GitDir gitDir, Sha commit) async {
     await showTypedDialog(
       context: context,
-      fallbackValue: null,
       builder: (context) => BranchCreateDialog(
         gitDir: gitDir,
         startPoint: commit,
@@ -93,13 +91,12 @@ class _GitGraphAtomState extends ConsumerState<GitGraphAtom> {
   Future<void> _showBranchRenameDialog(GitDir gitDir, String branchName) async {
     await showTypedDialog(
       context: context,
-      fallbackValue: null,
       builder: (context) => BranchRenameDialog(gitDir: gitDir, branchName: branchName),
     );
   }
 
   Future<void> _showBranchDeleteDialog(GitDir gitDir, String branchName) async {
-    await showDialog(
+    await showTypedDialog(
       context: context,
       builder: (context) => BranchDeleteDialog(
         gitDir: gitDir,

@@ -35,7 +35,7 @@ enum _PushType {
   }
 }
 
-class PushDialog extends ConsumerStatefulWidget {
+class PushDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void> {
   final GitDir gitDir;
   final String branchName;
 
