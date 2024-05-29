@@ -16,13 +16,13 @@ class RepositorySettingsDto with _$RepositorySettingsDto {
     this.protectedBranches = const IListConst([]),
   });
 
-  static IMap<String, RepositorySettingsDto> fromBin(Object data) {
+  static IMap<String, RepositorySettingsDto> fromBin(Object? data) {
     if (data is List) {
       return IMap.fromEntries(config: const ConfigMap(sort: true), data.map((e) {
         return MapEntry(e, const RepositorySettingsDto());
       }));
     }
-    return IMap.fromJson(data as Map<String, Object?>, (path) {
+    return IMap.fromJson(data! as Map<String, Object?>, (path) {
       return path! as String;
     }, (settings) {
       return RepositorySettingsDto.fromJson(settings! as Map<String, dynamic>);

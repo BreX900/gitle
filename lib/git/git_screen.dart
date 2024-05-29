@@ -124,9 +124,10 @@ class _GitScreenState extends ConsumerState<GitScreen> {
         converter: const DefaultFieldConverter<ISet<String>>(),
         constraints: const BoxConstraints.tightFor(width: 384.0),
         padding: EdgeInsets.zero,
-        decoration: const InputDecoration.collapsed(
-          hintText: null,
+        decoration: const InputDecoration(
+          isCollapsed: true,
           border: OutlineInputBorder(),
+          contentPadding: EdgeInsets.symmetric(horizontal: 8.0),
         ),
         itemsBuilder: (context, selection) {
           return repository.references.where((e) => e.isLocal || e.isRemote).map((e) {

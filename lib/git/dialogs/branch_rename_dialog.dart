@@ -34,8 +34,8 @@ class _BranchRenameDialogState extends ConsumerState<BranchRenameDialog> {
   void initState() {
     super.initState();
     final values = BranchType.from(widget.branchName);
-    _typeFb.updateInitialValue(values.$1);
-    _newNameFb.updateInitialValue(values.$2);
+    _typeFb.updateValue(values.$1);
+    _newNameFb.updateValue(values.$2);
   }
 
   @override

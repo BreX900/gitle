@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:git/git.dart';
 import 'package:gitle/git/clients/git_extensions.dart';
+import 'package:gitle/git/clients/instances.dart';
 import 'package:gitle/git/dto/git_dto.dart';
 import 'package:gitle/git/dto/repository_dto.dart';
 import 'package:gitle/git/models/repository_model.dart';
@@ -18,21 +19,18 @@ class InvalidGitDirFailure implements Exception {
 
 abstract class RepositoriesProviders {
   static final _bin = Bin<IMap<String, RepositorySettingsDto>>(
-    name: 'repositories',
+    name: Instances.resolveBinName('repositories'),
     deserializer: RepositorySettingsDto.fromBin,
     serializer: RepositorySettingsDto.toBin,
     fallbackData: RepositorySettingsDto.initialBin,
   );
-  static final _currentBin = Bin<String>(
-    name: 'repository',
+  static final _currentBin = Bin<String?>(
+    name: Instances.resolveBinName('repository'),
     deserializer: (data) => data as String,
+    fallbackData: null,
   );
 
-  static final all = StreamProvider((ref) {
-    return _bin.stream.map((e) {
-      return e ?? RepositorySettingsDto.initialBin;
-    });
-  });
+  static final all = StreamProvider((ref) => _bin.stream);
 
   static final currentGitDir = StreamProvider((ref) {
     return _currentBin.stream.asyncSwitchMap((path) async {
@@ -83,8 +81,8 @@ abstract class RepositoriesProviders {
   }
 
   static Future<void> remove(Ref ref, String dirPath) async {
-    final currentDirPath = await _currentBin.readOrNull();
-    if (currentDirPath == dirPath) await _currentBin.delete();
+    final currentDirPath = await _currentBin.read();
+    if (currentDirPath == dirPath) await _currentBin.write('');
     await _bin.remove(dirPath);
   }
 

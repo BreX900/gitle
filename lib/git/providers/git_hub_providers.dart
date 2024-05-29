@@ -2,24 +2,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:github/github.dart';
 import 'package:gitle/common/logger.dart';
 import 'package:gitle/git/clients/github.dart';
+import 'package:gitle/git/clients/instances.dart';
 import 'package:mek/mek.dart';
 
 abstract class GitHubProviders {
-  static final _bin = Bin<Map<String, dynamic>>(
-    name: 'git_hub',
-    deserializer: (data) => (data as Map).cast<String, dynamic>(),
-  );
+  static CachedBin<Map<String, dynamic>> get _bin => Instances.gitHubBin;
 
   static final token = Provider((ref) {
-    ref.onDispose(_bin.stream
-        .listen((values) => ref.state = ((values ?? {})['token'] as String?) ?? '')
-        .cancel);
-    return '';
+    ref.onDispose(Instances.gitHubTokenBin.onChanges.listen((vl) => ref.state = vl).cancel);
+    return Instances.gitHubTokenBin.read();
   });
 
   static final shouldNotify = Provider((ref) {
-    ref.onDispose(_shouldNotifyStream.listen((value) => ref.state = value).cancel);
-    return false;
+    ref.onDispose(Instances.gitHubShouldNotifyBin.onChanges.listen((vl) => ref.state = vl).cancel);
+    return Instances.gitHubShouldNotifyBin.read();
   });
 
   static final notifications = FutureProvider((ref) async {
@@ -40,11 +36,5 @@ abstract class GitHubProviders {
       if (token != null) 'token': token,
       if (shouldNotify != null) 'shouldNotify': shouldNotify,
     });
-  }
-
-  static Stream<bool> get _shouldNotifyStream {
-    return _bin.stream.map((values) {
-      return ((values ?? {})['shouldNotify'] as bool?) ?? true;
-    }).distinct();
   }
 }
