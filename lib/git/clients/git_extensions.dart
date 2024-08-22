@@ -5,7 +5,7 @@ import 'package:collection/collection.dart';
 import 'package:git/git.dart';
 import 'package:gitle/common/logger.dart';
 import 'package:gitle/git/dto/git_dto.dart';
-import 'package:pure_extensions/pure_extensions.dart';
+import 'package:mek/mek.dart';
 import 'package:rxdart/rxdart.dart';
 
 enum PushForce { enabled, enabledWithLease }
@@ -199,7 +199,7 @@ extension GitDirExtensions on GitDir {
 
   Future<String?> rebase(String name, {bool continue$ = false}) async {
     final message = await runEffect(['rebase', name, if (continue$) '--continue']);
-    return message.nullIfEmpty();
+    return message.isEmpty ? null : message;
   }
 
   Future<String> rebaseContinue({bool editor = false}) async {

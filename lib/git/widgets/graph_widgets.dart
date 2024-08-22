@@ -2,7 +2,6 @@ import 'dart:math';
 
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'package:pure_extensions/pure_extensions.dart';
 
 class GraphChip extends StatelessWidget {
   final bool isSelected;
@@ -40,15 +39,14 @@ class GraphChip extends StatelessWidget {
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: children
-                    .mapIndexed<Widget>((index, child) {
-                      return ChipGraphScope(
-                        isLast: children.length == index + 1,
-                        child: child,
-                      );
-                    })
-                    .joinElement(VerticalDivider(width: 0.0, color: colors.onPrimary))
-                    .toList(),
+                children: children.expandIndexed<Widget>((index, child) sync* {
+                  if (index > 0) yield VerticalDivider(width: 0.0, color: colors.onPrimary);
+
+                  yield ChipGraphScope(
+                    isLast: children.length == index + 1,
+                    child: child,
+                  );
+                }).toList(),
               ),
             ),
           ],

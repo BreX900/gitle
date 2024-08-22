@@ -16,7 +16,6 @@ class GitleApp extends ConsumerStatefulWidget {
   ConsumerState<GitleApp> createState() => _MyAppState();
 }
 
-// ignore: prefer_mixin
 class _MyAppState extends ConsumerState<GitleApp> with WindowListener {
   @override
   void initState() {

@@ -10,6 +10,7 @@ import 'package:gitle/git/dto/git_dto.dart';
 import 'package:gitle/git/dto/repository_dto.dart';
 import 'package:gitle/git/models/repository_model.dart';
 import 'package:mek/mek.dart';
+import 'package:rxdart/rxdart.dart';
 
 class InvalidGitDirFailure implements Exception {
   final String path;
@@ -33,10 +34,13 @@ abstract class RepositoriesProviders {
   static final all = StreamProvider((ref) => _bin.stream);
 
   static final currentGitDir = StreamProvider((ref) {
-    return _currentBin.stream.asyncSwitchMap((path) async {
-      if (path == null) return null;
-      if (!await GitDir.isGitDir(path)) return throw InvalidGitDirFailure(path: path);
-      return await GitDir.fromExisting(path);
+    return _currentBin.stream.switchMap((path) async* {
+      if (path == null) {
+        yield null;
+        return;
+      }
+      if (!await GitDir.isGitDir(path)) throw InvalidGitDirFailure(path: path);
+      yield await GitDir.fromExisting(path);
     });
   });
 
