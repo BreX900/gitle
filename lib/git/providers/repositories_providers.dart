@@ -10,6 +10,7 @@ import 'package:gitle/git/dto/git_dto.dart';
 import 'package:gitle/git/dto/repository_dto.dart';
 import 'package:gitle/git/models/repository_model.dart';
 import 'package:mek/mek.dart';
+import 'package:mekart/mekart.dart';
 import 'package:rxdart/rxdart.dart';
 
 class InvalidGitDirFailure implements Exception {
@@ -118,12 +119,12 @@ abstract class RepositoriesProviders {
     return RepositoryModel(
       gitDir: gitDir,
       currentBranch: data.$1,
-      commits: data.$3.asIList(),
-      references: data.$2.asIList(),
-      upstreams: data.$6.asIList(),
-      workingTree: data.$4.asIList(),
-      stashes: data.$5.asIList(),
-      marks: Mark.from(references: data.$2, branches: data.$6).asIList(),
+      commits: data.$3.asImmutable(),
+      references: data.$2.asImmutable(),
+      upstreams: data.$6.asImmutable(),
+      workingTree: data.$4.asImmutable(),
+      stashes: data.$5.asImmutable(),
+      marks: Mark.from(references: data.$2, branches: data.$6).asImmutable(),
       settings: settings,
     );
   }

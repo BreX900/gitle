@@ -235,7 +235,7 @@ class _GitScreenState extends ConsumerState<GitScreen> {
             ),
           const EndDrawerButton(),
         ],
-        flexibleSpace: LinearProgressIndicatorBar(isVisible: !isGitIdle || isLoading),
+        flexibleSpace: LinearProgressIndicatorBar(isHidden: isGitIdle && !isLoading),
       ),
       drawer: const RepositoriesDrawerAtom(),
       endDrawer: repository != null ? RepositorySettingsDrawer(repository: repository) : null,

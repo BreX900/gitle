@@ -5,7 +5,7 @@ import 'package:collection/collection.dart';
 import 'package:git/git.dart';
 import 'package:gitle/common/logger.dart';
 import 'package:gitle/git/dto/git_dto.dart';
-import 'package:mek/mek.dart';
+import 'package:mekart/mekart.dart';
 import 'package:rxdart/rxdart.dart';
 
 enum PushForce { enabled, enabledWithLease }
@@ -310,10 +310,10 @@ extension GitDirExtensions on GitDir {
       }
 
       logs.add(LogDto(
-        commit: data.get('commit'),
+        commit: data.require('commit'),
         parent: data['parent'],
-        author: LogActionDto.parse(data.get('author')),
-        committer: LogActionDto.parse(data.get('committer')),
+        author: LogActionDto.parse(data.require('author')),
+        committer: LogActionDto.parse(data.require('committer')),
         message: lines,
       ));
     }

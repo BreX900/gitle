@@ -60,6 +60,7 @@ dependencies:
 
   mek_data_class: ^1.4.0
 
+  mekart: { path: ../packages/mekart }
   mek: { path: ../packages/mek_framework }
 
 dev_dependencies:

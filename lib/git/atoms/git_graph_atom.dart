@@ -132,81 +132,68 @@ class _GitGraphAtomState extends ConsumerState<GitGraphAtom> {
   Future<void> _showCommitMenu(BuildContext context, Offset offset, LogDto log) async {
     final deep =
         _calculateResetDeep(widget.repository.commits, widget.repository.currentBranch.sha, log);
-    await Utils.showMenu(
+    await showMenu<void>(
       context: context,
-      offset: offset,
+      position: MekUtils.getMenuPosition(context, offset),
+      constraints: const BoxConstraints(minHeight: 32.0, minWidth: 128.0),
       items: [
-        PopupMenuItem(
-          value: () => _showTagCreateDialog(widget.repository.gitDir, log.commit),
-          child: const ListTile(
-            leading: Icon(GitleIcons.tag),
-            title: Text('Create Tag...'),
-          ),
+        PopupMenuItemTile(
+          onTap: () => _showTagCreateDialog(widget.repository.gitDir, log.commit),
+          leading: const Icon(GitleIcons.tag),
+          title: const Text('Create Tag...'),
         ),
-        PopupMenuItem(
-          value: () => _showBranchCreateDialog(widget.repository.gitDir, log.commit),
-          child: const ListTile(
-            leading: Icon(GitleIcons.flow_branch),
-            title: Text('Create Branch...'),
-          ),
+        PopupMenuItemTile(
+          onTap: () => _showBranchCreateDialog(widget.repository.gitDir, log.commit),
+          leading: const Icon(GitleIcons.flow_branch),
+          title: const Text('Create Branch...'),
         ),
         const PopupMenuDivider(),
-        PopupMenuItem(
-          value: deep > 0 ? () => _reset((repository: widget.repository, count: deep)) : null,
-          child: ListTile(
-            leading: const Icon(Icons.delete_outline),
-            title: const Text('Reset'),
-            subtitle: Text('reset HEAD~$deep --soft'),
-          ),
+        PopupMenuItemTile(
+          enabled: deep > 0,
+          onTap: () => _reset((repository: widget.repository, count: deep)),
+          leading: const Icon(Icons.delete_outline),
+          title: const Text('Reset'),
+          subtitle: Text('reset HEAD~$deep --soft'),
         ),
         const PopupMenuDivider(),
-        PopupMenuItem(
-          value: () => Utils.setClipboard(log.commit),
-          child: const ListTile(
-            leading: Icon(Icons.data_object),
-            title: Text('Copy commit hash to clipboard'),
-          ),
+        PopupMenuItemTile(
+          onTap: () => Utils.setClipboard(log.commit),
+          leading: const Icon(Icons.data_object),
+          title: const Text('Copy commit hash to clipboard'),
         ),
-        PopupMenuItem(
-          value: () => Utils.setClipboard(log.message.join('\n')),
-          child: const ListTile(
-            leading: Icon(Icons.message_outlined),
-            title: Text('Copy commit message to clipboard'),
-          ),
+        PopupMenuItemTile(
+          onTap: () => Utils.setClipboard(log.message.join('\n')),
+          leading: const Icon(Icons.message_outlined),
+          title: const Text('Copy commit message to clipboard'),
         ),
       ],
     );
   }
 
   Future<void> _showTagMenu(BuildContext context, Offset offset, CommitReference commit) async {
-    await Utils.showMenu(
+    await showMenu<void>(
       context: context,
-      offset: offset,
+      position: MekUtils.getMenuPosition(context, offset),
+      constraints: const BoxConstraints(minHeight: 32.0, minWidth: 128.0),
       items: [
-        PopupMenuItem(
-          value: () => _showBranchDeleteDialog(widget.repository.gitDir, commit.name),
-          child: ListTile(
-            leading: const Icon(Icons.delete),
-            title: const Text('Delete Tag...'),
-            subtitle: Text('branch ${commit.name} --delete'),
-          ),
+        PopupMenuItemTile(
+          onTap: () => _showBranchDeleteDialog(widget.repository.gitDir, commit.name),
+          leading: const Icon(Icons.delete),
+          title: const Text('Delete Tag...'),
+          subtitle: Text('branch ${commit.name} --delete'),
         ),
         // if (commit.isLocal)
-        PopupMenuItem(
-          value: () => _showBranchPushDialog(widget.repository.gitDir, branchName: commit.name),
-          child: ListTile(
-            leading: const Icon(Icons.upload_outlined),
-            title: const Text('Push tag...'),
-            subtitle: Text('push ${commit.name}'),
-          ),
+        PopupMenuItemTile(
+          onTap: () => _showBranchPushDialog(widget.repository.gitDir, branchName: commit.name),
+          leading: const Icon(Icons.upload_outlined),
+          title: const Text('Push tag...'),
+          subtitle: Text('push ${commit.name}'),
         ),
         const PopupMenuDivider(),
-        PopupMenuItem(
-          value: () => Utils.setClipboard(commit.name),
-          child: const ListTile(
-            leading: Icon(Icons.abc),
-            title: Text('Copy tag name to clipboard'),
-          ),
+        PopupMenuItemTile(
+          onTap: () => Utils.setClipboard(commit.name),
+          leading: const Icon(Icons.abc),
+          title: const Text('Copy tag name to clipboard'),
         ),
       ],
     );
@@ -221,96 +208,86 @@ class _GitGraphAtomState extends ConsumerState<GitGraphAtom> {
   ) async {
     final head = widget.repository.currentBranch;
 
-    await Utils.showMenu(
+    await showMenu<void>(
       context: context,
-      offset: offset,
+      position: MekUtils.getMenuPosition(context, offset),
+      constraints: const BoxConstraints(minHeight: 32.0, minWidth: 128.0),
       items: [
         if (!hasHead)
-          PopupMenuItem(
-            value: () => _checkout((
+          PopupMenuItemTile(
+            onTap: () => _checkout((
               repository: widget.repository,
               commitOrBranch: commit.name,
               newBranchName: commit.isRemote ? commit.toBranchName() : null,
             )),
-            child: ListTile(
-              leading: const Icon(Icons.read_more),
-              title: const Text('Checkout Branch'),
-              subtitle: Text(
-                  'checkout ${commit.name}${commit.isRemote ? ' -b ${commit.toBranchName()}' : ''}'),
-            ),
+            leading: const Icon(Icons.read_more),
+            title: const Text('Checkout Branch'),
+            subtitle: Text(
+                'checkout ${commit.name}${commit.isRemote ? ' -b ${commit.toBranchName()}' : ''}'),
           ),
         if (commit.isLocal)
-          PopupMenuItem(
-            value: () => _showBranchRenameDialog(widget.repository.gitDir, commit.name),
-            child: ListTile(
-              leading: const Icon(Icons.edit_outlined),
-              title: const Text('Rename Branch...'),
-              subtitle: Text('branch --move ${commit.name} <NEW_NAME>'),
-            ),
+          PopupMenuItemTile(
+            onTap: () => _showBranchRenameDialog(widget.repository.gitDir, commit.name),
+            leading: const Icon(Icons.edit_outlined),
+            title: const Text('Rename Branch...'),
+            subtitle: Text('branch --move ${commit.name} <NEW_NAME>'),
           ),
         if (commit.isLocal && !hasHead)
-          PopupMenuItem(
-            value: () => _showBranchDeleteDialog(widget.repository.gitDir, commit.name),
-            child: ListTile(
-              leading: const Icon(Icons.delete),
-              title: const Text('Delete Branch...'),
-              subtitle: Text('branch --delete ${commit.name}'),
-            ),
+          PopupMenuItemTile(
+            onTap: () => _showBranchDeleteDialog(widget.repository.gitDir, commit.name),
+            leading: const Icon(Icons.delete),
+            title: const Text('Delete Branch...'),
+            subtitle: Text('branch --delete ${commit.name}'),
           ),
         if (!hasHead)
-          PopupMenuItem(
-            value: () => _rebase((gitDir: widget.repository.gitDir, branchName: commit.name)),
-            child: ListTile(
-              leading: const Icon(Icons.compare_arrows),
-              title: const Text('Rebase current branch on Branch'),
-              subtitle: Text('rebase ${commit.name}'),
-            ),
+          PopupMenuItemTile(
+            onTap: () => _rebase((gitDir: widget.repository.gitDir, branchName: commit.name)),
+            leading: const Icon(Icons.compare_arrows),
+            title: const Text('Rebase current branch on Branch'),
+            subtitle: Text('rebase ${commit.name}'),
           ),
         if (commit.isLocal)
-          PopupMenuItem(
-            value: () => _showBranchPushDialog(widget.repository.gitDir, branchName: commit.name),
-            child: ListTile(
-              leading: const Icon(Icons.upload_outlined),
-              title: const Text('Push branch...'),
-              subtitle: Text('push ${commit.name}'),
-            ),
+          PopupMenuItemTile(
+            onTap: () => _showBranchPushDialog(widget.repository.gitDir, branchName: commit.name),
+            leading: const Icon(Icons.upload_outlined),
+            title: const Text('Push branch...'),
+            subtitle: Text('push ${commit.name}'),
           ),
         if (commit.isRemote)
-          PopupMenuItem(
-            value: () => _showBranchPullDialog(
+          PopupMenuItemTile(
+            onTap: () => _showBranchPullDialog(
               widget.repository.gitDir,
               localBranchName: head.name,
               remoteBranchName: commit.toBranchName(),
             ),
-            child: ListTile(
-              leading: const Icon(Icons.download_outlined),
-              title: const Text('Pull into current branch...'),
-              subtitle: Text('pull origin ${commit.toBranchName()}'),
-            ),
+            leading: const Icon(Icons.download_outlined),
+            title: const Text('Pull into current branch...'),
+            subtitle: Text('pull origin ${commit.toBranchName()}'),
           ),
         if (upstream != null && !hasHead) ...[
           const PopupMenuDivider(),
-          PopupMenuItem(
-            value: () => _fetch((
+          PopupMenuItemTile(
+            onTap: () => _fetch((
               gitDir: widget.repository.gitDir,
               remoteBranchName: upstream.toBranchName(),
               localBranch: commit.name,
               prune: false,
             )),
-            child: ListTile(
-              leading: const Icon(Icons.download_outlined),
-              title: const Text('Fetch'),
-              subtitle: Text('fetch origin ${upstream.toBranchName()}:${commit.name}'),
-            ),
+            leading: const Icon(Icons.download_outlined),
+            title: const Text('Fetch'),
+            subtitle: Text('fetch origin ${upstream.toBranchName()}:${commit.name}'),
           ),
         ],
         const PopupMenuDivider(),
-        PopupMenuItem(
-          value: () => Utils.setClipboard(commit.name),
-          child: const ListTile(
-            leading: Icon(Icons.abc),
-            title: Text('Copy branch name to clipboard'),
-          ),
+        PopupMenuItemTile(
+          onTap: () => Utils.setClipboard(commit.name),
+          leading: const Icon(Icons.abc),
+          title: const Text('Copy branch name to clipboard'),
+        ),
+        PopupMenuItemTile(
+          onTap: () => Utils.setClipboard(commit.name.replaceFirst('/', ': ').replaceAll('_', ' ')),
+          leading: const Icon(Icons.abc),
+          title: const Text('Copy branch name as commit message to clipboard'),
         ),
       ],
     );

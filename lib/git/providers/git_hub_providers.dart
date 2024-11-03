@@ -3,7 +3,7 @@ import 'package:github/github.dart';
 import 'package:gitle/common/logger.dart';
 import 'package:gitle/git/clients/github.dart';
 import 'package:gitle/git/clients/instances.dart';
-import 'package:mek/mek.dart';
+import 'package:mekart/mekart.dart';
 
 abstract class GitHubProviders {
   static CachedBin<Map<String, dynamic>> get _bin => Instances.gitHubBin;
