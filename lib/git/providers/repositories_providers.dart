@@ -19,23 +19,27 @@ class InvalidGitDirFailure implements Exception {
   const InvalidGitDirFailure({required this.path});
 }
 
-abstract class RepositoriesProviders {
-  static final _bin = Bin<IMap<String, RepositorySettingsDto>>(
-    name: Instances.resolveBinName('repositories'),
-    deserializer: RepositorySettingsDto.fromBin,
-    serializer: RepositorySettingsDto.toBin,
-    fallbackData: RepositorySettingsDto.initialBin,
-  );
-  static final _currentBin = Bin<String?>(
-    name: Instances.resolveBinName('repository'),
-    deserializer: (data) => data as String,
-    fallbackData: null,
-  );
+extension on BinSession {
+  BinStore<IMap<String, RepositorySettingsDto>> get repositories => BinStore(
+        session: this,
+        name: Instances.resolveBinName('repositories'),
+        deserializer: RepositorySettingsDto.fromBin,
+        serializer: RepositorySettingsDto.toBin,
+        fallbackData: RepositorySettingsDto.initialBin,
+      );
+  BinStore<String?> get currentRepository => BinStore(
+        session: this,
+        name: Instances.resolveBinName('repository'),
+        deserializer: (data) => data as String,
+        fallbackData: null,
+      );
+}
 
-  static final all = StreamProvider((ref) => _bin.stream);
+abstract class RepositoriesProviders {
+  static final all = StreamProvider((ref) => Instances.bin.repositories.stream);
 
   static final currentGitDir = StreamProvider((ref) {
-    return _currentBin.stream.switchMap((path) async* {
+    return Instances.bin.currentRepository.stream.switchMap((path) async* {
       if (path == null) {
         yield null;
         return;
@@ -74,21 +78,25 @@ abstract class RepositoriesProviders {
     final dirPath = await FilePicker.platform.getDirectoryPath();
     if (dirPath == null) return;
 
-    final paths = await _bin.read();
-    if (paths.containsKey(dirPath)) throw StateError('Already has $dirPath');
+    await Instances.bin.runTransaction((tx) async {
+      final paths = await tx.repositories.read();
+      if (paths.containsKey(dirPath)) throw StateError('Already has $dirPath');
 
-    await _bin.set(dirPath, const RepositorySettingsDto());
-    await _currentBin.write(dirPath);
+      await tx.repositories.set(dirPath, const RepositorySettingsDto());
+      await tx.currentRepository.write(dirPath);
+    });
   }
 
   static Future<void> select(String repositoryPath) async {
-    await _currentBin.write(repositoryPath);
+    await Instances.bin.currentRepository.write(repositoryPath);
   }
 
   static Future<void> remove(Ref ref, String dirPath) async {
-    final currentDirPath = await _currentBin.read();
-    if (currentDirPath == dirPath) await _currentBin.write('');
-    await _bin.remove(dirPath);
+    await Instances.bin.runTransaction((tx) async {
+      final currentDirPath = await tx.currentRepository.read();
+      if (currentDirPath == dirPath) await tx.currentRepository.write('');
+      await tx.repositories.remove(dirPath);
+    });
   }
 
   static Future<void> toggleBranchesProtection(Ref ref, {required bool isEnabled}) async {
@@ -98,7 +106,7 @@ abstract class RepositoriesProviders {
       ..protectedBranches =
           isEnabled ? const IListConst(['master', 'develop', 'main']) : const IListConst([]));
 
-    await _bin.set(gitDir!.path, settings);
+    await Instances.bin.repositories.set(gitDir!.path, settings);
   }
 
   static Future<RepositoryModel> _read(

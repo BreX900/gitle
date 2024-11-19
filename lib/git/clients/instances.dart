@@ -2,21 +2,27 @@ import 'package:flutter/foundation.dart';
 import 'package:mekart/mekart.dart';
 import 'package:path_provider/path_provider.dart';
 
-abstract final class Instances {
-  static late final CachedBin<Map<String, dynamic>> gitHubBin;
+extension on BinSession {
+  BinStore<Map<String, dynamic>> get gitHub => BinStore(
+        session: this,
+        name: 'git_hub.json',
+        deserializer: (data) => (data as Map).cast<String, dynamic>(),
+        fallbackData: const {},
+      );
+}
 
-  static CachedValueBin<String> get gitHubTokenBin =>
-      CachedValueBin.fromMap(gitHubBin, 'token', '');
-  static CachedValueBin<bool> get gitHubShouldNotifyBin =>
-      CachedValueBin.fromMap(gitHubBin, 'shouldNotify', false);
+abstract final class Instances {
+  static final BinConnection bin = BinConnection(_BinEngine());
+  static late final CachedBinStore<Map<String, dynamic>> gitHubBin;
+
+  static CachedValueBinStore<String> get gitHubTokenBin =>
+      CachedValueBinStore.fromMap(gitHubBin, 'token', '');
+
+  static CachedValueBinStore<bool> get gitHubShouldNotifyBin =>
+      CachedValueBinStore.fromMap(gitHubBin, 'shouldNotify', false);
 
   static Future<void> register() async {
-    BinEngine.instance = _BinEngine();
-    gitHubBin = await CachedBin.getInstance<Map<String, dynamic>>(Bin(
-      name: resolveBinName('git_hub'),
-      deserializer: (data) => (data as Map).cast<String, dynamic>(),
-      fallbackData: const {},
-    ));
+    gitHubBin = await CachedBinStore.getInstance<Map<String, dynamic>>(bin.gitHub);
   }
 
   static String resolveBinName(String name) => kIsWeb ? '__bins__#$name' : '__bins__/$name';
@@ -25,7 +31,7 @@ abstract final class Instances {
 class _BinEngine extends BinEngineBase {
   @override
   Future<String?> getDirectoryPath() async {
-    final directory = await getApplicationDocumentsDirectory();
+    final directory = await getApplicationSupportDirectory();
     return directory.path;
   }
 }

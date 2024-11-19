@@ -6,7 +6,7 @@ import 'package:gitle/git/clients/instances.dart';
 import 'package:mekart/mekart.dart';
 
 abstract class GitHubProviders {
-  static CachedBin<Map<String, dynamic>> get _bin => Instances.gitHubBin;
+  static CachedBinStore<Map<String, dynamic>> get _bin => Instances.gitHubBin;
 
   static final token = Provider((ref) {
     ref.onDispose(Instances.gitHubTokenBin.onChanges.listen((vl) => ref.state = vl).cancel);
