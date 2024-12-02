@@ -136,7 +136,7 @@ class _FormCommitAtomState extends ConsumerState<FormCommitAtom> {
 
     final repository = ref.watch(RepositoriesProviders.current).requireValue!;
 
-    final isIdle = ref.watchIdle(mutations: [_commitPush]);
+    final isIdle = !ref.watchIsMutating([_commitPush]);
 
     final content = Column(
       children: [

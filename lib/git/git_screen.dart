@@ -56,7 +56,7 @@ class _GitScreenState extends ConsumerState<GitScreen> {
       return state.valueOrNull;
     }));
 
-    final isGitIdle = ref.watchIdle(mutations: [_fetch, _rebaseContinue]);
+    final isGitIdle = !ref.watchIsMutating([_fetch, _rebaseContinue]);
 
     Widget buildRepository(RepositoryModel repository) {
       return MultiSplitView(

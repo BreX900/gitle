@@ -1,10 +1,9 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:git/git.dart';
 import 'package:gitle/git/providers/git_providers.dart';
 import 'package:mek/mek.dart';
+import 'package:reactive_forms/reactive_forms.dart';
 
 class BranchDeleteDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void> {
   final GitDir gitDir;
@@ -21,14 +20,14 @@ class BranchDeleteDialog extends ConsumerStatefulWidget with TypedWidgetMixin<vo
 }
 
 class _BranchDeleteDialogState extends ConsumerState<BranchDeleteDialog> {
-  final _forceFb = FieldBloc(initialValue: false);
-  final _remotesFb = FieldBloc(initialValue: false);
+  final _forceFb = FormControlTyped(initialValue: false);
+  final _remotesFb = FormControlTyped(initialValue: false);
 
-  late final _form = ListFieldBloc(fieldBlocs: [_remotesFb, _forceFb]);
+  late final _form = FormArray([_remotesFb, _forceFb]);
 
   @override
   void dispose() {
-    unawaited(_form.close());
+    _form.dispose();
     super.dispose();
   }
 
@@ -37,8 +36,8 @@ class _BranchDeleteDialogState extends ConsumerState<BranchDeleteDialog> {
       ref,
       gitDir: widget.gitDir,
       branchName: widget.branchName,
-      force: _forceFb.state.value,
-      remote: _remotesFb.state.value,
+      force: _forceFb.value,
+      remote: _remotesFb.value,
     );
   }, onSuccess: (_, __) {
     context.nav.pop();
@@ -46,8 +45,8 @@ class _BranchDeleteDialogState extends ConsumerState<BranchDeleteDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isIdle = ref.watchIdle(mutations: [_deleteBranch]);
-    final deleteBranch = context.handleMutation(_form, _deleteBranch);
+    final isIdle = !ref.watchIsMutating([_deleteBranch]);
+    final deleteBranch = _form.handleSubmit(_deleteBranch);
 
     return AlertDialog(
       title: Text(
@@ -60,12 +59,12 @@ class _BranchDeleteDialogState extends ConsumerState<BranchDeleteDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            FieldSwitchListTile(
-              fieldBloc: _forceFb,
+            ReactiveSwitchListTile(
+              formControl: _forceFb,
               title: const Text('Force Delete'),
             ),
-            FieldSwitchListTile(
-              fieldBloc: _remotesFb,
+            ReactiveSwitchListTile(
+              formControl: _remotesFb,
               title: const Text('Delete this branch on the remote'),
             ),
           ],

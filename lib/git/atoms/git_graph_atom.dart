@@ -297,7 +297,7 @@ class _GitGraphAtomState extends ConsumerState<GitGraphAtom> {
   Widget build(BuildContext context) {
     final dateFormat = DateFormat.Hm('it').add_yMd();
 
-    final isIdle = ref.watchIdle(mutations: [_checkout, _rebase, _rebase, _fetch]);
+    final isIdle = !ref.watchIsMutating([_checkout, _rebase, _rebase, _fetch]);
 
     final head = widget.repository.currentBranch;
     final marks = widget.repository.marks;

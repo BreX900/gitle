@@ -27,7 +27,7 @@ class _BranchPullDialogState extends ConsumerState<BranchPullDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isIdle = ref.watchIdle(mutations: [_pullBranch]);
+    final isIdle = !ref.watchIsMutating([_pullBranch]);
 
     return AlertDialog(
       title: Text.rich(

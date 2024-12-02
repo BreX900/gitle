@@ -74,7 +74,7 @@ abstract class RepositoriesProviders {
     });
   });
 
-  static Future<void> add(Ref ref, void _) async {
+  static Future<void> add(MutationRef ref, void _) async {
     final dirPath = await FilePicker.platform.getDirectoryPath();
     if (dirPath == null) return;
 
@@ -91,7 +91,7 @@ abstract class RepositoriesProviders {
     await Instances.bin.currentRepository.write(repositoryPath);
   }
 
-  static Future<void> remove(Ref ref, String dirPath) async {
+  static Future<void> remove(MutationRef ref, String dirPath) async {
     await Instances.bin.runTransaction((tx) async {
       final currentDirPath = await tx.currentRepository.read();
       if (currentDirPath == dirPath) await tx.currentRepository.write('');
@@ -99,7 +99,7 @@ abstract class RepositoriesProviders {
     });
   }
 
-  static Future<void> toggleBranchesProtection(Ref ref, {required bool isEnabled}) async {
+  static Future<void> toggleBranchesProtection(MutationRef ref, {required bool isEnabled}) async {
     final gitDir = await ref.read(currentGitDir.future);
     final repository = await ref.read(current.future);
     final settings = repository!.settings.change((c) => c

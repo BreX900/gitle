@@ -21,7 +21,9 @@ scripts:
   deploy: >-
     flutter build macos &&
     rm -r ~/Desktop/Gitle.app &&
-    mv ./build/macos/Build/Products/Release/Gitle.app ~/Desktop/Gitle.app
+    mv ./build/macos/Build/Products/Release/Gitle.app ~/Desktop/Gitle.app &&
+    flutter clean &&
+    flutter pub get
 
   recreate-project: flutter create --platforms=windows,macos --org=com.doonties --project-name=hasd .
 
@@ -37,11 +39,11 @@ dependencies:
   flutter_localizations: { sdk: flutter }
 
   # Flutter Data
-  file_picker: ^8.1.2
+  file_picker: ^8.1.4
   github: ^9.24.0
-  flutter_local_notifications: ^17.2.2
-  url_launcher: ^6.3.0
-  path_provider: ^2.1.4
+  flutter_local_notifications: ^18.0.1
+  url_launcher: ^6.3.1
+  path_provider: ^2.1.5
 
   # Dart
   path: ^1.9.0
@@ -49,14 +51,15 @@ dependencies:
   collection: ^1.18.0
   logging: ^1.2.0
   rxdart: ^0.28.0
-  fast_immutable_collections: ^10.2.4
+  fast_immutable_collections: ^11.0.0
 
   # Dart UI
   intl: ^0.19.0
   # Flutter UI
-  flutter_riverpod: ^2.5.1
+  flutter_riverpod: ^2.6.1
   window_manager: ^0.4.2
   multi_split_view: ^2.4.0
+  reactive_forms: ^17.0.1
 
   mek_data_class: ^1.4.0
 
@@ -66,7 +69,7 @@ dependencies:
 dev_dependencies:
   mek_lints: ^4.0.0
 
-  build_runner: ^2.4.12
+  build_runner: ^2.4.13
   mek_data_class_generator: ^1.5.1
 
 flutter:

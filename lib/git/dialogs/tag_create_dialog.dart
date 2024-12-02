@@ -53,7 +53,7 @@ class _TagCreateDialogState extends ConsumerState<TagCreateDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isIdle = ref.watchIdle(mutations: [_createTag]);
+    final isIdle = !ref.watchIsMutating([_createTag]);
     final createTag = context.handleMutation(_form, _createTag, isFormDisabledAfterSubmit: true);
 
     return AlertDialog(

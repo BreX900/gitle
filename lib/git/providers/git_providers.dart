@@ -1,11 +1,11 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:git/git.dart';
 import 'package:gitle/git/clients/git_extensions.dart';
 import 'package:gitle/git/models/repository_model.dart';
 import 'package:gitle/git/providers/repositories_providers.dart';
+import 'package:mek/mek.dart';
 
 abstract class GitProviders {
-  static Future<void> checkout(Ref ref,
+  static Future<void> checkout(MutationRef ref,
       ({RepositoryModel repository, String commitOrBranch, String? newBranchName}) args) async {
     try {
       await args.repository.gitDir.checkout(args.commitOrBranch, newBranchName: args.newBranchName);
@@ -14,7 +14,7 @@ abstract class GitProviders {
     }
   }
 
-  static Future<void> reset(Ref ref, ({RepositoryModel repository, int count}) args) async {
+  static Future<void> reset(MutationRef ref, ({RepositoryModel repository, int count}) args) async {
     try {
       await args.repository.gitDir.reset(count: args.count);
     } finally {
@@ -22,7 +22,7 @@ abstract class GitProviders {
     }
   }
 
-  static Future<String?> rebase(Ref ref, ({GitDir gitDir, String branchName}) args) async {
+  static Future<String?> rebase(MutationRef ref, ({GitDir gitDir, String branchName}) args) async {
     try {
       return await args.gitDir.rebase(args.branchName);
     } finally {
@@ -30,7 +30,7 @@ abstract class GitProviders {
     }
   }
 
-  static Future<String> rebaseContinue(Ref ref, GitDir gitDir) async {
+  static Future<String> rebaseContinue(MutationRef ref, GitDir gitDir) async {
     try {
       return await gitDir.rebaseContinue(editor: true);
     } finally {
@@ -38,7 +38,7 @@ abstract class GitProviders {
     }
   }
 
-  static Future<String> rebaseAbort(Ref ref, GitDir gitDir) async {
+  static Future<String> rebaseAbort(MutationRef ref, GitDir gitDir) async {
     try {
       return await gitDir.rebaseContinue(editor: true);
     } finally {
@@ -47,7 +47,7 @@ abstract class GitProviders {
   }
 
   static Future<void> createBranch(
-    Ref ref, {
+    MutationRef ref, {
     required GitDir gitDir,
     required String startPoint,
     required String branchName,
@@ -65,7 +65,7 @@ abstract class GitProviders {
   }
 
   static Future<void> renameBranch(
-    Ref ref, {
+    MutationRef ref, {
     required GitDir gitDir,
     required String currentName,
     required String newName,
@@ -78,7 +78,7 @@ abstract class GitProviders {
   }
 
   static Future<void> deleteBranch(
-    Ref ref, {
+    MutationRef ref, {
     required GitDir gitDir,
     required String branchName,
     required bool remote,
@@ -93,7 +93,7 @@ abstract class GitProviders {
   }
 
   static Future<void> commit(
-    Ref ref,
+    MutationRef ref,
     GitDir gitDir, {
     bool amend = false,
     required String message,
@@ -107,7 +107,7 @@ abstract class GitProviders {
   }
 
   static Future<void> commitPush(
-    Ref ref,
+    MutationRef ref,
     GitDir gitDir, {
     bool amend = false,
     required String message,
@@ -131,7 +131,7 @@ abstract class GitProviders {
     }
   }
 
-  static Future<void> fetch(Ref ref,
+  static Future<void> fetch(MutationRef ref,
       ({GitDir gitDir, String? remoteBranchName, String? localBranch, bool prune}) args) async {
     try {
       await args.gitDir.fetch(
@@ -143,7 +143,7 @@ abstract class GitProviders {
     }
   }
 
-  static Future<void> pull(Ref ref, ({GitDir gitDir, String remoteBranchName}) args) async {
+  static Future<void> pull(MutationRef ref, ({GitDir gitDir, String remoteBranchName}) args) async {
     try {
       await args.gitDir.pull(args.remoteBranchName);
     } finally {
@@ -152,17 +152,16 @@ abstract class GitProviders {
   }
 
   static Future<void> push(
-      Ref ref,
-      ({
-        GitDir gitDir,
-        String? upstream,
-        PushForce? force,
-      }) args) async {
+    MutationRef ref, {
+    required GitDir gitDir,
+    required String? upstream,
+    required PushForce? force,
+  }) async {
     try {
-      await args.gitDir.push(
-        setUpstream: args.upstream != null,
-        referenceName: args.upstream,
-        force: args.force,
+      await gitDir.push(
+        setUpstream: upstream != null,
+        referenceName: upstream,
+        force: force,
       );
     } finally {
       ref.invalidate(RepositoriesProviders.current);
@@ -170,7 +169,7 @@ abstract class GitProviders {
   }
 
   static Future<void> createTag(
-    Ref ref, {
+    MutationRef ref, {
     required GitDir gitDir,
     required String? commitSha,
     required String name,

@@ -27,7 +27,7 @@ class _RepositoriesDrawerAtomState extends ConsumerState<RepositoriesDrawerAtom>
   }
 
   Widget _buildRepositories(IList<String> repositories) {
-    final isIdle = ref.watchIdle(mutations: [_addRepository, _removeRepository]);
+    final isIdle = !ref.watchIsMutating([_addRepository, _removeRepository]);
     final repository = ref.watch(RepositoriesProviders.current.select((state) {
       return state.valueOrNull?.gitDir.path;
     }));
@@ -36,6 +36,7 @@ class _RepositoriesDrawerAtomState extends ConsumerState<RepositoriesDrawerAtom>
     final textTheme = theme.textTheme;
 
     return ListView.builder(
+      key: const PageStorageKey<String>('repositories'),
       primary: false,
       itemCount: repositories.length,
       itemBuilder: (context, index) {
@@ -80,7 +81,7 @@ class _RepositoriesDrawerAtomState extends ConsumerState<RepositoriesDrawerAtom>
   }
 
   Widget _buildContent(IList<String> repositories) {
-    final isIdle = ref.watchIdle(mutations: [_addRepository, _removeRepository]);
+    final isIdle = !ref.watchIsMutating([_addRepository, _removeRepository]);
 
     return Column(
       children: [

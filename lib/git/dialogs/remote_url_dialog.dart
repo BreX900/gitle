@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gitle/git/clients/git_extensions.dart';
 import 'package:gitle/git/models/repository_model.dart';
 import 'package:mek/mek.dart';
+import 'package:reactive_forms/reactive_forms.dart';
 
 class RemoteUrlDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void> {
   final RepositoryModel repository;
@@ -19,7 +20,7 @@ class RemoteUrlDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void>
 }
 
 class _RemoteUrlDialogState extends ConsumerState<RemoteUrlDialog> {
-  final _urlFieldBloc = FieldBloc(initialValue: '');
+  final _urlFieldBloc = FormControlTyped(initialValue: '');
 
   @override
   void initState() {
@@ -29,33 +30,33 @@ class _RemoteUrlDialogState extends ConsumerState<RemoteUrlDialog> {
 
   @override
   void dispose() {
-    unawaited(_urlFieldBloc.close());
+    _urlFieldBloc.dispose();
     super.dispose();
   }
 
   Future<void> _initForm() async {
     final remoteUrl =
         await widget.repository.gitDir.runCommand(['ls-remote', '--get-url', 'origin']);
-    _urlFieldBloc.updateInitialValue(remoteUrl.stdout as String);
+    _urlFieldBloc.updateValue(remoteUrl.stdout as String);
   }
 
   late final _updateRemoteOriginUrl = ref.mutation((ref, Nil _) async {
-    await widget.repository.gitDir
-        .runEffect(['remote', 'set-url', 'origin', _urlFieldBloc.state.value]);
+    await widget.repository.gitDir.runEffect(['remote', 'set-url', 'origin', _urlFieldBloc.value]);
   }, onSuccess: (_, __) {
     context.nav.pop();
   });
 
   @override
   Widget build(BuildContext context) {
-    final isDataIdle = ref.watchIdle(mutations: [_updateRemoteOriginUrl]);
-    final canSubmit = ref.watchCanUpsert(_urlFieldBloc, isCreate: false);
+    final isDataIdle = !ref.watchIsMutating([_updateRemoteOriginUrl]);
+    final isFormDirty = ref.watch(_urlFieldBloc.provider.dirty);
+
+    final updateRemoteOriginUrl = _urlFieldBloc.handleSubmit(_updateRemoteOriginUrl.run);
 
     return AlertDialog(
       title: const Text('Remote origin url'),
-      content: FieldText(
-        fieldBloc: _urlFieldBloc,
-        converter: FieldConvert.text,
+      content: ReactiveTextField(
+        formControl: _urlFieldBloc,
         decoration: const InputDecoration(labelText: 'Url'),
       ),
       actions: [
@@ -64,7 +65,7 @@ class _RemoteUrlDialogState extends ConsumerState<RemoteUrlDialog> {
           child: const Text('Cancel'),
         ),
         ElevatedButton(
-          onPressed: isDataIdle && canSubmit ? () => _updateRemoteOriginUrl(nil) : null,
+          onPressed: isDataIdle && isFormDirty ? () => updateRemoteOriginUrl(nil) : null,
           child: const Text('Change'),
         ),
       ],

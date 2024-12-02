@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:git/git.dart';
@@ -8,6 +6,7 @@ import 'package:gitle/git/dto/git_dto.dart';
 import 'package:gitle/git/providers/git_providers.dart';
 import 'package:gitle/git/widgets/sha_text.dart';
 import 'package:mek/mek.dart';
+import 'package:reactive_forms/reactive_forms.dart';
 
 class BranchCreateDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void> {
   final GitDir gitDir;
@@ -24,18 +23,20 @@ class BranchCreateDialog extends ConsumerStatefulWidget with TypedWidgetMixin<vo
 }
 
 class _BranchCreateDialogState extends ConsumerState<BranchCreateDialog> {
-  final _typeFb = FieldBloc<BranchType?>(initialValue: null);
-  final _nameFb = FieldBloc(
+  final _typeFb = FormControlTypedOptional<BranchType>();
+  final _nameFb = FormControlTyped<String>(
     initialValue: '',
-    validator: const TextValidation(minLength: 1),
+    validators: [ValidatorsTyped.required()],
   );
-  final _checkoutFb = FieldBloc(initialValue: false);
+  final _checkoutFb = FormControlTyped(
+    initialValue: false,
+  );
 
-  late final _form = ListFieldBloc(fieldBlocs: [_typeFb, _nameFb, _checkoutFb]);
+  late final _form = FormArray<void>([_typeFb, _nameFb, _checkoutFb]);
 
   @override
   void dispose() {
-    unawaited(_form.close());
+    _form.dispose();
     super.dispose();
   }
 
@@ -45,18 +46,18 @@ class _BranchCreateDialogState extends ConsumerState<BranchCreateDialog> {
       gitDir: widget.gitDir,
       branchName: _resolveBranchName(),
       startPoint: widget.startPoint,
-      checkout: _checkoutFb.state.value,
+      checkout: _checkoutFb.value,
     );
   }, onSuccess: (_, __) {
     context.nav.pop();
   });
 
-  String _resolveBranchName() => _typeFb.state.value.toName(_nameFb.state.value);
+  String _resolveBranchName() => _typeFb.value.toName(_nameFb.value);
 
   @override
   Widget build(BuildContext context) {
-    final isIdle = ref.watchIdle(mutations: [_createBranch]);
-    final createBranch = context.handleMutation(_form, _createBranch);
+    final isIdle = !ref.watchIsMutating([_createBranch]);
+    final createBranch = _form.handleSubmit(_createBranch, keepDisabled: true);
 
     return AlertDialog(
       title: Row(
@@ -71,9 +72,8 @@ class _BranchCreateDialogState extends ConsumerState<BranchCreateDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            FieldSegmentedButton<BranchType?>(
-              fieldBloc: _typeFb,
-              converter: _typeFb.transform(const SetFieldConverter<BranchType?>(emptyIfNull: true)),
+            ReactiveSegmentedButton<BranchType>(
+              formControl: _typeFb,
               emptySelectionAllowed: true,
               showSelectedIcon: false,
               segments: BranchType.values.map((type) {
@@ -83,16 +83,15 @@ class _BranchCreateDialogState extends ConsumerState<BranchCreateDialog> {
                 );
               }).toList(),
             ),
-            FieldText(
-              fieldBloc: _nameFb,
-              converter: FieldConvert.text,
+            ReactiveTextField(
+              formControl: _nameFb,
               minLines: 1,
               maxLines: 10,
               inputFormatters: [BranchUtils.textFormatter],
               decoration: const InputDecoration(labelText: 'Name'),
             ),
-            FieldSwitchListTile(
-              fieldBloc: _checkoutFb,
+            ReactiveSwitchListTile(
+              formControl: _checkoutFb,
               title: const Text('Checkout'),
             )
           ],
