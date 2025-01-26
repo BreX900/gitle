@@ -27,6 +27,14 @@ class GitScreen extends ConsumerStatefulWidget {
 class _GitScreenState extends ConsumerState<GitScreen> {
   final _workingTreeKey = GlobalKey<WorkingTreeAtomState>();
 
+  final _referenceNames = FormControlTyped(initialValue: const ISet<String>.empty());
+
+  @override
+  void dispose() {
+    _referenceNames.dispose();
+    super.dispose();
+  }
+
   late final _fetch = ref.mutation(GitProviders.fetch);
   late final _rebaseContinue = ref.mutation(GitProviders.rebaseContinue, onSuccess: (_, message) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -119,17 +127,17 @@ class _GitScreenState extends ConsumerState<GitScreen> {
 
     Widget? branchesDropdown;
     if (repository != null) {
-      branchesDropdown = FieldMultiDropdown(
-        fieldBloc: ref.watch(RepositoriesProviders.pathsFb(repository.gitDir.path)),
-        converter: const DefaultFieldConverter<ISet<String>>(),
-        constraints: const BoxConstraints.tightFor(width: 384.0),
-        padding: EdgeInsets.zero,
+      branchesDropdown = ReactivePopupMenuButton(
+        formControl: _referenceNames,
+        // constraints: const BoxConstraints.tightFor(width: 384.0),
+        // padding: EdgeInsets.zero,
         decoration: const InputDecoration(
           isCollapsed: true,
           border: OutlineInputBorder(),
           contentPadding: EdgeInsets.symmetric(horizontal: 8.0),
         ),
-        itemsBuilder: (context, selection) {
+        itemBuilder: (field) {
+          final selection = field.value ?? const ISet.empty();
           return repository.references.where((e) => e.isLocal || e.isRemote).map((e) {
             return CheckedPopupMenuItem(
               value: e.name,
@@ -138,7 +146,8 @@ class _GitScreenState extends ConsumerState<GitScreen> {
             );
           }).toList();
         },
-        builder: (context, selection) {
+        builder: (field) {
+          final selection = field.value ?? const ISet.empty();
           return ConstrainedBox(
             constraints: const BoxConstraints.tightFor(height: 48.0),
             child: Align(

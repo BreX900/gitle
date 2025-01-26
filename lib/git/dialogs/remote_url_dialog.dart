@@ -19,7 +19,7 @@ class RemoteUrlDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void>
   ConsumerState<RemoteUrlDialog> createState() => _RemoteUrlDialogState();
 }
 
-class _RemoteUrlDialogState extends ConsumerState<RemoteUrlDialog> {
+class _RemoteUrlDialogState extends ConsumerState<RemoteUrlDialog> with SourceConsumerState {
   final _urlFieldBloc = FormControlTyped(initialValue: '');
 
   @override

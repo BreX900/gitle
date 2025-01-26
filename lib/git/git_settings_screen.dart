@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gitle/git/providers/git_hub_providers.dart';
 import 'package:mek/mek.dart';
+import 'package:reactive_forms/reactive_forms.dart';
 
 class GitSettingsScreen extends ConsumerStatefulWidget {
   const GitSettingsScreen({super.key});
@@ -13,10 +14,10 @@ class GitSettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _GitSettingsScreenState extends ConsumerState<GitSettingsScreen> {
-  final _tokenFb = FieldBloc(initialValue: '');
-  final _shouldNotifyFb = FieldBloc(initialValue: true);
+  final _tokenFb = FormControlTyped(initialValue: '');
+  final _shouldNotifyFb = FormControlTyped(initialValue: true);
 
-  late final _form = ListFieldBloc(fieldBlocs: [_tokenFb, _shouldNotifyFb]);
+  late final _form = FormArray([_tokenFb, _shouldNotifyFb]);
 
   @override
   void initState() {
@@ -31,13 +32,13 @@ class _GitSettingsScreenState extends ConsumerState<GitSettingsScreen> {
 
   @override
   void dispose() {
-    unawaited(_form.close());
+    _form.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDirty = ref.watch(_form.select((state) => state.isDirty));
+    final isDirty = ref.watch(_form.provider.dirty);
 
     return Scaffold(
       appBar: AppBar(
@@ -47,15 +48,14 @@ class _GitSettingsScreenState extends ConsumerState<GitSettingsScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: FieldText(
-              fieldBloc: _tokenFb,
-              converter: FieldConvert.text,
-              type: const TextFieldType.secret(),
+            child: ReactiveTypedTextField(
+              formControl: _tokenFb,
+              variant: const TextFieldVariant.secret(),
               decoration: const InputDecoration(labelText: 'GitHub Token'),
             ),
           ),
-          FieldSwitchListTile(
-            fieldBloc: _shouldNotifyFb,
+          ReactiveSwitchListTile(
+            formControl: _shouldNotifyFb,
             title: const Text('GitHub Notifications'),
           ),
         ],
@@ -64,8 +64,8 @@ class _GitSettingsScreenState extends ConsumerState<GitSettingsScreen> {
         onPressed: isDirty
             ? () {
                 unawaited(GitHubProviders.update(
-                  token: _tokenFb.state.value,
-                  shouldNotify: _shouldNotifyFb.state.value,
+                  token: _tokenFb.value,
+                  shouldNotify: _shouldNotifyFb.value,
                 ));
                 context.nav.pop();
               }

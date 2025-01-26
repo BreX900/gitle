@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:git/git.dart';
@@ -7,6 +5,7 @@ import 'package:gitle/common/branch_utils.dart';
 import 'package:gitle/git/providers/git_providers.dart';
 import 'package:gitle/git/widgets/sha_text.dart';
 import 'package:mek/mek.dart';
+import 'package:reactive_forms/reactive_forms.dart';
 
 class TagCreateDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void> {
   final GitDir gitDir;
@@ -24,18 +23,18 @@ class TagCreateDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void>
 
 class _TagCreateDialogState extends ConsumerState<TagCreateDialog> {
   // final _typeFb = FieldBloc(initialValue: <_BranchType>{});
-  final _nameFb = FieldBloc(
+  final _nameFb = FormControlTyped<String>(
     initialValue: '',
-    validator: const TextValidation(minLength: 1),
+    validators: [ValidatorsTyped.required()],
   );
-  final _messageFb = FieldBloc(initialValue: '');
-  final _pushableToRemoteFb = FieldBloc(isEnabled: false, initialValue: true);
+  final _messageFb = FormControlTyped(initialValue: '');
+  final _pushableToRemoteFb = FormControlTyped(disabled: true, initialValue: true);
 
-  late final _form = ListFieldBloc(fieldBlocs: [_nameFb, _messageFb, _pushableToRemoteFb]);
+  late final _form = FormArray([_nameFb, _messageFb, _pushableToRemoteFb]);
 
   @override
   void dispose() {
-    unawaited(_form.close());
+    _form.dispose();
     super.dispose();
   }
 
@@ -44,8 +43,8 @@ class _TagCreateDialogState extends ConsumerState<TagCreateDialog> {
       ref,
       gitDir: widget.gitDir,
       commitSha: widget.startPoint,
-      name: _nameFb.state.value,
-      message: _messageFb.state.value,
+      name: _nameFb.value,
+      message: _messageFb.value,
     );
   }, onSuccess: (_, __) {
     context.nav.pop();
@@ -54,7 +53,7 @@ class _TagCreateDialogState extends ConsumerState<TagCreateDialog> {
   @override
   Widget build(BuildContext context) {
     final isIdle = !ref.watchIsMutating([_createTag]);
-    final createTag = context.handleMutation(_form, _createTag, isFormDisabledAfterSubmit: true);
+    final createTag = _form.handleSubmit(_createTag, keepDisabled: true);
 
     return AlertDialog(
       title: Row(
@@ -68,21 +67,19 @@ class _TagCreateDialogState extends ConsumerState<TagCreateDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            FieldText(
-              fieldBloc: _nameFb,
-              converter: FieldConvert.text,
+            ReactiveTextField(
+              formControl: _nameFb,
               inputFormatters: [BranchUtils.textFormatter],
               decoration: const InputDecoration(labelText: 'Name'),
             ),
-            FieldText(
-              fieldBloc: _messageFb,
-              converter: FieldConvert.text,
+            ReactiveTextField(
+              formControl: _messageFb,
               minLines: 1,
               maxLines: 10,
               decoration: const InputDecoration(labelText: 'Message'),
             ),
-            FieldSwitchListTile(
-              fieldBloc: _pushableToRemoteFb,
+            ReactiveSwitchListTile(
+              formControl: _pushableToRemoteFb,
               title: const Text('Push to remote'),
             )
           ],

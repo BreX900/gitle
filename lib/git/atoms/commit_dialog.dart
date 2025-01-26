@@ -7,6 +7,7 @@ import 'package:gitle/git/clients/git_extensions.dart';
 import 'package:gitle/git/providers/git_providers.dart';
 import 'package:gitle/git/providers/repositories_providers.dart';
 import 'package:mek/mek.dart';
+import 'package:reactive_forms/reactive_forms.dart';
 
 enum _PushType {
   enabled,
@@ -56,21 +57,21 @@ class FormCommitAtom extends ConsumerStatefulWidget {
 }
 
 class _FormCommitAtomState extends ConsumerState<FormCommitAtom> {
-  final _messageFb = FieldBloc(initialValue: '');
-  final _amendFb = FieldBloc(initialValue: false);
-  final _typeFb = FieldBloc<_PushType?>(initialValue: null);
+  final _messageFb = FormControlTyped(initialValue: '');
+  final _amendFb = FormControlTyped(initialValue: false);
+  final _typeFb = FormControlTypedOptional<_PushType>();
 
-  late final _form = ListFieldBloc(fieldBlocs: [_messageFb, _amendFb, _typeFb]);
+  late final _form = FormArray<void>([_messageFb, _amendFb, _typeFb]);
 
   @override
   void initState() {
     super.initState();
-    _amendFb.stream.map((state) => state.value).listen(_amendListener);
+    _amendFb.valueChanges.listen(_amendListener);
   }
 
   @override
   void dispose() {
-    unawaited(_form.close());
+    _form.dispose();
     super.dispose();
   }
 
@@ -84,12 +85,12 @@ class _FormCommitAtomState extends ConsumerState<FormCommitAtom> {
     await GitProviders.commitPush(
       ref,
       widget.gitDir,
-      amend: _amendFb.state.value,
-      message: _messageFb.state.value,
+      amend: _amendFb.value,
+      message: _messageFb.value,
       filePaths: widget.filePaths?.call() ?? [],
-      push: _typeFb.state.value != null,
-      setUpstream: _typeFb.state.value == _PushType.setUpstream,
-      pushForce: _typeFb.state.value?.toForce(),
+      push: _typeFb.value != null,
+      setUpstream: _typeFb.value == _PushType.setUpstream,
+      pushForce: _typeFb.value?.toForce(),
     );
   }, onSuccess: (_, __) {
     _form.clear();
@@ -100,11 +101,11 @@ class _FormCommitAtomState extends ConsumerState<FormCommitAtom> {
     final data = (await ref.read(RepositoriesProviders.current.future))!;
     final log = data.commits.firstWhere((e) => e.commit == data.currentBranch.sha);
 
-    if (_messageFb.state.value.isNotEmpty) {
+    if (_messageFb.value.isNotEmpty) {
       final canReplace = await _showReplaceMessageDialog();
       if (!canReplace) return;
     }
-    _messageFb.changeValue(log.message.join('\n'));
+    _messageFb.updateValue(log.message.join('\n'));
   }
 
   Future<bool> _showReplaceMessageDialog() async {
@@ -129,8 +130,8 @@ class _FormCommitAtomState extends ConsumerState<FormCommitAtom> {
 
   @override
   Widget build(BuildContext context) {
-    final hasPush = ref.watch(_typeFb.select((state) => state.value != null));
-    final isAmend = ref.watch(_amendFb.select((state) => state.value));
+    final hasPush = ref.watch(_typeFb.provider.hasValue);
+    final isAmend = ref.watch(_amendFb.provider.value) ?? false;
 
     final error = ref.watch(_commitPush.select((state) => state.errorOrNull));
 
@@ -142,39 +143,34 @@ class _FormCommitAtomState extends ConsumerState<FormCommitAtom> {
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: FieldText(
-            fieldBloc: _messageFb,
-            converter: FieldConvert.text,
+          child: ReactiveTextField(
+            formControl: _messageFb,
             minLines: 1,
             maxLines: 10,
             decoration: InputDecoration(
               labelText: 'Message',
               errorText: error != null ? '$error' : null,
-              suffixIcon: IconButton(
-                onPressed: _messageFb.clear,
-                icon: const Icon(Icons.close),
-              ),
+              suffixIcon: const ReactiveClearButton(),
             ),
           ),
         ),
-        FieldSwitchListTile(
-          fieldBloc: _amendFb,
+        ReactiveSwitchListTile(
+          formControl: _amendFb,
           title: const Text('Amend last commit'),
         ),
         const Divider(),
-        FieldGroupBuilder(
-          fieldBloc: _typeFb,
-          decoration: null,
-          builder: (context, state) => Grid(
+        ReactiveFormField(
+          formControl: _typeFb,
+          builder: (field) => Grid(
             crossAxisCount: 2,
             children: _PushType.values.map((value) {
-              final isEnabled = state.isEnabled;
+              final isEnabled = field.control.enabled;
 
               return RadioListTile(
-                groupValue: state.value,
+                groupValue: field.value,
                 toggleable: true,
                 value: value,
-                onChanged: isEnabled ? _typeFb.changeValue : null,
+                onChanged: isEnabled ? field.didChange : null,
                 title: Text(value.translate()),
               );
             }).toList(),

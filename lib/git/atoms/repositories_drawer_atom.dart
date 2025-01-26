@@ -62,7 +62,9 @@ class _RepositoriesDrawerAtomState extends ConsumerState<RepositoriesDrawerAtom>
         );
 
         if (prevRepositoryPath != null &&
-            p.dirname(prevRepositoryPath) == p.dirname(repositoryPath)) return child;
+            p.dirname(prevRepositoryPath) == p.dirname(repositoryPath)) {
+          return child;
+        }
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,

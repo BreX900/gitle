@@ -21,7 +21,7 @@ class BranchRenameDialog extends ConsumerStatefulWidget with TypedWidgetMixin<vo
 }
 
 class _BranchRenameDialogState extends ConsumerState<BranchRenameDialog> {
-  final _typeFb = FormControlTypedOptional<BranchType>(initialValue: null);
+  final _typeFb = FormControlTypedOptional<BranchType>();
   final _newNameFb = FormControlTyped<String>(
     initialValue: '',
     validators: [ValidatorsTyped.required()],

@@ -49,8 +49,8 @@ abstract class RepositoriesProviders {
     });
   });
 
-  static final pathsFb = Provider.autoDispose.family((ref, String _) {
-    return FieldBloc<ISet<String>>(initialValue: const ISet.empty());
+  static final referencesNames = StateProvider.autoDispose.family((ref, String _) {
+    return const ISet<String>.empty();
   });
 
   static final current = FutureProvider.autoDispose((ref) async {
@@ -66,8 +66,7 @@ abstract class RepositoriesProviders {
     //     .listen((event) => ref.invalidateSelf())
     //     .cancel);
 
-    final referencesNames =
-        ref.watch(ref.watch(pathsFb(gitDir.path)).select((state) => state.value));
+    final referencesNames = ref.watch(RepositoriesProviders.referencesNames(gitDir.path));
 
     return await Isolate.run(() async {
       return await _read(gitDir, referencesNames: referencesNames, settings: settings);
