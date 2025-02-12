@@ -80,13 +80,13 @@ class _GitScreenState extends ConsumerState<GitScreen> {
               Area(minimalSize: kMinInteractiveDimension * 9)
             ],
             children: [
-              Material(
+              Surface(
                 child: WorkingTreeAtom(
                   key: _workingTreeKey,
                   repository: repository,
                 ),
               ),
-              Material(
+              Surface(
                 child: DefaultTabController(
                   length: 2,
                   child: Column(
@@ -118,7 +118,7 @@ class _GitScreenState extends ConsumerState<GitScreen> {
               ),
             ],
           ),
-          Material(
+          Surface(
             child: GitGraphAtom(repository: repository),
           ),
         ],
@@ -137,23 +137,21 @@ class _GitScreenState extends ConsumerState<GitScreen> {
           contentPadding: EdgeInsets.symmetric(horizontal: 8.0),
         ),
         itemBuilder: (field) {
-          final selection = field.value ?? const ISet.empty();
           return repository.references.where((e) => e.isLocal || e.isRemote).map((e) {
             return CheckedPopupMenuItem(
               value: e.name,
-              checked: selection.contains(e.name),
+              checked: field.value.contains(e.name),
               child: Text(e.name),
             );
           }).toList();
         },
         builder: (field) {
-          final selection = field.value ?? const ISet.empty();
           return ConstrainedBox(
             constraints: const BoxConstraints.tightFor(height: 48.0),
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'Branches: ${selection.isEmpty ? 'Show All' : selection.join(', ')}',
+                'Branches: ${field.value.isEmpty ? 'Show All' : field.value.join(', ')}',
                 maxLines: 2,
               ),
             ),
@@ -244,7 +242,7 @@ class _GitScreenState extends ConsumerState<GitScreen> {
             ),
           const EndDrawerButton(),
         ],
-        flexibleSpace: LinearProgressIndicatorBar(isHidden: isGitIdle && !isLoading),
+        flexibleSpace: LinearProgressIndicatorFlexible(visible: !isGitIdle || isLoading),
       ),
       drawer: const RepositoriesDrawerAtom(),
       endDrawer: repository != null ? RepositorySettingsDrawer(repository: repository) : null,

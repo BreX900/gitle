@@ -197,8 +197,8 @@ extension GitDirExtensions on GitDir {
     await runEffect(['pull', 'origin', remoteBranchName]);
   }
 
-  Future<String?> rebase(String name, {bool continue$ = false}) async {
-    final message = await runEffect(['rebase', name, if (continue$) '--continue']);
+  Future<String?> rebase(String name) async {
+    final message = await runEffect(['rebase', name]);
     return message.isEmpty ? null : message;
   }
 
@@ -212,6 +212,21 @@ extension GitDirExtensions on GitDir {
 
   Future<String> rebaseAbort() async {
     return await runEffect(['rebase', '--abort']);
+  }
+
+  Future<String?> cherryPick(String commitSha, {bool noCommit = false}) async {
+    final message = await runEffect(['cherry-pick', commitSha, if (noCommit) '--no-commit']);
+    return message.isEmpty ? null : message;
+  }
+
+  Future<String?> cherryContinue(String commitSha) async {
+    final message = await runEffect(['cherry-pick', commitSha, '--continue']);
+    return message.isEmpty ? null : message;
+  }
+
+  Future<String?> cherryAbort(String commitSha, {bool continue$ = false}) async {
+    final message = await runEffect(['cherry-pick', commitSha, '--abort']);
+    return message.isEmpty ? null : message;
   }
 
   /// https://git-scm.com/book/en/v2/Git-Basics-Tagging

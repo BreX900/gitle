@@ -40,6 +40,13 @@ class _GitGraphAtomState extends ConsumerState<GitGraphAtom> {
       content: Text(message ?? 'Rebase completed!'),
     ));
   });
+  late final _cherryPick = ref.mutation((ref, String commitSha) async {
+    return await GitProviders.cherryPick(ref, widget.repository.gitDir, commitSha);
+  }, onSuccess: (_, message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(message ?? 'Rebase completed!'),
+    ));
+  });
   late final _fetch = ref.mutation(GitProviders.fetch);
   late final _reset = ref.mutation(GitProviders.reset);
 
@@ -130,6 +137,7 @@ class _GitGraphAtomState extends ConsumerState<GitGraphAtom> {
   }
 
   Future<void> _showCommitMenu(BuildContext context, Offset offset, LogDto log) async {
+    final isCurrentBranch = widget.repository.currentBranch.sha == log.commit;
     final deep =
         _calculateResetDeep(widget.repository.commits, widget.repository.currentBranch.sha, log);
     await showMenu<void>(
@@ -148,6 +156,13 @@ class _GitGraphAtomState extends ConsumerState<GitGraphAtom> {
           title: const Text('Create Branch...'),
         ),
         const PopupMenuDivider(),
+        if (!isCurrentBranch)
+          PopupMenuItemTile(
+            onTap: () => _cherryPick(log.commit),
+            leading: const Icon(Icons.unarchive),
+            title: const Text('Cherry pick current commit on Branch'),
+            subtitle: Text('git cherry-pick ${ShaText.resolve(log.commit)} --no-commit'),
+          ),
         PopupMenuItemTile(
           enabled: deep > 0,
           onTap: () => _reset((repository: widget.repository, count: deep)),
@@ -297,7 +312,7 @@ class _GitGraphAtomState extends ConsumerState<GitGraphAtom> {
   Widget build(BuildContext context) {
     final dateFormat = DateFormat.Hm('it').add_yMd();
 
-    final isIdle = !ref.watchIsMutating([_checkout, _rebase, _rebase, _fetch]);
+    final isIdle = !ref.watchIsMutating([_checkout, _rebase, _rebase, _cherryPick, _fetch]);
 
     final head = widget.repository.currentBranch;
     final marks = widget.repository.marks;

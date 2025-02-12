@@ -126,12 +126,12 @@ abstract class RepositoriesProviders {
     return RepositoryModel(
       gitDir: gitDir,
       currentBranch: data.$1,
-      commits: data.$3.asImmutable(),
-      references: data.$2.asImmutable(),
-      upstreams: data.$6.asImmutable(),
-      workingTree: data.$4.asImmutable(),
-      stashes: data.$5.asImmutable(),
-      marks: Mark.from(references: data.$2, branches: data.$6).asImmutable(),
+      commits: data.$3.lockUnsafe,
+      references: data.$2.lockUnsafe,
+      upstreams: data.$6.lockUnsafe,
+      workingTree: data.$4.lockUnsafe,
+      stashes: data.$5.lockUnsafe,
+      marks: Mark.from(references: data.$2, branches: data.$6).lockUnsafe,
       settings: settings,
     );
   }

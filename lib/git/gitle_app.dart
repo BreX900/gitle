@@ -45,6 +45,7 @@ class _MyAppState extends ConsumerState<GitleApp> with WindowListener {
       title: 'Gitle',
       debugShowCheckedModeBanner: false,
       theme: theme.copyWith(
+        scaffoldBackgroundColor: theme.colorScheme.surface,
         extensions: {
           ...theme.extensions.values,
           const DataBuilders(errorListener: T.showSnackBarError),

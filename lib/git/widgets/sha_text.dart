@@ -4,6 +4,8 @@ class ShaText extends StatelessWidget {
   final String value;
   final TextStyle? style;
 
+  static String resolve(String value) => value.substring(0, 8);
+
   const ShaText(this.value, {super.key, this.style});
 
   @override
@@ -11,7 +13,7 @@ class ShaText extends StatelessWidget {
     return Tooltip(
       message: value,
       child: Text(
-        value.substring(0, 8),
+        resolve(value),
         style: style,
       ),
     );

@@ -30,6 +30,14 @@ abstract class GitProviders {
     }
   }
 
+  static Future<String?> cherryPick(MutationRef ref, GitDir gitDir, String commitSha) async {
+    try {
+      return await gitDir.cherryPick(commitSha, noCommit: true);
+    } finally {
+      ref.invalidate(RepositoriesProviders.current);
+    }
+  }
+
   static Future<String> rebaseContinue(MutationRef ref, GitDir gitDir) async {
     try {
       return await gitDir.rebaseContinue(editor: true);
