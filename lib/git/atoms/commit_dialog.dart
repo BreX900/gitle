@@ -93,7 +93,7 @@ class _FormCommitAtomState extends ConsumerState<FormCommitAtom> {
       pushForce: _typeFb.value?.toForce(),
     );
   }, onSuccess: (_, __) {
-    _form.clear();
+    _form.reset();
   });
 
   Future<void> _amendListener(bool amend) async {

@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,15 +20,31 @@ class GitleApp extends ConsumerStatefulWidget {
 }
 
 class _MyAppState extends ConsumerState<GitleApp> with WindowListener {
+  StreamSubscription? _subscription;
+
   @override
   void initState() {
     super.initState();
     WindowManager.instance.addListener(this);
+
+    ref.listenManual(fireImmediately: true, RepositoriesProviders.current, (prev, next) async {
+      final prevPath = prev?.valueOrNull?.gitDir.path;
+      final nextPath = next.valueOrNull?.gitDir.path;
+      if (prevPath == nextPath) return;
+
+      final rebaseFile = File('$nextPath/.git/REBASE_HEAD');
+      await _subscription?.cancel();
+      _subscription =
+          rebaseFile.watch(events: FileSystemEvent.create | FileSystemEvent.delete).listen((_) {
+        ref.invalidate(RepositoriesProviders.current);
+      });
+    });
   }
 
   @override
   void dispose() {
     WindowManager.instance.removeListener(this);
+    unawaited(_subscription?.cancel());
     super.dispose();
   }
 

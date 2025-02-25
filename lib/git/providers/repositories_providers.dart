@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:io';
 import 'dart:isolate';
 
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
@@ -65,11 +67,18 @@ abstract class RepositoriesProviders {
     //     .debounceTime(const Duration(seconds: 3))
     //     .listen((event) => ref.invalidateSelf())
     //     .cancel);
+    //
+    final isRebaseInProgress = File('${gitDir.path}/.git/REBASE_HEAD').existsSync();
 
     final referencesNames = ref.watch(RepositoriesProviders.referencesNames(gitDir.path));
 
     return await Isolate.run(() async {
-      return await _read(gitDir, referencesNames: referencesNames, settings: settings);
+      return await _read(
+        gitDir,
+        referencesNames: referencesNames,
+        settings: settings,
+        isRebaseInProgress: isRebaseInProgress,
+      );
     });
   });
 
@@ -112,6 +121,7 @@ abstract class RepositoriesProviders {
     GitDir gitDir, {
     required Iterable<String> referencesNames,
     required RepositorySettingsDto settings,
+    required bool isRebaseInProgress,
   }) async {
     final data = await (
       gitDir.currentBranch(),
@@ -129,6 +139,7 @@ abstract class RepositoriesProviders {
       commits: data.$3.lockUnsafe,
       references: data.$2.lockUnsafe,
       upstreams: data.$6.lockUnsafe,
+      isRebaseInProgress: isRebaseInProgress,
       workingTree: data.$4.lockUnsafe,
       stashes: data.$5.lockUnsafe,
       marks: Mark.from(references: data.$2, branches: data.$6).lockUnsafe,

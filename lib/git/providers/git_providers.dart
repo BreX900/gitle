@@ -48,7 +48,7 @@ abstract class GitProviders {
 
   static Future<String> rebaseAbort(MutationRef ref, GitDir gitDir) async {
     try {
-      return await gitDir.rebaseContinue(editor: true);
+      return await gitDir.rebaseAbort();
     } finally {
       ref.invalidate(RepositoriesProviders.current);
     }

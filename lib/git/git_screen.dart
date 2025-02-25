@@ -9,7 +9,6 @@ import 'package:gitle/git/atoms/stash_atom.dart';
 import 'package:gitle/git/atoms/working_tree_atom.dart';
 import 'package:gitle/git/clients/git_extensions.dart';
 import 'package:gitle/git/dialogs/remote_url_dialog.dart';
-import 'package:gitle/git/dto/git_dto.dart';
 import 'package:gitle/git/models/repository_model.dart';
 import 'package:gitle/git/providers/git_providers.dart';
 import 'package:gitle/git/providers/repositories_providers.dart';
@@ -129,12 +128,12 @@ class _GitScreenState extends ConsumerState<GitScreen> {
     if (repository != null) {
       branchesDropdown = ReactivePopupMenuButton(
         formControl: _referenceNames,
-        // constraints: const BoxConstraints.tightFor(width: 384.0),
-        // padding: EdgeInsets.zero,
+        constraints: const BoxConstraints.tightFor(width: 384.0),
         decoration: const InputDecoration(
           isCollapsed: true,
           border: OutlineInputBorder(),
-          contentPadding: EdgeInsets.symmetric(horizontal: 8.0),
+          contentPadding: EdgeInsets.all(12.0),
+          hintText: 'Branches...',
         ),
         itemBuilder: (field) {
           return repository.references.where((e) => e.isLocal || e.isRemote).map((e) {
@@ -178,18 +177,16 @@ class _GitScreenState extends ConsumerState<GitScreen> {
         ),
         title: branchesDropdown,
         actions: [
-          if (repository != null &&
-              repository.workingTree
-                  .any((e) => e.status.contains(FileStatus.updatedAndUnmerged))) ...[
+          if (repository != null && repository.isRebaseInProgress) ...[
             IconButton(
               color: colors.secondary,
-              tooltip: '-c core.editor=true rebase --continue',
+              tooltip: 'git -c core.editor=true rebase --continue',
               onPressed: isGitIdle ? () => _rebaseContinue(repository.gitDir) : null,
               icon: const Icon(Icons.next_plan_outlined),
             ),
             IconButton(
               color: colors.secondary,
-              tooltip: 'rebase --abort',
+              tooltip: 'git rebase --abort',
               onPressed: isGitIdle ? () => _rebaseAbort(repository.gitDir) : null,
               icon: const Icon(Icons.settings_backup_restore),
             ),

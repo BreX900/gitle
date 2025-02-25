@@ -19,6 +19,7 @@ class RepositoryModel with _$RepositoryModel {
   final IList<CommitReference> references;
   final IList<BranchReferenceWithUpstream> upstreams;
 
+  final bool isRebaseInProgress;
   final IList<FileDto> workingTree;
 
   final IList<Stash> stashes;
@@ -33,6 +34,7 @@ class RepositoryModel with _$RepositoryModel {
     required this.commits,
     required this.references,
     required this.upstreams,
+    required this.isRebaseInProgress,
     required this.workingTree,
     required this.stashes,
     required this.marks,
