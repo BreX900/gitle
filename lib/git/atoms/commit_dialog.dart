@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:git/git.dart';
+import 'package:gitle/common/app_utils.dart';
 import 'package:gitle/git/clients/git_extensions.dart';
 import 'package:gitle/git/providers/git_providers.dart';
 import 'package:gitle/git/providers/repositories_providers.dart';
@@ -11,34 +12,13 @@ import 'package:reactive_forms/reactive_forms.dart';
 
 enum _PushType {
   enabled,
-  setUpstream,
-  forceWithLease,
-  force;
+  setUpstream;
 
   String translate() {
-    switch (this) {
-      case _PushType.enabled:
-        return 'Push';
-      case _PushType.setUpstream:
-        return 'Push with upstream';
-
-      case _PushType.forceWithLease:
-        return 'Force Push With Lease';
-      case _PushType.force:
-        return 'Force Push';
-    }
-  }
-
-  PushForce? toForce() {
-    switch (this) {
-      case _PushType.enabled:
-      case _PushType.setUpstream:
-        return null;
-      case _PushType.forceWithLease:
-        return PushForce.enabledWithLease;
-      case _PushType.force:
-        return PushForce.enabled;
-    }
+    return switch (this) {
+      _PushType.enabled => 'Push',
+      _PushType.setUpstream => 'Push with upstream',
+    };
   }
 }
 
@@ -59,9 +39,10 @@ class FormCommitAtom extends ConsumerStatefulWidget {
 class _FormCommitAtomState extends ConsumerState<FormCommitAtom> {
   final _messageFb = FormControlTyped(initialValue: '');
   final _amendFb = FormControlTyped(initialValue: false);
-  final _typeFb = FormControlTypedOptional<_PushType>();
+  final _pushFb = FormControlTypedOptional<_PushType>();
+  final _pushForceTypeFb = FormControlTypedOptional<PushForce>();
 
-  late final _form = FormArray<void>([_messageFb, _amendFb, _typeFb]);
+  late final _form = FormArray<void>([_messageFb, _amendFb, _pushFb, _pushForceTypeFb]);
 
   @override
   void initState() {
@@ -88,10 +69,12 @@ class _FormCommitAtomState extends ConsumerState<FormCommitAtom> {
       amend: _amendFb.value,
       message: _messageFb.value,
       filePaths: widget.filePaths?.call() ?? [],
-      push: _typeFb.value != null,
-      setUpstream: _typeFb.value == _PushType.setUpstream,
-      pushForce: _typeFb.value?.toForce(),
+      push: _pushFb.value != null,
+      setUpstream: _pushFb.value == _PushType.setUpstream,
+      pushForce: _pushForceTypeFb.value,
     );
+  }, onError: (_, error) {
+    AppUtils.showErrorSnackBar(context, error);
   }, onSuccess: (_, __) {
     _form.reset();
   });
@@ -130,7 +113,7 @@ class _FormCommitAtomState extends ConsumerState<FormCommitAtom> {
 
   @override
   Widget build(BuildContext context) {
-    final hasPush = ref.watch(_typeFb.provider.hasValue);
+    final hasPush = ref.watch(_pushFb.provider.hasValue);
     final isAmend = ref.watch(_amendFb.provider.value) ?? false;
 
     final error = ref.watch(_commitPush.select((state) => state.errorOrNull));
@@ -159,8 +142,8 @@ class _FormCommitAtomState extends ConsumerState<FormCommitAtom> {
           title: const Text('Amend last commit'),
         ),
         const Divider(),
-        ReactiveFormField(
-          formControl: _typeFb,
+        ReactiveFormField<_PushType, _PushType>(
+          formControl: _pushFb,
           builder: (field) => Grid(
             crossAxisCount: 2,
             children: _PushType.values.map((value) {
@@ -176,6 +159,24 @@ class _FormCommitAtomState extends ConsumerState<FormCommitAtom> {
             }).toList(),
           ),
         ),
+        if (hasPush)
+          ReactiveFormField<PushForce, PushForce>(
+            formControl: _pushForceTypeFb,
+            builder: (field) => Grid(
+              crossAxisCount: 2,
+              children: PushForce.values.map((value) {
+                final isEnabled = field.control.enabled;
+
+                return RadioListTile(
+                  groupValue: field.value,
+                  toggleable: true,
+                  value: value,
+                  onChanged: isEnabled ? field.didChange : null,
+                  title: Text(value.translate()),
+                );
+              }).toList(),
+            ),
+          ),
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: Row(

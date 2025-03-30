@@ -115,8 +115,8 @@ class WorkingTreeAtomState extends State<WorkingTreeAtom> {
             return CheckboxListTile(
               controlAffinity: ListTileControlAffinity.leading,
               value: selection.contains(file),
-              tileColor: WorkingTreeAtom.resolveFileColor(file.status)?.withOpacity(0.2),
-              selectedTileColor: Colors.white.withOpacity(0.2),
+              tileColor: WorkingTreeAtom.resolveFileColor(file.status)?.withValues(alpha: 0.2),
+              selectedTileColor: Colors.white.withValues(alpha: 0.2),
               onChanged: (isSelected) => _toggle(!isSelected!, file),
               title: Text(path_.basename(file.paths.last)),
               subtitle: Text(file.paths.join(' -> ')),

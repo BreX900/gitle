@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:gitle/common/utils.dart';
+import 'package:gitle/common/app_utils.dart';
 import 'package:gitle/git/git_logs_screen.dart';
 import 'package:gitle/git/git_settings_screen.dart';
 import 'package:gitle/git/providers/repositories_providers.dart';
@@ -18,8 +18,12 @@ class RepositoriesDrawerAtom extends ConsumerStatefulWidget {
 }
 
 class _RepositoriesDrawerAtomState extends ConsumerState<RepositoriesDrawerAtom> {
-  late final _addRepository = ref.mutation(RepositoriesProviders.add);
-  late final _removeRepository = ref.mutation(RepositoriesProviders.remove);
+  late final _addRepository = ref.mutation(RepositoriesProviders.add, onError: (_, error) {
+    AppUtils.showErrorSnackBar(context, error);
+  });
+  late final _removeRepository = ref.mutation(RepositoriesProviders.remove, onError: (_, error) {
+    AppUtils.showErrorSnackBar(context, error);
+  });
 
   Future<void> _selectRepository(String repositoryPath) async {
     Scaffold.of(context).closeDrawer();
@@ -72,7 +76,7 @@ class _RepositoriesDrawerAtomState extends ConsumerState<RepositoriesDrawerAtom>
             if (prevRepositoryPath != null) const Divider(),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-              child: Text(Utils.removeHomePath(p.dirname(repositoryPath)),
+              child: Text(AppUtils.removeHomePath(p.dirname(repositoryPath)),
                   style: textTheme.titleMedium),
             ),
             child,

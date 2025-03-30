@@ -1,6 +1,8 @@
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:flutter/material.dart' hide Notification;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:git/git.dart';
+import 'package:gitle/common/app_utils.dart';
 import 'package:gitle/git/atoms/commit_dialog.dart';
 import 'package:gitle/git/atoms/git_graph_atom.dart';
 import 'package:gitle/git/atoms/repositories_drawer_atom.dart';
@@ -34,19 +36,31 @@ class _GitScreenState extends ConsumerState<GitScreen> {
     super.dispose();
   }
 
-  late final _fetch = ref.mutation(GitProviders.fetch);
-  late final _rebaseContinue = ref.mutation(GitProviders.rebaseContinue, onSuccess: (_, message) {
+  void _refresh() => ref.refreshAndInvalidateAncestors(RepositoriesProviders.current);
+
+  late final _fetch = ref.mutation((ref, (GitDir, {bool prune}) __) async {
+    final (gitDir, :prune) = __;
+    await GitProviders.fetch(ref, gitDir, prune: prune);
+  }, onError: (_, error) {
+    AppUtils.showErrorSnackBar(context, error);
+  });
+  late final _rebaseContinue = ref.mutation(GitProviders.rebaseContinue, onError: (_, error) {
+    AppUtils.showErrorSnackBar(context, error);
+  }, onSuccess: (_, message) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(message),
     ));
   });
-  late final _rebaseAbort = ref.mutation(GitProviders.rebaseAbort, onSuccess: (_, message) {
+  late final _rebaseAbort = ref.mutation(GitProviders.rebaseAbort, onError: (_, error) {
+    AppUtils.showErrorSnackBar(context, error);
+  }, onSuccess: (_, message) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(message),
     ));
   });
-  late final _removeRepository =
-      ref.mutation(RepositoriesProviders.remove, onSuccess: (_, message) {
+  late final _removeRepository = ref.mutation(RepositoriesProviders.remove, onError: (_, error) {
+    AppUtils.showErrorSnackBar(context, error);
+  }, onSuccess: (_, message) {
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
       content: Text('Removed repository!'),
     ));
@@ -213,28 +227,14 @@ class _GitScreenState extends ConsumerState<GitScreen> {
             ),
           if (repository != null)
             IconButton(
-              tooltip: 'fetch --all',
-              onPressed: isGitIdle
-                  ? () => _fetch((
-                        gitDir: repository.gitDir,
-                        prune: false,
-                        remoteBranchName: null,
-                        localBranch: null,
-                      ))
-                  : null,
+              tooltip: 'fetch  --tags --all',
+              onPressed: isGitIdle ? () => _fetch((repository.gitDir, prune: false)) : null,
               icon: const Icon(Icons.sync_outlined),
             ),
           if (repository != null)
             IconButton(
-              tooltip: 'fetch --all --prune',
-              onPressed: isGitIdle
-                  ? () => _fetch((
-                        gitDir: repository.gitDir,
-                        prune: true,
-                        remoteBranchName: null,
-                        localBranch: null,
-                      ))
-                  : null,
+              tooltip: 'fetch  --tags --all --prune',
+              onPressed: isGitIdle ? () => _fetch((repository.gitDir, prune: true)) : null,
               icon: const Icon(Icons.cloud_sync_outlined),
             ),
           const EndDrawerButton(),
@@ -258,7 +258,7 @@ class _GitScreenState extends ConsumerState<GitScreen> {
               ],
             );
           }
-          return DataBuilders.buildError(context, error);
+          return ErrorView(error: error, onRefresh: _refresh);
         },
         data: (repository) {
           if (repository == null) {

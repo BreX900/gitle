@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:git/git.dart';
+import 'package:gitle/common/app_utils.dart';
 import 'package:gitle/git/providers/git_providers.dart';
 import 'package:mek/mek.dart';
 import 'package:reactive_forms/reactive_forms.dart';
@@ -31,7 +32,7 @@ class _BranchDeleteDialogState extends ConsumerState<BranchDeleteDialog> {
     super.dispose();
   }
 
-  late final _deleteBranch = ref.mutation((ref, Nil _) {
+  late final _deleteBranch = ref.mutation((ref, None _) {
     return GitProviders.deleteBranch(
       ref,
       gitDir: widget.gitDir,
@@ -39,6 +40,8 @@ class _BranchDeleteDialogState extends ConsumerState<BranchDeleteDialog> {
       force: _forceFb.value,
       remote: _remotesFb.value,
     );
+  }, onError: (_, error) {
+    AppUtils.showErrorSnackBar(context, error);
   }, onSuccess: (_, __) {
     context.nav.pop();
   });
@@ -46,7 +49,7 @@ class _BranchDeleteDialogState extends ConsumerState<BranchDeleteDialog> {
   @override
   Widget build(BuildContext context) {
     final isIdle = !ref.watchIsMutating([_deleteBranch]);
-    final deleteBranch = _form.handleSubmit(_deleteBranch);
+    final deleteBranch = _form.handleSubmit(_deleteBranch.run);
 
     return AlertDialog(
       title: Text(
@@ -76,7 +79,7 @@ class _BranchDeleteDialogState extends ConsumerState<BranchDeleteDialog> {
           child: const Text('Cancel'),
         ),
         ElevatedButton(
-          onPressed: isIdle ? () => deleteBranch(nil) : null,
+          onPressed: isIdle ? () => deleteBranch(none) : null,
           child: const Text('Delete'),
         ),
       ],

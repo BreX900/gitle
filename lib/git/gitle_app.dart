@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:gitle/common/t.dart';
 import 'package:gitle/git/git_screen.dart';
 import 'package:gitle/git/providers/git_hub_providers.dart';
 import 'package:gitle/git/providers/repositories_providers.dart';
@@ -65,10 +64,6 @@ class _MyAppState extends ConsumerState<GitleApp> with WindowListener {
       debugShowCheckedModeBanner: false,
       theme: theme.copyWith(
         scaffoldBackgroundColor: theme.colorScheme.surface,
-        extensions: {
-          ...theme.extensions.values,
-          const DataBuilders(errorListener: T.showSnackBarError),
-        },
       ),
       locale: const Locale('it', 'IT'),
       supportedLocales: kWidgetsSupportedLanguages.map(Locale.new),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:git/git.dart';
+import 'package:gitle/common/app_utils.dart';
 import 'package:gitle/common/branch_utils.dart';
 import 'package:gitle/git/providers/git_providers.dart';
 import 'package:gitle/git/widgets/sha_text.dart';
@@ -38,7 +39,7 @@ class _TagCreateDialogState extends ConsumerState<TagCreateDialog> {
     super.dispose();
   }
 
-  late final _createTag = ref.mutation((ref, Nil _) async {
+  late final _createTag = ref.mutation((ref, None _) async {
     await GitProviders.createTag(
       ref,
       gitDir: widget.gitDir,
@@ -46,6 +47,8 @@ class _TagCreateDialogState extends ConsumerState<TagCreateDialog> {
       name: _nameFb.value,
       message: _messageFb.value,
     );
+  }, onError: (_, error) {
+    AppUtils.showErrorSnackBar(context, error);
   }, onSuccess: (_, __) {
     context.nav.pop();
   });
@@ -53,7 +56,7 @@ class _TagCreateDialogState extends ConsumerState<TagCreateDialog> {
   @override
   Widget build(BuildContext context) {
     final isIdle = !ref.watchIsMutating([_createTag]);
-    final createTag = _form.handleSubmit(_createTag, keepDisabled: true);
+    final createTag = _form.handleSubmit(_createTag.run, keepDisabled: true);
 
     return AlertDialog(
       title: Row(
@@ -91,7 +94,7 @@ class _TagCreateDialogState extends ConsumerState<TagCreateDialog> {
           child: const Text('Cancel'),
         ),
         ElevatedButton(
-          onPressed: isIdle ? () => createTag(nil) : null,
+          onPressed: isIdle ? () => createTag(none) : null,
           child: const Text('Create'),
         ),
       ],

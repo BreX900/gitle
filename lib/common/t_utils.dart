@@ -1,19 +1,13 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
 import 'package:mek/mek.dart';
 
-abstract class T {
-  static void showSnackBarError(BuildContext context, ErrorData data) {
-    MekUtils.showSnackBarError(
-      context: context,
-      description: Text(translateError(data.error)),
-    );
-  }
-
+abstract final class TUtils {
   static String translateError(Object error) {
     if (error is ProcessException) {
       return '${error.executable} ${error.arguments.join(' ')}\n${error.errorCode}: ${error.message}';
+    } else if (error is TextualError) {
+      return error.message;
     }
     return '$error';
   }

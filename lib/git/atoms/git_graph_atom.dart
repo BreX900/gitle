@@ -4,8 +4,8 @@ import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:git/git.dart';
+import 'package:gitle/common/app_utils.dart';
 import 'package:gitle/common/gitle_icons.dart';
-import 'package:gitle/common/utils.dart';
 import 'package:gitle/git/clients/git_extensions.dart';
 import 'package:gitle/git/dialogs/branch_create_dialog.dart';
 import 'package:gitle/git/dialogs/branch_delete_dialog.dart';
@@ -34,21 +34,39 @@ class GitGraphAtom extends ConsumerStatefulWidget {
 }
 
 class _GitGraphAtomState extends ConsumerState<GitGraphAtom> {
-  late final _checkout = ref.mutation(GitProviders.checkout);
-  late final _rebase = ref.mutation(GitProviders.rebase, onSuccess: (_, message) {
+  late final _checkout = ref.mutation(GitProviders.checkout, onError: (_, error) {
+    AppUtils.showErrorSnackBar(context, error);
+  });
+  late final _rebase = ref.mutation(GitProviders.rebase, onError: (_, error) {
+    AppUtils.showErrorSnackBar(context, error);
+  }, onSuccess: (_, message) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(message ?? 'Rebase completed!'),
     ));
   });
   late final _cherryPick = ref.mutation((ref, String commitSha) async {
     return await GitProviders.cherryPick(ref, widget.repository.gitDir, commitSha);
+  }, onError: (_, error) {
+    AppUtils.showErrorSnackBar(context, error);
   }, onSuccess: (_, message) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(message ?? 'Rebase completed!'),
     ));
   });
-  late final _fetch = ref.mutation(GitProviders.fetch);
-  late final _reset = ref.mutation(GitProviders.reset);
+  late final _fetch = ref.mutation((ref, (String, String) __) async {
+    final (remote, local) = __;
+    await GitProviders.fetch(
+      ref,
+      widget.repository.gitDir,
+      remoteBranchName: remote,
+      localBranch: local,
+    );
+  }, onError: (_, error) {
+    AppUtils.showErrorSnackBar(context, error);
+  });
+  late final _reset = ref.mutation(GitProviders.reset, onError: (_, error) {
+    AppUtils.showErrorSnackBar(context, error);
+  });
 
   Future<void> _showTagCreateDialog(GitDir gitDir, Sha commit) async {
     await showTypedDialog(
@@ -172,12 +190,12 @@ class _GitGraphAtomState extends ConsumerState<GitGraphAtom> {
         ),
         const PopupMenuDivider(),
         PopupMenuItemTile(
-          onTap: () => Utils.setClipboard(log.commit),
+          onTap: () => AppUtils.setClipboard(log.commit),
           leading: const Icon(Icons.data_object),
           title: const Text('Copy commit hash to clipboard'),
         ),
         PopupMenuItemTile(
-          onTap: () => Utils.setClipboard(log.message.join('\n')),
+          onTap: () => AppUtils.setClipboard(log.message.join('\n')),
           leading: const Icon(Icons.message_outlined),
           title: const Text('Copy commit message to clipboard'),
         ),
@@ -206,7 +224,7 @@ class _GitGraphAtomState extends ConsumerState<GitGraphAtom> {
         ),
         const PopupMenuDivider(),
         PopupMenuItemTile(
-          onTap: () => Utils.setClipboard(commit.name),
+          onTap: () => AppUtils.setClipboard(commit.name),
           leading: const Icon(Icons.abc),
           title: const Text('Copy tag name to clipboard'),
         ),
@@ -282,12 +300,7 @@ class _GitGraphAtomState extends ConsumerState<GitGraphAtom> {
         if (upstream != null && !hasHead) ...[
           const PopupMenuDivider(),
           PopupMenuItemTile(
-            onTap: () => _fetch((
-              gitDir: widget.repository.gitDir,
-              remoteBranchName: upstream.toBranchName(),
-              localBranch: commit.name,
-              prune: false,
-            )),
+            onTap: () => _fetch((upstream.toBranchName(), commit.name)),
             leading: const Icon(Icons.download_outlined),
             title: const Text('Fetch'),
             subtitle: Text('fetch origin ${upstream.toBranchName()}:${commit.name}'),
@@ -295,12 +308,13 @@ class _GitGraphAtomState extends ConsumerState<GitGraphAtom> {
         ],
         const PopupMenuDivider(),
         PopupMenuItemTile(
-          onTap: () => Utils.setClipboard(commit.name),
+          onTap: () => AppUtils.setClipboard(commit.name),
           leading: const Icon(Icons.abc),
           title: const Text('Copy branch name to clipboard'),
         ),
         PopupMenuItemTile(
-          onTap: () => Utils.setClipboard(commit.name.replaceFirst('/', ': ').replaceAll('_', ' ')),
+          onTap: () =>
+              AppUtils.setClipboard(commit.name.replaceFirst('/', ': ').replaceAll('_', ' ')),
           leading: const Icon(Icons.abc),
           title: const Text('Copy branch name as commit message to clipboard'),
         ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:git/git.dart';
+import 'package:gitle/common/app_utils.dart';
 import 'package:gitle/common/branch_utils.dart';
 import 'package:gitle/git/providers/git_providers.dart';
 import 'package:mek/mek.dart';
@@ -43,13 +44,15 @@ class _BranchRenameDialogState extends ConsumerState<BranchRenameDialog> {
     super.dispose();
   }
 
-  late final _renameBranch = ref.mutation((ref, Nil _) {
-    return GitProviders.renameBranch(
+  late final _renameBranch = ref.mutation((ref, None _) async {
+    return await GitProviders.renameBranch(
       ref,
       gitDir: widget.gitDir,
       currentName: widget.branchName,
       newName: _resolveBranchName(),
     );
+  }, onError: (_, error) {
+    AppUtils.showErrorSnackBar(context, error);
   }, onSuccess: (_, __) {
     context.nav.pop();
   });
@@ -60,7 +63,7 @@ class _BranchRenameDialogState extends ConsumerState<BranchRenameDialog> {
   Widget build(BuildContext context) {
     final isIdle = !ref.watchIsMutating([_renameBranch]);
     final isFormDirty = ref.watch(_form.provider.dirty);
-    final renameBranch = _form.handleSubmit(_renameBranch);
+    final renameBranch = _form.handleSubmit(_renameBranch.run);
 
     return AlertDialog(
       title: Row(
@@ -102,7 +105,7 @@ class _BranchRenameDialogState extends ConsumerState<BranchRenameDialog> {
           child: const Text('Cancel'),
         ),
         ElevatedButton(
-          onPressed: isIdle && isFormDirty ? () => renameBranch(nil) : null,
+          onPressed: isIdle && isFormDirty ? () => renameBranch(none) : null,
           child: const Text('Rename'),
         ),
       ],

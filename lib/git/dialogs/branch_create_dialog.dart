@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:git/git.dart';
+import 'package:gitle/common/app_utils.dart';
 import 'package:gitle/common/branch_utils.dart';
 import 'package:gitle/git/dto/git_dto.dart';
 import 'package:gitle/git/providers/git_providers.dart';
@@ -40,7 +41,7 @@ class _BranchCreateDialogState extends ConsumerState<BranchCreateDialog> {
     super.dispose();
   }
 
-  late final _createBranch = ref.mutation((ref, Nil _) {
+  late final _createBranch = ref.mutation((ref, None _) {
     return GitProviders.createBranch(
       ref,
       gitDir: widget.gitDir,
@@ -48,6 +49,8 @@ class _BranchCreateDialogState extends ConsumerState<BranchCreateDialog> {
       startPoint: widget.startPoint,
       checkout: _checkoutFb.value,
     );
+  }, onError: (_, error) {
+    AppUtils.showErrorSnackBar(context, error);
   }, onSuccess: (_, __) {
     context.nav.pop();
   });
@@ -57,7 +60,7 @@ class _BranchCreateDialogState extends ConsumerState<BranchCreateDialog> {
   @override
   Widget build(BuildContext context) {
     final isIdle = !ref.watchIsMutating([_createBranch]);
-    final createBranch = _form.handleSubmit(_createBranch, keepDisabled: true);
+    final createBranch = _form.handleSubmit(_createBranch.run, keepDisabled: true);
 
     return AlertDialog(
       title: Row(
@@ -103,7 +106,7 @@ class _BranchCreateDialogState extends ConsumerState<BranchCreateDialog> {
           child: const Text('Cancel'),
         ),
         ElevatedButton(
-          onPressed: isIdle ? () => createBranch(nil) : null,
+          onPressed: isIdle ? () => createBranch(none) : null,
           child: const Text('Create'),
         ),
       ],

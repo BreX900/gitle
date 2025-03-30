@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gitle/common/app_utils.dart';
 import 'package:gitle/git/clients/git_extensions.dart';
 import 'package:gitle/git/models/repository_model.dart';
 import 'package:mek/mek.dart';
@@ -40,8 +41,10 @@ class _RemoteUrlDialogState extends ConsumerState<RemoteUrlDialog> {
     _urlFieldBloc.updateValue(remoteUrl.stdout as String);
   }
 
-  late final _updateRemoteOriginUrl = ref.mutation((ref, Nil _) async {
+  late final _updateRemoteOriginUrl = ref.mutation((ref, None _) async {
     await widget.repository.gitDir.runEffect(['remote', 'set-url', 'origin', _urlFieldBloc.value]);
+  }, onError: (_, error) {
+    AppUtils.showErrorSnackBar(context, error);
   }, onSuccess: (_, __) {
     context.nav.pop();
   });
@@ -65,7 +68,7 @@ class _RemoteUrlDialogState extends ConsumerState<RemoteUrlDialog> {
           child: const Text('Cancel'),
         ),
         ElevatedButton(
-          onPressed: isDataIdle && isFormDirty ? () => updateRemoteOriginUrl(nil) : null,
+          onPressed: isDataIdle && isFormDirty ? () => updateRemoteOriginUrl(none) : null,
           child: const Text('Change'),
         ),
       ],

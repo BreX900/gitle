@@ -159,7 +159,12 @@ extension GitDirExtensions on GitDir {
   }
 
   /// https://git-scm.com/docs/git-fetch
-  Future<void> fetch({String? remoteBranchName, String? localBranch, bool prune = false}) async {
+  Future<void> fetch({
+    String? remoteBranchName,
+    String? localBranch,
+    bool prune = false,
+    bool tags = false,
+  }) async {
     await runEffect([
       'fetch',
       if (remoteBranchName != null && localBranch != null) ...[
@@ -168,6 +173,7 @@ extension GitDirExtensions on GitDir {
       ] else
         '--all',
       if (prune) '--prune',
+      if (tags) '--tags',
     ]);
   }
 

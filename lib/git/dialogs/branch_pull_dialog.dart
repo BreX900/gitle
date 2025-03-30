@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:git/git.dart';
+import 'package:gitle/common/app_utils.dart';
 import 'package:gitle/git/providers/git_providers.dart';
 import 'package:mek/mek.dart';
 
@@ -23,6 +24,8 @@ class BranchPullDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void
 class _BranchPullDialogState extends ConsumerState<BranchPullDialog> {
   late final _pullBranch = ref.mutation(GitProviders.pull, onSuccess: (_, __) {
     context.nav.pop();
+  }, onError: (_, error) {
+    AppUtils.showErrorSnackBar(context, error);
   });
 
   @override

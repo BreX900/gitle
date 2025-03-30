@@ -139,13 +139,19 @@ abstract class GitProviders {
     }
   }
 
-  static Future<void> fetch(MutationRef ref,
-      ({GitDir gitDir, String? remoteBranchName, String? localBranch, bool prune}) args) async {
+  static Future<void> fetch(
+    MutationRef ref,
+    GitDir gitDir, {
+    String? remoteBranchName,
+    String? localBranch,
+    bool prune = false,
+  }) async {
     try {
-      await args.gitDir.fetch(
-          remoteBranchName: args.remoteBranchName,
-          localBranch: args.localBranch,
-          prune: args.prune);
+      await gitDir.fetch(
+        remoteBranchName: remoteBranchName,
+        localBranch: localBranch,
+        prune: prune,
+      );
     } finally {
       ref.invalidate(RepositoriesProviders.current);
     }

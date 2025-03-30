@@ -1,38 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:git/git.dart';
+import 'package:gitle/common/app_utils.dart';
 import 'package:gitle/git/clients/git_extensions.dart';
 import 'package:gitle/git/providers/git_providers.dart';
 import 'package:mek/mek.dart';
 import 'package:reactive_forms/reactive_forms.dart';
-
-enum _PushType {
-  setUpstream,
-  forceWithLease,
-  force;
-
-  String translate() {
-    switch (this) {
-      case _PushType.setUpstream:
-        return 'Push with upstream';
-      case _PushType.forceWithLease:
-        return 'Force Push With Lease';
-      case _PushType.force:
-        return 'Force Push';
-    }
-  }
-
-  PushForce? toForce() {
-    switch (this) {
-      case _PushType.setUpstream:
-        return null;
-      case _PushType.forceWithLease:
-        return PushForce.enabledWithLease;
-      case _PushType.force:
-        return PushForce.enabled;
-    }
-  }
-}
 
 class PushDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void> {
   final GitDir gitDir;
@@ -49,18 +22,10 @@ class PushDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void> {
 }
 
 class _PushDialogState extends ConsumerState<PushDialog> {
-  late final _push = ref.mutation((ref, Nil _) async {
-    await GitProviders.push(
-      ref,
-      gitDir: widget.gitDir,
-      force: _pushForceFb.value?.toForce(),
-      upstream: _pushForceFb.value == _PushType.setUpstream ? widget.branchName : null,
-    );
-  }, onSuccess: (_, __) {
-    context.nav.pop();
-  });
-
-  final _pushForceFb = FormControlTypedOptional<_PushType>();
+  final _pushWithUpstreamFb = FormControlTyped<bool>(
+    initialValue: false,
+  );
+  final _pushForceFb = FormControlTypedOptional<PushForce>();
 
   late final _form = FormArray([_pushForceFb]);
 
@@ -70,11 +35,24 @@ class _PushDialogState extends ConsumerState<PushDialog> {
     super.dispose();
   }
 
+  late final _push = ref.mutation((ref, None _) async {
+    await GitProviders.push(
+      ref,
+      gitDir: widget.gitDir,
+      force: _pushForceFb.value,
+      upstream: _pushWithUpstreamFb.value ? widget.branchName : null,
+    );
+  }, onError: (_, error) {
+    AppUtils.showErrorSnackBar(context, error);
+  }, onSuccess: (_, __) {
+    context.nav.pop();
+  });
+
   @override
   Widget build(BuildContext context) {
     final isIdle = !ref.watchIsMutating([_push]);
     final isFormDirty = ref.watch(_form.provider.dirty);
-    final push = _form.handleSubmit(_push);
+    final push = _form.handleSubmit(_push.run);
 
     return AlertDialog(
       title: Text('Push ${widget.branchName}'),
@@ -83,10 +61,14 @@ class _PushDialogState extends ConsumerState<PushDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            ReactiveSwitchListTile(
+              formControl: _pushWithUpstreamFb,
+              title: const Text('Push with upstream'),
+            ),
             ReactiveFormField(
               formControl: _pushForceFb,
               builder: (field) => Column(
-                children: _PushType.values.map((value) {
+                children: PushForce.values.map((value) {
                   final isEnabled = field.control.enabled;
 
                   return RadioListTile(
@@ -108,7 +90,7 @@ class _PushDialogState extends ConsumerState<PushDialog> {
           child: const Text('Cancel'),
         ),
         ElevatedButton(
-          onPressed: isIdle && isFormDirty ? () => push(nil) : null,
+          onPressed: isIdle && isFormDirty ? () => push(none) : null,
           child: const Text('Push'),
         ),
       ],
