@@ -201,6 +201,20 @@ abstract class GitProviders {
     }
   }
 
+  static Future<void> deleteTag(
+    MutationRef ref, {
+    required GitDir gitDir,
+    required String name,
+    bool remote = false,
+  }) async {
+    try {
+      await gitDir.deleteTag(name);
+      if (remote) await gitDir.pushDelete(name);
+    } finally {
+      ref.invalidate(RepositoriesProviders.current);
+    }
+  }
+
   static Future<void> _commit(
     GitDir gitDir, {
     required bool amend,

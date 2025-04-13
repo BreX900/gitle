@@ -8,7 +8,7 @@ import 'package:gitle/git/dto/git_dto.dart';
 import 'package:mekart/mekart.dart';
 import 'package:rxdart/rxdart.dart';
 
-enum PushForce { enabled, enabledWithLease }
+enum PushForce { enabledWithLease, enabled }
 
 // git -c core.editor=true rebase --continue
 extension GitDirExtensions on GitDir {
@@ -246,6 +246,10 @@ extension GitDirExtensions on GitDir {
       if (message != null) ...['--message', message],
       if (commit != null) commit,
     ]);
+  }
+
+  Future<void> deleteTag(String name, {bool force = false}) async {
+    await runEffect(['tag', '--delete', name, if (force) '--force']);
   }
 
   /// https://git-scm.com/docs/git-status

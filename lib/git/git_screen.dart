@@ -36,7 +36,7 @@ class _GitScreenState extends ConsumerState<GitScreen> {
     super.dispose();
   }
 
-  void _refresh() => ref.refreshAndInvalidateAncestors(RepositoriesProviders.current);
+  void _refresh() => ref.invalidateWithAncestors(RepositoriesProviders.current);
 
   late final _fetch = ref.mutation((ref, (GitDir, {bool prune}) __) async {
     final (gitDir, :prune) = __;
@@ -239,7 +239,7 @@ class _GitScreenState extends ConsumerState<GitScreen> {
             ),
           const EndDrawerButton(),
         ],
-        flexibleSpace: LinearProgressIndicatorFlexible(visible: !isGitIdle || isLoading),
+        flexibleSpace: FlexibleLinearProgressBar(visible: !isGitIdle || isLoading),
       ),
       drawer: const RepositoriesDrawerAtom(),
       endDrawer: repository != null ? RepositorySettingsDrawer(repository: repository) : null,

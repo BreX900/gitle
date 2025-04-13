@@ -126,7 +126,7 @@ abstract class RepositoriesProviders {
     final data = await (
       gitDir.currentBranch(),
       gitDir.showRef(), // head: true
-      gitDir.logs(tags: true, paths: referencesNames, maxCount: 200),
+      gitDir.logs(tags: true, paths: referencesNames, maxCount: 512),
       gitDir.status(),
       //gitDir.lsRemotes(heads: true).benchmark('lsRemotes'), // , tags: true
       gitDir.stashList(),

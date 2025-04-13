@@ -20,7 +20,7 @@ abstract final class AppUtils {
   }
 
   static void showErrorSnackBar(BuildContext context, Object error) {
-    MekUtils.showSnackBarError(
+    MekUtils.showErrorSnackBar(
       context: context,
       description: Text(TUtils.translateError(error)),
     );

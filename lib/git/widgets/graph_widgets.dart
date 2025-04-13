@@ -24,7 +24,7 @@ class GraphChip extends StatelessWidget {
       color: colors.primary,
       borderRadius: const BorderRadius.all(Radius.circular(8.0)),
       child: SizedBox(
-        height: 24.0,
+        height: 20.0,
         child: Row(
           children: [
             const SizedBox(width: 4.0),
@@ -93,28 +93,24 @@ class GraphTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onSecondaryTap: onSecondaryTap,
-      onSecondaryTapUp: onSecondaryTapDown,
-      child: Row(
-        children: [
-          Expanded(
-            child: Row(
-              children: [
-                ...leading.expand((element) => [element, const SizedBox(width: 8.0)]),
-                Expanded(
-                  child: DefaultTextStyle.merge(
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 2,
-                    child: content,
-                  ),
+    return Row(
+      children: [
+        Expanded(
+          child: Row(
+            children: [
+              ...leading.expand((element) => [element, const SizedBox(width: 8.0)]),
+              Expanded(
+                child: DefaultTextStyle.merge(
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
+                  child: content,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          ...trailing.expand((element) => [element, const SizedBox(width: 8.0)]),
-        ],
-      ),
+        ),
+        ...trailing.expand((element) => [element, const SizedBox(width: 8.0)]),
+      ],
     );
   }
 }
@@ -135,7 +131,7 @@ class GitNode<T> {
 
 class GitGraph<T> extends StatelessWidget {
   final List<GitNode<T>> nodes;
-  final Widget Function(BuildContext context, T data) builder;
+  final GraphTile Function(BuildContext context, T data) builder;
 
   const GitGraph({
     super.key,
@@ -168,38 +164,48 @@ class GitGraph<T> extends StatelessWidget {
       }
     }
 
-    return ListView.builder(
-      cacheExtent: 256.0,
-      itemCount: nodes.length,
-      itemBuilder: (context, index) {
-        final node = nodes[index];
-        final depth = nodesDepth[node.id] ?? 0;
+    const tileHeight = 32.0;
+    const leadingWidth = tileHeight / 2.0;
 
-        final parentDistance =
-            nodes.skip(index).takeWhile((value) => value.id != node.parent).length;
+    return SingleChildScrollView(
+      child: Column(
+        children: nodes.mapIndexed((index, node) {
+          final depth = nodesDepth[node.id] ?? 0;
 
-        final child = ConstrainedBox(
-          constraints: const BoxConstraints(
-            minHeight: 40.0,
-          ),
-          child: builder(context, node.data),
-        );
+          final parentDistance =
+              nodes.skip(index).takeWhile((value) => value.id != node.parent).length;
 
-        return CustomPaint(
-          foregroundPainter: _LinePainter(
-            color: colors.onSurface,
-            shouldDrawLine: nodes.length - 1 != index,
-            lineSpace: 24.0,
-            targetHeightPos: parentDistance,
-            targetWidthPos: nodesDepth[node.parent] ?? depth,
-            widthPos: depth,
-          ),
-          child: Padding(
-            padding: EdgeInsets.only(left: 24.0 * nodesDepth.values.max),
-            child: child,
-          ),
-        );
-      },
+          return Builder(builder: (context) {
+            final tile = builder(context, node.data);
+
+            final child = ConstrainedBox(
+              constraints: const BoxConstraints(
+                minHeight: tileHeight,
+              ),
+              child: tile,
+            );
+
+            return InkWell(
+              onSecondaryTap: tile.onSecondaryTap,
+              onSecondaryTapUp: tile.onSecondaryTapDown,
+              child: CustomPaint(
+                foregroundPainter: _LinePainter(
+                  color: colors.onSurface,
+                  shouldDrawLine: nodes.length - 1 != index,
+                  lineSpace: leadingWidth,
+                  targetHeightPosition: parentDistance,
+                  targetWidthPosition: nodesDepth[node.parent] ?? depth,
+                  widthPosition: depth,
+                ),
+                child: Padding(
+                  padding: EdgeInsets.only(left: leadingWidth * nodesDepth.values.max + 4.0),
+                  child: child,
+                ),
+              ),
+            );
+          });
+        }).toList(),
+      ),
     );
   }
 }
@@ -207,17 +213,17 @@ class GitGraph<T> extends StatelessWidget {
 class _LinePainter extends CustomPainter {
   final Color color;
   final bool shouldDrawLine;
-  final int widthPos;
-  final int targetHeightPos;
-  final int targetWidthPos;
+  final int widthPosition;
+  final int targetHeightPosition;
+  final int targetWidthPosition;
   final double lineSpace;
 
   const _LinePainter({
     required this.color,
     required this.shouldDrawLine,
-    required this.widthPos,
-    required this.targetHeightPos,
-    required this.targetWidthPos,
+    required this.widthPosition,
+    required this.targetHeightPosition,
+    required this.targetWidthPosition,
     required this.lineSpace,
   });
 
@@ -227,43 +233,34 @@ class _LinePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final space = resolveDx(widthPos);
+    final space = resolveDx(widthPosition);
 
     final ballOffset = Offset(space, size.height / 2);
     const ballPadding = 2.0;
 
-    if (shouldDrawLine && targetHeightPos > 0) {
+    if (shouldDrawLine && targetHeightPosition > 0) {
       var dy = ballOffset.dy;
-      var dx = resolveDx(widthPos);
+      var dx = resolveDx(widthPosition);
 
       final path = Path()..moveTo(dx, dy += _ballRadius + ballPadding);
 
-      if (targetWidthPos == widthPos) {}
-      final effectiveTargetHeightPos = targetHeightPos + (targetWidthPos != widthPos ? -1 : 0);
+      if (targetWidthPosition == widthPosition) {}
+      final effectiveTargetHeightPos =
+          targetHeightPosition + (targetWidthPosition != widthPosition ? -1 : 0);
       if (effectiveTargetHeightPos > 0) {
         path.lineTo(
             space, dy += size.height * effectiveTargetHeightPos - (_ballRadius + ballPadding) * 2);
       }
 
-      if (targetWidthPos != widthPos) {
+      if (targetWidthPosition != widthPosition) {
         final borderRadius = lineSpace / 2;
         final lineLength = size.height - (_ballRadius * 2) - (ballPadding * 2) - (borderRadius * 2);
 
         path
           ..lineTo(dx, dy += lineLength)
-          ..arcToCenter(
-            Offset(dx -= borderRadius, dy),
-            borderRadius,
-            0,
-            90,
-          )
-          ..lineTo(dx = resolveDx(targetWidthPos) + borderRadius, dy += borderRadius)
-          ..arcToCenter(
-            Offset(dx, dy += borderRadius),
-            borderRadius,
-            180,
-            90,
-          );
+          ..arcToCenter(Offset(dx -= borderRadius, dy), borderRadius, 0, 90)
+          ..lineTo(dx = resolveDx(targetWidthPosition) + borderRadius, dy += borderRadius)
+          ..arcToCenter(Offset(dx, dy += borderRadius), borderRadius, 180, 90);
       } else {}
 
       canvas.drawPath(
@@ -271,7 +268,7 @@ class _LinePainter extends CustomPainter {
           Paint()
             ..color = color
             ..strokeCap = StrokeCap.round
-            ..strokeWidth = 2.5
+            ..strokeWidth = 2.0
             ..style = PaintingStyle.stroke);
     }
 
@@ -279,7 +276,7 @@ class _LinePainter extends CustomPainter {
   }
 
   void _drawCircle(Canvas canvas, Size size) {
-    final dx = resolveDx(widthPos);
+    final dx = resolveDx(widthPosition);
 
     canvas.drawCircle(
         Offset(dx, size.height / 2),

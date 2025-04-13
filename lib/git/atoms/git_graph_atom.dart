@@ -13,6 +13,7 @@ import 'package:gitle/git/dialogs/branch_pull_dialog.dart';
 import 'package:gitle/git/dialogs/branch_rename_dialog.dart';
 import 'package:gitle/git/dialogs/push_dialog.dart';
 import 'package:gitle/git/dialogs/tag_create_dialog.dart';
+import 'package:gitle/git/dialogs/tag_delete_dialog.dart' show TagDeleteDialog;
 import 'package:gitle/git/dto/git_dto.dart';
 import 'package:gitle/git/models/repository_model.dart';
 import 'package:gitle/git/providers/git_providers.dart';
@@ -123,10 +124,14 @@ class _GitGraphAtomState extends ConsumerState<GitGraphAtom> {
   Future<void> _showBranchDeleteDialog(GitDir gitDir, String branchName) async {
     await showTypedDialog(
       context: context,
-      builder: (context) => BranchDeleteDialog(
-        gitDir: gitDir,
-        branchName: branchName,
-      ),
+      builder: (context) => BranchDeleteDialog(gitDir: gitDir, branchName: branchName),
+    );
+  }
+
+  Future<void> _showTagDeleteDialog(GitDir gitDir, String branchName) async {
+    await showTypedDialog(
+      context: context,
+      builder: (context) => TagDeleteDialog(gitDir: gitDir, name: branchName),
     );
   }
 
@@ -210,10 +215,10 @@ class _GitGraphAtomState extends ConsumerState<GitGraphAtom> {
       constraints: const BoxConstraints(minHeight: 32.0, minWidth: 128.0),
       items: [
         PopupMenuItemTile(
-          onTap: () => _showBranchDeleteDialog(widget.repository.gitDir, commit.name),
+          onTap: () => _showTagDeleteDialog(widget.repository.gitDir, commit.name),
           leading: const Icon(Icons.delete),
           title: const Text('Delete Tag...'),
-          subtitle: Text('branch ${commit.name} --delete'),
+          subtitle: Text('tag --delete ${commit.name}'),
         ),
         // if (commit.isLocal)
         PopupMenuItemTile(
@@ -342,69 +347,67 @@ class _GitGraphAtomState extends ConsumerState<GitGraphAtom> {
       builder: (context, log) {
         final commitMarks = marks.where((e) => e.sha == log.commit);
 
-        return Builder(builder: (context) {
-          return GraphTile(
-            onSecondaryTapDown: isIdle
-                ? (details) => unawaited(_showCommitMenu(context, details.localPosition, log))
-                : null,
-            leading: commitMarks.map((mark) {
-              final local = mark.local;
-              final remote = mark.remote;
-              final isTag = remote?.isTag ?? false;
+        return GraphTile(
+          onSecondaryTapDown: isIdle
+              ? (details) => unawaited(_showCommitMenu(context, details.localPosition, log))
+              : null,
+          leading: commitMarks.map((mark) {
+            final local = mark.local;
+            final remote = mark.remote;
+            final isTag = remote?.isTag ?? false;
 
-              return Builder(builder: (context) {
-                return GraphChip(
-                  isSelected: head.reference == mark.local?.reference,
-                  icon: isTag ? const Icon(GitleIcons.tag) : const Icon(GitleIcons.flow_branch),
-                  children: [
-                    if (local != null)
-                      _MarkView(
-                        onDoubleTap: isIdle && !mark.hasHead
-                            ? () => _checkout((
-                                  repository: widget.repository,
-                                  commitOrBranch: local.name,
-                                  newBranchName: null,
-                                ))
-                            : null,
-                        onSecondaryTapUp: isIdle
-                            ? (details) => unawaited(_showBranchMenu(
-                                context, details.localPosition, mark.hasHead, local, remote))
-                            : null,
-                        text: local.name,
-                      ),
-                    if (remote != null)
-                      _MarkView(
-                        onDoubleTap: isIdle && !mark.hasHead
-                            ? () => _checkout((
-                                  repository: widget.repository,
-                                  commitOrBranch: remote.name,
-                                  newBranchName: remote.toBranchName(),
-                                ))
-                            : null,
-                        onSecondaryTapUp: isIdle
-                            ? (details) => remote.isTag
-                                ? unawaited(_showTagMenu(context, details.localPosition, remote))
-                                : unawaited(_showBranchMenu(
-                                    context, details.localPosition, mark.hasHead, remote, null))
-                            : null,
-                        text: local != null ? 'origin' : remote.name,
-                      ),
-                  ],
-                );
-              });
-            }).toList(),
-            content: Tooltip(
-              waitDuration: const Duration(seconds: 5),
-              message: log.message.join('\n'),
-              child: Text(log.message.join(' ↲ ')),
-            ),
-            trailing: [
-              Text(dateFormat.format(log.author.date)),
-              Text(log.author.username),
-              ShaText(log.commit),
-            ],
-          );
-        });
+            return Builder(builder: (context) {
+              return GraphChip(
+                isSelected: head.reference == mark.local?.reference,
+                icon: isTag ? const Icon(GitleIcons.tag) : const Icon(GitleIcons.flow_branch),
+                children: [
+                  if (local != null)
+                    _MarkView(
+                      onDoubleTap: isIdle && !mark.hasHead
+                          ? () => _checkout((
+                                repository: widget.repository,
+                                commitOrBranch: local.name,
+                                newBranchName: null,
+                              ))
+                          : null,
+                      onSecondaryTapUp: isIdle
+                          ? (details) => unawaited(_showBranchMenu(
+                              context, details.localPosition, mark.hasHead, local, remote))
+                          : null,
+                      text: local.name,
+                    ),
+                  if (remote != null)
+                    _MarkView(
+                      onDoubleTap: isIdle && !mark.hasHead
+                          ? () => _checkout((
+                                repository: widget.repository,
+                                commitOrBranch: remote.name,
+                                newBranchName: remote.toBranchName(),
+                              ))
+                          : null,
+                      onSecondaryTapUp: isIdle
+                          ? (details) => remote.isTag
+                              ? unawaited(_showTagMenu(context, details.localPosition, remote))
+                              : unawaited(_showBranchMenu(
+                                  context, details.localPosition, mark.hasHead, remote, null))
+                          : null,
+                      text: local != null ? 'origin' : remote.name,
+                    ),
+                ],
+              );
+            });
+          }).toList(),
+          content: Tooltip(
+            waitDuration: const Duration(seconds: 5),
+            message: log.message.join('\n'),
+            child: Text(log.message.join(' ↲ ')),
+          ),
+          trailing: [
+            Text(dateFormat.format(log.author.date)),
+            Text(log.author.username),
+            ShaText(log.commit),
+          ],
+        );
       },
     );
     return SelectionArea(child: child);
