@@ -20,7 +20,7 @@ scripts:
 
   deploy: >-
     flutter build macos &&
-    rm -r ~/Desktop/Gitle.app &&
+    rm -r -f ~/Desktop/Gitle.app &&
     mv ./build/macos/Build/Products/Release/Gitle.app ~/Desktop/Gitle.app &&
     flutter clean &&
     flutter pub get

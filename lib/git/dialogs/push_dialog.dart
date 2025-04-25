@@ -27,7 +27,7 @@ class _PushDialogState extends ConsumerState<PushDialog> {
   );
   final _pushForceFb = FormControlTypedOptional<PushForce>();
 
-  late final _form = FormArray([_pushForceFb]);
+  late final _form = FormArray<void>([_pushWithUpstreamFb, _pushForceFb]);
 
   @override
   void dispose() {
