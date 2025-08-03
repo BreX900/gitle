@@ -18,12 +18,18 @@ class RepositoriesDrawerAtom extends ConsumerStatefulWidget {
 }
 
 class _RepositoriesDrawerAtomState extends ConsumerState<RepositoriesDrawerAtom> {
-  late final _addRepository = ref.mutation(RepositoriesProviders.add, onError: (_, error) {
-    AppUtils.showErrorSnackBar(context, error);
-  });
-  late final _removeRepository = ref.mutation(RepositoriesProviders.remove, onError: (_, error) {
-    AppUtils.showErrorSnackBar(context, error);
-  });
+  late final _addRepository = ref.mutation(
+    RepositoriesProviders.add,
+    onError: (_, error) {
+      AppUtils.showErrorSnackBar(context, error);
+    },
+  );
+  late final _removeRepository = ref.mutation(
+    RepositoriesProviders.remove,
+    onError: (_, error) {
+      AppUtils.showErrorSnackBar(context, error);
+    },
+  );
 
   Future<void> _selectRepository(String repositoryPath) async {
     Scaffold.of(context).closeDrawer();
@@ -32,9 +38,11 @@ class _RepositoriesDrawerAtomState extends ConsumerState<RepositoriesDrawerAtom>
 
   Widget _buildRepositories(IList<String> repositories) {
     final isIdle = !ref.watchIsMutating([_addRepository, _removeRepository]);
-    final repository = ref.watch(RepositoriesProviders.current.select((state) {
-      return state.valueOrNull?.gitDir.path;
-    }));
+    final repository = ref.watch(
+      RepositoriesProviders.current.select((state) {
+        return state.valueOrNull?.gitDir.path;
+      }),
+    );
 
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
@@ -56,11 +64,8 @@ class _RepositoriesDrawerAtomState extends ConsumerState<RepositoriesDrawerAtom>
             itemBuilder: (context) => [
               PopupMenuItem(
                 onTap: isIdle ? () => _removeRepository(repositoryPath) : null,
-                child: const ListTile(
-                  title: Text('Delete'),
-                  trailing: Icon(Icons.delete_outline),
-                ),
-              )
+                child: const ListTile(title: Text('Delete'), trailing: Icon(Icons.delete_outline)),
+              ),
             ],
           ),
         );
@@ -76,8 +81,10 @@ class _RepositoriesDrawerAtomState extends ConsumerState<RepositoriesDrawerAtom>
             if (prevRepositoryPath != null) const Divider(),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-              child: Text(AppUtils.removeHomePath(p.dirname(repositoryPath)),
-                  style: textTheme.titleMedium),
+              child: Text(
+                AppUtils.removeHomePath(p.dirname(repositoryPath)),
+                style: textTheme.titleMedium,
+              ),
             ),
             child,
           ],
@@ -92,15 +99,10 @@ class _RepositoriesDrawerAtomState extends ConsumerState<RepositoriesDrawerAtom>
     return Column(
       children: [
         ConstrainedBox(
-          constraints: const BoxConstraints(
-            minWidth: double.infinity,
-            minHeight: kToolbarHeight,
-          ),
+          constraints: const BoxConstraints(minWidth: double.infinity, minHeight: kToolbarHeight),
           child: const CloseButton(),
         ),
-        Expanded(
-          child: _buildRepositories(repositories),
-        ),
+        Expanded(child: _buildRepositories(repositories)),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

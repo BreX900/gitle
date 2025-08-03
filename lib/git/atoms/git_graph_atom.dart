@@ -25,67 +25,75 @@ import 'package:mek/mek.dart';
 class GitGraphAtom extends ConsumerStatefulWidget {
   final RepositoryModel repository;
 
-  const GitGraphAtom({
-    super.key,
-    required this.repository,
-  });
+  const GitGraphAtom({super.key, required this.repository});
 
   @override
   ConsumerState<GitGraphAtom> createState() => _GitGraphAtomState();
 }
 
 class _GitGraphAtomState extends ConsumerState<GitGraphAtom> {
-  late final _checkout = ref.mutation(GitProviders.checkout, onError: (_, error) {
-    AppUtils.showErrorSnackBar(context, error);
-  });
-  late final _rebase = ref.mutation(GitProviders.rebase, onError: (_, error) {
-    AppUtils.showErrorSnackBar(context, error);
-  }, onSuccess: (_, message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(message ?? 'Rebase completed!'),
-    ));
-  });
-  late final _cherryPick = ref.mutation((ref, String commitSha) async {
-    return await GitProviders.cherryPick(ref, widget.repository.gitDir, commitSha);
-  }, onError: (_, error) {
-    AppUtils.showErrorSnackBar(context, error);
-  }, onSuccess: (_, message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(message ?? 'Rebase completed!'),
-    ));
-  });
-  late final _fetch = ref.mutation((ref, (String, String) __) async {
-    final (remote, local) = __;
-    await GitProviders.fetch(
-      ref,
-      widget.repository.gitDir,
-      remoteBranchName: remote,
-      localBranch: local,
-    );
-  }, onError: (_, error) {
-    AppUtils.showErrorSnackBar(context, error);
-  });
-  late final _reset = ref.mutation(GitProviders.reset, onError: (_, error) {
-    AppUtils.showErrorSnackBar(context, error);
-  });
+  late final _checkout = ref.mutation(
+    GitProviders.checkout,
+    onError: (_, error) {
+      AppUtils.showErrorSnackBar(context, error);
+    },
+  );
+  late final _rebase = ref.mutation(
+    GitProviders.rebase,
+    onError: (_, error) {
+      AppUtils.showErrorSnackBar(context, error);
+    },
+    onSuccess: (_, message) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message ?? 'Rebase completed!')));
+    },
+  );
+  late final _cherryPick = ref.mutation(
+    (ref, String commitSha) async {
+      return await GitProviders.cherryPick(ref, widget.repository.gitDir, commitSha);
+    },
+    onError: (_, error) {
+      AppUtils.showErrorSnackBar(context, error);
+    },
+    onSuccess: (_, message) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message ?? 'Rebase completed!')));
+    },
+  );
+  late final _fetch = ref.mutation(
+    (ref, (String, String) __) async {
+      final (remote, local) = __;
+      await GitProviders.fetch(
+        ref,
+        widget.repository.gitDir,
+        remoteBranchName: remote,
+        localBranch: local,
+      );
+    },
+    onError: (_, error) {
+      AppUtils.showErrorSnackBar(context, error);
+    },
+  );
+  late final _reset = ref.mutation(
+    GitProviders.reset,
+    onError: (_, error) {
+      AppUtils.showErrorSnackBar(context, error);
+    },
+  );
 
   Future<void> _showTagCreateDialog(GitDir gitDir, Sha commit) async {
     await showTypedDialog(
       context: context,
-      builder: (context) => TagCreateDialog(
-        gitDir: gitDir,
-        startPoint: commit,
-      ),
+      builder: (context) => TagCreateDialog(gitDir: gitDir, startPoint: commit),
     );
   }
 
   Future<void> _showBranchPushDialog(GitDir gitDir, {required String branchName}) async {
     await showTypedDialog(
       context: context,
-      builder: (context) => PushDialog(
-        gitDir: gitDir,
-        branchName: branchName,
-      ),
+      builder: (context) => PushDialog(gitDir: gitDir, branchName: branchName),
     );
   }
 
@@ -107,10 +115,7 @@ class _GitGraphAtomState extends ConsumerState<GitGraphAtom> {
   Future<void> _showBranchCreateDialog(GitDir gitDir, Sha commit) async {
     await showTypedDialog(
       context: context,
-      builder: (context) => BranchCreateDialog(
-        gitDir: gitDir,
-        startPoint: commit,
-      ),
+      builder: (context) => BranchCreateDialog(gitDir: gitDir, startPoint: commit),
     );
   }
 
@@ -161,8 +166,11 @@ class _GitGraphAtomState extends ConsumerState<GitGraphAtom> {
 
   Future<void> _showCommitMenu(BuildContext context, Offset offset, LogDto log) async {
     final isCurrentBranch = widget.repository.currentBranch.sha == log.commit;
-    final deep =
-        _calculateResetDeep(widget.repository.commits, widget.repository.currentBranch.sha, log);
+    final deep = _calculateResetDeep(
+      widget.repository.commits,
+      widget.repository.currentBranch.sha,
+      log,
+    );
     await showMenu<void>(
       context: context,
       position: MekUtils.getMenuPosition(context, offset),
@@ -261,7 +269,8 @@ class _GitGraphAtomState extends ConsumerState<GitGraphAtom> {
             leading: const Icon(Icons.read_more),
             title: const Text('Checkout Branch'),
             subtitle: Text(
-                'checkout ${commit.name}${commit.isRemote ? ' -b ${commit.toBranchName()}' : ''}'),
+              'checkout ${commit.name}${commit.isRemote ? ' -b ${commit.toBranchName()}' : ''}',
+            ),
           ),
         if (commit.isLocal)
           PopupMenuItemTile(
@@ -338,11 +347,7 @@ class _GitGraphAtomState extends ConsumerState<GitGraphAtom> {
 
     final child = GitGraph<LogDto>(
       nodes: widget.repository.commits.map((e) {
-        return GitNode(
-          id: e.commit,
-          parent: e.parent,
-          data: e,
-        );
+        return GitNode(id: e.commit, parent: e.parent, data: e);
       }).toList(),
       builder: (context, log) {
         final commitMarks = marks.where((e) => e.sha == log.commit);
@@ -356,46 +361,62 @@ class _GitGraphAtomState extends ConsumerState<GitGraphAtom> {
             final remote = mark.remote;
             final isTag = remote?.isTag ?? false;
 
-            return Builder(builder: (context) {
-              return GraphChip(
-                isSelected: head.reference == mark.local?.reference,
-                icon: isTag ? const Icon(GitleIcons.tag) : const Icon(GitleIcons.flow_branch),
-                children: [
-                  if (local != null)
-                    _MarkView(
-                      onDoubleTap: isIdle && !mark.hasHead
-                          ? () => _checkout((
+            return Builder(
+              builder: (context) {
+                return GraphChip(
+                  isSelected: head.reference == mark.local?.reference,
+                  icon: isTag ? const Icon(GitleIcons.tag) : const Icon(GitleIcons.flow_branch),
+                  children: [
+                    if (local != null)
+                      _MarkView(
+                        onDoubleTap: isIdle && !mark.hasHead
+                            ? () => _checkout((
                                 repository: widget.repository,
                                 commitOrBranch: local.name,
                                 newBranchName: null,
                               ))
-                          : null,
-                      onSecondaryTapUp: isIdle
-                          ? (details) => unawaited(_showBranchMenu(
-                              context, details.localPosition, mark.hasHead, local, remote))
-                          : null,
-                      text: local.name,
-                    ),
-                  if (remote != null)
-                    _MarkView(
-                      onDoubleTap: isIdle && !mark.hasHead
-                          ? () => _checkout((
+                            : null,
+                        onSecondaryTapUp: isIdle
+                            ? (details) => unawaited(
+                                _showBranchMenu(
+                                  context,
+                                  details.localPosition,
+                                  mark.hasHead,
+                                  local,
+                                  remote,
+                                ),
+                              )
+                            : null,
+                        text: local.name,
+                      ),
+                    if (remote != null)
+                      _MarkView(
+                        onDoubleTap: isIdle && !mark.hasHead
+                            ? () => _checkout((
                                 repository: widget.repository,
                                 commitOrBranch: remote.name,
                                 newBranchName: remote.toBranchName(),
                               ))
-                          : null,
-                      onSecondaryTapUp: isIdle
-                          ? (details) => remote.isTag
-                              ? unawaited(_showTagMenu(context, details.localPosition, remote))
-                              : unawaited(_showBranchMenu(
-                                  context, details.localPosition, mark.hasHead, remote, null))
-                          : null,
-                      text: local != null ? 'origin' : remote.name,
-                    ),
-                ],
-              );
-            });
+                            : null,
+                        onSecondaryTapUp: isIdle
+                            ? (details) => remote.isTag
+                                  ? unawaited(_showTagMenu(context, details.localPosition, remote))
+                                  : unawaited(
+                                      _showBranchMenu(
+                                        context,
+                                        details.localPosition,
+                                        mark.hasHead,
+                                        remote,
+                                        null,
+                                      ),
+                                    )
+                            : null,
+                        text: local != null ? 'origin' : remote.name,
+                      ),
+                  ],
+                );
+              },
+            );
           }).toList(),
           content: Tooltip(
             waitDuration: const Duration(seconds: 5),
@@ -419,26 +440,20 @@ class _MarkView extends StatelessWidget {
   final GestureTapUpCallback? onSecondaryTapUp;
   final String text;
 
-  const _MarkView({
-    required this.onDoubleTap,
-    required this.onSecondaryTapUp,
-    required this.text,
-  });
+  const _MarkView({required this.onDoubleTap, required this.onSecondaryTapUp, required this.text});
 
   @override
   Widget build(BuildContext context) {
     final scope = ChipGraphScope.of(context);
 
     return InkWell(
-      borderRadius:
-          scope.isLast ? const BorderRadius.horizontal(right: Radius.circular(8.0)) : null,
+      borderRadius: scope.isLast
+          ? const BorderRadius.horizontal(right: Radius.circular(8.0))
+          : null,
       onDoubleTap: onDoubleTap,
       onSecondaryTapUp: onSecondaryTapUp,
       child: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6.0),
-          child: Text(text),
-        ),
+        child: Padding(padding: const EdgeInsets.symmetric(horizontal: 6.0), child: Text(text)),
       ),
     );
   }

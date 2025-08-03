@@ -4,8 +4,8 @@ publish_to: 'none'
 version: 0.1.0+1
 
 environment:
-  sdk: '>=3.5.0 <4.0.0'
-  flutter: '>=3.22.0 <3.23.0'
+  sdk: '>=3.8.0 <4.0.0'
+  flutter: '>=3.32.0 <3.33.0'
 
 scripts:
   # To initialize project and dependencies
@@ -54,12 +54,12 @@ dependencies:
   fast_immutable_collections: ^11.0.0
 
   # Dart UI
-  intl: ^0.19.0
+  intl: ^0.20.2
   # Flutter UI
   flutter_riverpod: ^2.6.1
   window_manager: ^0.4.2
   multi_split_view: ^2.4.0
-  reactive_forms: ^17.0.1
+  reactive_forms: ^18.1.1
 
   mek_data_class: ^1.4.0
 

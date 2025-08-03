@@ -8,10 +8,7 @@ import 'package:path/path.dart' as path_;
 class WorkingTreeAtom extends StatefulWidget {
   final RepositoryModel repository;
 
-  const WorkingTreeAtom({
-    super.key,
-    required this.repository,
-  });
+  const WorkingTreeAtom({super.key, required this.repository});
 
   static Color? resolveFileColor(List<FileStatus> status) {
     if (status.contains(FileStatus.deleted)) {
@@ -141,12 +138,8 @@ class WorkingTreeAtomState extends State<WorkingTreeAtom> {
       child: child,
     );
     child = FocusableActionDetector(
-      shortcuts: const {
-        SingleActivator(LogicalKeyboardKey.keyA, meta: true): SelectAllIntent(),
-      },
-      actions: {
-        SelectAllIntent: CallbackAction<SelectAllIntent>(onInvoke: (_) => _selectAll()),
-      },
+      shortcuts: const {SingleActivator(LogicalKeyboardKey.keyA, meta: true): SelectAllIntent()},
+      actions: {SelectAllIntent: CallbackAction<SelectAllIntent>(onInvoke: (_) => _selectAll())},
       child: child,
     );
     child = SelectionArea(child: child);

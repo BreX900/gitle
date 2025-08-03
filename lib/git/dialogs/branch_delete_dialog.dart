@@ -10,11 +10,7 @@ class BranchDeleteDialog extends ConsumerStatefulWidget with TypedWidgetMixin<vo
   final GitDir gitDir;
   final String branchName;
 
-  const BranchDeleteDialog({
-    super.key,
-    required this.gitDir,
-    required this.branchName,
-  });
+  const BranchDeleteDialog({super.key, required this.gitDir, required this.branchName});
 
   @override
   ConsumerState<BranchDeleteDialog> createState() => _BranchDeleteDialogState();
@@ -32,19 +28,23 @@ class _BranchDeleteDialogState extends ConsumerState<BranchDeleteDialog> {
     super.dispose();
   }
 
-  late final _deleteBranch = ref.mutation((ref, None _) {
-    return GitProviders.deleteBranch(
-      ref,
-      gitDir: widget.gitDir,
-      branchName: widget.branchName,
-      force: _forceFb.value,
-      remote: _remotesFb.value,
-    );
-  }, onError: (_, error) {
-    AppUtils.showErrorSnackBar(context, error);
-  }, onSuccess: (_, __) {
-    context.nav.pop();
-  });
+  late final _deleteBranch = ref.mutation(
+    (ref, None _) {
+      return GitProviders.deleteBranch(
+        ref,
+        gitDir: widget.gitDir,
+        branchName: widget.branchName,
+        force: _forceFb.value,
+        remote: _remotesFb.value,
+      );
+    },
+    onError: (_, error) {
+      AppUtils.showErrorSnackBar(context, error);
+    },
+    onSuccess: (_, __) {
+      context.nav.pop();
+    },
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -62,10 +62,7 @@ class _BranchDeleteDialogState extends ConsumerState<BranchDeleteDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ReactiveSwitchListTile(
-              formControl: _forceFb,
-              title: const Text('Force Delete'),
-            ),
+            ReactiveSwitchListTile(formControl: _forceFb, title: const Text('Force Delete')),
             ReactiveSwitchListTile(
               formControl: _remotesFb,
               title: const Text('Delete this branch on the remote'),

@@ -8,12 +8,7 @@ class GraphChip extends StatelessWidget {
   final Widget icon;
   final List<Widget> children;
 
-  const GraphChip({
-    super.key,
-    this.isSelected = false,
-    required this.icon,
-    required this.children,
-  });
+  const GraphChip({super.key, this.isSelected = false, required this.icon, required this.children});
 
   @override
   Widget build(BuildContext context) {
@@ -28,10 +23,7 @@ class GraphChip extends StatelessWidget {
         child: Row(
           children: [
             const SizedBox(width: 4.0),
-            IconTheme(
-              data: const IconThemeData(size: 16.0),
-              child: icon,
-            ),
+            IconTheme(data: const IconThemeData(size: 16.0), child: icon),
             DefaultTextStyle.merge(
               style: TextStyle(
                 fontWeight: isSelected ? FontWeight.w900 : null,
@@ -42,10 +34,7 @@ class GraphChip extends StatelessWidget {
                 children: children.expandIndexed<Widget>((index, child) sync* {
                   if (index > 0) yield VerticalDivider(width: 0.0, color: colors.onPrimary);
 
-                  yield ChipGraphScope(
-                    isLast: children.length == index + 1,
-                    child: child,
-                  );
+                  yield ChipGraphScope(isLast: children.length == index + 1, child: child);
                 }).toList(),
               ),
             ),
@@ -59,11 +48,7 @@ class GraphChip extends StatelessWidget {
 class ChipGraphScope extends InheritedWidget {
   final bool isLast;
 
-  const ChipGraphScope({
-    super.key,
-    required this.isLast,
-    required super.child,
-  });
+  const ChipGraphScope({super.key, required this.isLast, required super.child});
 
   static ChipGraphScope of(BuildContext context) {
     final result = context.dependOnInheritedWidgetOfExactType<ChipGraphScope>();
@@ -122,22 +107,14 @@ class GitNode<T> {
   final String? parent;
   final T data;
 
-  const GitNode({
-    required this.id,
-    this.parent,
-    required this.data,
-  });
+  const GitNode({required this.id, this.parent, required this.data});
 }
 
 class GitGraph<T> extends StatelessWidget {
   final List<GitNode<T>> nodes;
   final GraphTile Function(BuildContext context, T data) builder;
 
-  const GitGraph({
-    super.key,
-    required this.nodes,
-    required this.builder,
-  });
+  const GitGraph({super.key, required this.nodes, required this.builder});
 
   @override
   Widget build(BuildContext context) {
@@ -159,8 +136,10 @@ class GitGraph<T> extends StatelessWidget {
         nodesDepth[currentNode.id] = currentDepth;
       }
       if (currentNode.parent != null) {
-        nodesDepth[currentNode.parent!] =
-            min(nodesDepth[currentNode.parent!] ?? currentDepth, nodesDepth[currentNode.id]!);
+        nodesDepth[currentNode.parent!] = min(
+          nodesDepth[currentNode.parent!] ?? currentDepth,
+          nodesDepth[currentNode.id]!,
+        );
       }
     }
 
@@ -172,38 +151,40 @@ class GitGraph<T> extends StatelessWidget {
         children: nodes.mapIndexed((index, node) {
           final depth = nodesDepth[node.id] ?? 0;
 
-          final parentDistance =
-              nodes.skip(index).takeWhile((value) => value.id != node.parent).length;
+          final parentDistance = nodes
+              .skip(index)
+              .takeWhile((value) => value.id != node.parent)
+              .length;
 
-          return Builder(builder: (context) {
-            final tile = builder(context, node.data);
+          return Builder(
+            builder: (context) {
+              final tile = builder(context, node.data);
 
-            final child = ConstrainedBox(
-              constraints: const BoxConstraints(
-                minHeight: tileHeight,
-              ),
-              child: tile,
-            );
+              final child = ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: tileHeight),
+                child: tile,
+              );
 
-            return InkWell(
-              onSecondaryTap: tile.onSecondaryTap,
-              onSecondaryTapUp: tile.onSecondaryTapDown,
-              child: CustomPaint(
-                foregroundPainter: _LinePainter(
-                  color: colors.onSurface,
-                  shouldDrawLine: nodes.length - 1 != index,
-                  lineSpace: leadingWidth,
-                  targetHeightPosition: parentDistance,
-                  targetWidthPosition: nodesDepth[node.parent] ?? depth,
-                  widthPosition: depth,
+              return InkWell(
+                onSecondaryTap: tile.onSecondaryTap,
+                onSecondaryTapUp: tile.onSecondaryTapDown,
+                child: CustomPaint(
+                  foregroundPainter: _LinePainter(
+                    color: colors.onSurface,
+                    shouldDrawLine: nodes.length - 1 != index,
+                    lineSpace: leadingWidth,
+                    targetHeightPosition: parentDistance,
+                    targetWidthPosition: nodesDepth[node.parent] ?? depth,
+                    widthPosition: depth,
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.only(left: leadingWidth * nodesDepth.values.max + 4.0),
+                    child: child,
+                  ),
                 ),
-                child: Padding(
-                  padding: EdgeInsets.only(left: leadingWidth * nodesDepth.values.max + 4.0),
-                  child: child,
-                ),
-              ),
-            );
-          });
+              );
+            },
+          );
         }).toList(),
       ),
     );
@@ -249,7 +230,9 @@ class _LinePainter extends CustomPainter {
           targetHeightPosition + (targetWidthPosition != widthPosition ? -1 : 0);
       if (effectiveTargetHeightPos > 0) {
         path.lineTo(
-            space, dy += size.height * effectiveTargetHeightPos - (_ballRadius + ballPadding) * 2);
+          space,
+          dy += size.height * effectiveTargetHeightPos - (_ballRadius + ballPadding) * 2,
+        );
       }
 
       if (targetWidthPosition != widthPosition) {
@@ -264,12 +247,13 @@ class _LinePainter extends CustomPainter {
       } else {}
 
       canvas.drawPath(
-          path,
-          Paint()
-            ..color = color
-            ..strokeCap = StrokeCap.round
-            ..strokeWidth = 2.0
-            ..style = PaintingStyle.stroke);
+        path,
+        Paint()
+          ..color = color
+          ..strokeCap = StrokeCap.round
+          ..strokeWidth = 2.0
+          ..style = PaintingStyle.stroke,
+      );
     }
 
     _drawCircle(canvas, size);
@@ -279,11 +263,12 @@ class _LinePainter extends CustomPainter {
     final dx = resolveDx(widthPosition);
 
     canvas.drawCircle(
-        Offset(dx, size.height / 2),
-        _ballRadius,
-        Paint()
-          ..color = color
-          ..style = PaintingStyle.fill);
+      Offset(dx, size.height / 2),
+      _ballRadius,
+      Paint()
+        ..color = color
+        ..style = PaintingStyle.fill,
+    );
   }
 
   @override

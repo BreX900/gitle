@@ -12,10 +12,7 @@ class ShaText extends StatelessWidget {
   Widget build(BuildContext context) {
     return Tooltip(
       message: value,
-      child: Text(
-        resolve(value),
-        style: style,
-      ),
+      child: Text(resolve(value), style: style),
     );
   }
 }

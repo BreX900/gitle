@@ -11,20 +11,14 @@ class PushDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void> {
   final GitDir gitDir;
   final String branchName;
 
-  const PushDialog({
-    super.key,
-    required this.gitDir,
-    required this.branchName,
-  });
+  const PushDialog({super.key, required this.gitDir, required this.branchName});
 
   @override
   ConsumerState<PushDialog> createState() => _PushDialogState();
 }
 
 class _PushDialogState extends ConsumerState<PushDialog> {
-  final _pushWithUpstreamFb = FormControlTyped<bool>(
-    initialValue: false,
-  );
+  final _pushWithUpstreamFb = FormControlTyped<bool>(initialValue: false);
   final _pushForceFb = FormControlTypedOptional<PushForce>();
 
   late final _form = FormArray<void>([_pushWithUpstreamFb, _pushForceFb]);
@@ -35,18 +29,22 @@ class _PushDialogState extends ConsumerState<PushDialog> {
     super.dispose();
   }
 
-  late final _push = ref.mutation((ref, None _) async {
-    await GitProviders.push(
-      ref,
-      gitDir: widget.gitDir,
-      force: _pushForceFb.value,
-      upstream: _pushWithUpstreamFb.value ? widget.branchName : null,
-    );
-  }, onError: (_, error) {
-    AppUtils.showErrorSnackBar(context, error);
-  }, onSuccess: (_, __) {
-    context.nav.pop();
-  });
+  late final _push = ref.mutation(
+    (ref, None _) async {
+      await GitProviders.push(
+        ref,
+        gitDir: widget.gitDir,
+        force: _pushForceFb.value,
+        upstream: _pushWithUpstreamFb.value ? widget.branchName : null,
+      );
+    },
+    onError: (_, error) {
+      AppUtils.showErrorSnackBar(context, error);
+    },
+    onSuccess: (_, __) {
+      context.nav.pop();
+    },
+  );
 
   @override
   Widget build(BuildContext context) {

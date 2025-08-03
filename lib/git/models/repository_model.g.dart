@@ -40,15 +40,16 @@ mixin _$RepositoryModel {
   }
 
   @override
-  String toString() => (ClassToString('RepositoryModel')
-        ..add('gitDir', _self.gitDir)
-        ..add('currentBranch', _self.currentBranch)
-        ..add('commits', _self.commits)
-        ..add('references', _self.references)
-        ..add('upstreams', _self.upstreams)
-        ..add('workingTree', _self.workingTree)
-        ..add('stashes', _self.stashes)
-        ..add('marks', _self.marks)
-        ..add('settings', _self.settings))
-      .toString();
+  String toString() =>
+      (ClassToString('RepositoryModel')
+            ..add('gitDir', _self.gitDir)
+            ..add('currentBranch', _self.currentBranch)
+            ..add('commits', _self.commits)
+            ..add('references', _self.references)
+            ..add('upstreams', _self.upstreams)
+            ..add('workingTree', _self.workingTree)
+            ..add('stashes', _self.stashes)
+            ..add('marks', _self.marks)
+            ..add('settings', _self.settings))
+          .toString();
 }

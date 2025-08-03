@@ -23,22 +23,33 @@ class InvalidGitDirFailure implements Exception {
 
 extension on BinSession {
   BinStore<IMap<String, RepositorySettingsDto>> get repositories => BinStore(
-        session: this,
-        name: Instances.resolveBinName('repositories'),
-        deserializer: RepositorySettingsDto.fromBin,
-        serializer: RepositorySettingsDto.toBin,
-        fallbackData: RepositorySettingsDto.initialBin,
-      );
+    session: this,
+    name: Instances.resolveBinName('repositories'),
+    deserializer: RepositorySettingsDto.fromBin,
+    serializer: RepositorySettingsDto.toBin,
+    fallbackData: RepositorySettingsDto.initialBin,
+  );
   BinStore<String?> get currentRepository => BinStore(
-        session: this,
-        name: Instances.resolveBinName('repository'),
-        deserializer: (data) => data as String,
-        fallbackData: null,
-      );
+    session: this,
+    name: Instances.resolveBinName('repository'),
+    deserializer: (data) => data as String,
+    fallbackData: null,
+  );
+  BinStore<IList<String>> get lastRepositories => BinStore(
+    session: this,
+    name: Instances.resolveBinName('last_repositories_v3'),
+    deserializer: (data) => (data as List).cast<String>().lockUnsafe,
+    serializer: (data) => data.unlockView,
+    fallbackData: const IList<String>.empty(),
+  );
 }
 
 abstract class RepositoriesProviders {
   static final all = StreamProvider((ref) => Instances.bin.repositories.stream);
+
+  static final last = StreamProvider((ref) {
+    return Instances.bin.lastRepositories.stream;
+  });
 
   static final currentGitDir = StreamProvider((ref) {
     return Instances.bin.currentRepository.stream.switchMap((path) async* {
@@ -59,8 +70,9 @@ abstract class RepositoriesProviders {
     final gitDir = await ref.watch(currentGitDir.future);
     if (gitDir == null) return null;
 
-    final settings = await ref
-        .watch(all.selectAsync((value) => value[gitDir.path] ?? const RepositorySettingsDto()));
+    final settings = await ref.watch(
+      all.selectAsync((value) => value[gitDir.path] ?? const RepositorySettingsDto()),
+    );
 
     // ref.onDispose(Directory(path)
     //     .watch(recursive: true)
@@ -97,6 +109,28 @@ abstract class RepositoriesProviders {
 
   static Future<void> select(String repositoryPath) async {
     await Instances.bin.currentRepository.write(repositoryPath);
+    await Instances.bin.runTransaction((tx) async {
+      final lastRepositories = await tx.lastRepositories.requireRead();
+      if (lastRepositories.contains(repositoryPath)) return;
+      await tx.lastRepositories.write(lastRepositories.add(repositoryPath));
+    });
+  }
+
+  static Future<void> removeFromLast(String repositoryPath) async {
+    await Instances.bin.runTransaction((tx) async {
+      final lastRepositories = await tx.lastRepositories.requireRead();
+      await tx.lastRepositories.write(lastRepositories.remove(repositoryPath));
+    });
+  }
+
+  static Future<void> upgradeLast(String repositoryPath) async {
+    await Instances.bin.runTransaction((tx) async {
+      var lastRepositories = await tx.lastRepositories.requireRead();
+      final index = lastRepositories.indexOf(repositoryPath);
+      if (index == 0) return;
+      lastRepositories = lastRepositories.removeAt(index).insert(index - 1, repositoryPath);
+      await tx.lastRepositories.write(lastRepositories);
+    });
   }
 
   static Future<void> remove(MutationRef ref, String dirPath) async {
@@ -110,9 +144,12 @@ abstract class RepositoriesProviders {
   static Future<void> toggleBranchesProtection(MutationRef ref, {required bool isEnabled}) async {
     final gitDir = await ref.read(currentGitDir.future);
     final repository = await ref.read(current.future);
-    final settings = repository!.settings.change((c) => c
-      ..protectedBranches =
-          isEnabled ? const IListConst(['master', 'develop', 'main']) : const IListConst([]));
+    final settings = repository!.settings.change(
+      (c) => c
+        ..protectedBranches = isEnabled
+            ? const IListConst(['master', 'develop', 'main'])
+            : const IListConst([]),
+    );
 
     await Instances.bin.repositories.set(gitDir!.path, settings);
   }

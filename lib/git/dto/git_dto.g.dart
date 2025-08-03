@@ -96,12 +96,13 @@ mixin _$Stash {
   }
 
   @override
-  String toString() => (ClassToString('Stash')
-        ..add('name', _self.name)
-        ..add('author', _self.author)
-        ..add('committer', _self.committer)
-        ..add('message', _self.message))
-      .toString();
+  String toString() =>
+      (ClassToString('Stash')
+            ..add('name', _self.name)
+            ..add('author', _self.author)
+            ..add('committer', _self.committer)
+            ..add('message', _self.message))
+          .toString();
 }
 
 mixin _$FileDto {
@@ -122,10 +123,11 @@ mixin _$FileDto {
   }
 
   @override
-  String toString() => (ClassToString('FileDto')
-        ..add('status', _self.status)
-        ..add('paths', _self.paths))
-      .toString();
+  String toString() =>
+      (ClassToString('FileDto')
+            ..add('status', _self.status)
+            ..add('paths', _self.paths))
+          .toString();
 }
 
 mixin _$BranchReferenceWithUpstream {
@@ -152,13 +154,14 @@ mixin _$BranchReferenceWithUpstream {
   }
 
   @override
-  String toString() => (ClassToString('BranchReferenceWithUpstream')
-        ..add('isHead', _self.isHead)
-        ..add('name', _self.name)
-        ..add('commit', _self.commit)
-        ..add('upstream', _self.upstream)
-        ..add('message', _self.message))
-      .toString();
+  String toString() =>
+      (ClassToString('BranchReferenceWithUpstream')
+            ..add('isHead', _self.isHead)
+            ..add('name', _self.name)
+            ..add('commit', _self.commit)
+            ..add('upstream', _self.upstream)
+            ..add('message', _self.message))
+          .toString();
 }
 
 mixin _$Mark {
@@ -181,9 +184,10 @@ mixin _$Mark {
   }
 
   @override
-  String toString() => (ClassToString('Mark')
-        ..add('hasHead', _self.hasHead)
-        ..add('remote', _self.remote)
-        ..add('local', _self.local))
-      .toString();
+  String toString() =>
+      (ClassToString('Mark')
+            ..add('hasHead', _self.hasHead)
+            ..add('remote', _self.remote)
+            ..add('local', _self.local))
+          .toString();
 }

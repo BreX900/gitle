@@ -4,11 +4,11 @@ import 'package:path_provider/path_provider.dart';
 
 extension on BinSession {
   BinStore<Map<String, dynamic>> get gitHub => BinStore(
-        session: this,
-        name: 'git_hub.json',
-        deserializer: (data) => (data as Map).cast<String, dynamic>(),
-        fallbackData: const {},
-      );
+    session: this,
+    name: 'git_hub.json',
+    deserializer: (data) => (data as Map).cast<String, dynamic>(),
+    fallbackData: const {},
+  );
 }
 
 abstract final class Instances {

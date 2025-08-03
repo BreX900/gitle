@@ -13,11 +13,7 @@ class BranchCreateDialog extends ConsumerStatefulWidget with TypedWidgetMixin<vo
   final GitDir gitDir;
   final Sha startPoint;
 
-  const BranchCreateDialog({
-    super.key,
-    required this.gitDir,
-    required this.startPoint,
-  });
+  const BranchCreateDialog({super.key, required this.gitDir, required this.startPoint});
 
   @override
   ConsumerState<BranchCreateDialog> createState() => _BranchCreateDialogState();
@@ -29,9 +25,7 @@ class _BranchCreateDialogState extends ConsumerState<BranchCreateDialog> {
     initialValue: '',
     validators: [ValidatorsTyped.required()],
   );
-  final _checkoutFb = FormControlTyped(
-    initialValue: false,
-  );
+  final _checkoutFb = FormControlTyped(initialValue: false);
 
   late final _form = FormArray<void>([_typeFb, _nameFb, _checkoutFb]);
 
@@ -41,19 +35,23 @@ class _BranchCreateDialogState extends ConsumerState<BranchCreateDialog> {
     super.dispose();
   }
 
-  late final _createBranch = ref.mutation((ref, None _) {
-    return GitProviders.createBranch(
-      ref,
-      gitDir: widget.gitDir,
-      branchName: _resolveBranchName(),
-      startPoint: widget.startPoint,
-      checkout: _checkoutFb.value,
-    );
-  }, onError: (_, error) {
-    AppUtils.showErrorSnackBar(context, error);
-  }, onSuccess: (_, __) {
-    context.nav.pop();
-  });
+  late final _createBranch = ref.mutation(
+    (ref, None _) {
+      return GitProviders.createBranch(
+        ref,
+        gitDir: widget.gitDir,
+        branchName: _resolveBranchName(),
+        startPoint: widget.startPoint,
+        checkout: _checkoutFb.value,
+      );
+    },
+    onError: (_, error) {
+      AppUtils.showErrorSnackBar(context, error);
+    },
+    onSuccess: (_, __) {
+      context.nav.pop();
+    },
+  );
 
   String _resolveBranchName() => _typeFb.value.toName(_nameFb.value);
 
@@ -80,10 +78,7 @@ class _BranchCreateDialogState extends ConsumerState<BranchCreateDialog> {
               emptySelectionAllowed: true,
               showSelectedIcon: false,
               segments: BranchType.values.map((type) {
-                return ButtonSegment(
-                  value: type,
-                  label: Text(type.name),
-                );
+                return ButtonSegment(value: type, label: Text(type.name));
               }).toList(),
             ),
             ReactiveTextField(
@@ -93,10 +88,7 @@ class _BranchCreateDialogState extends ConsumerState<BranchCreateDialog> {
               inputFormatters: [BranchUtils.textFormatter],
               decoration: const InputDecoration(labelText: 'Name'),
             ),
-            ReactiveSwitchListTile(
-              formControl: _checkoutFb,
-              title: const Text('Checkout'),
-            )
+            ReactiveSwitchListTile(formControl: _checkoutFb, title: const Text('Checkout')),
           ],
         ),
       ),

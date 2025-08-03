@@ -11,10 +11,7 @@ import 'package:reactive_forms/reactive_forms.dart';
 class RemoteUrlDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void> {
   final RepositoryModel repository;
 
-  const RemoteUrlDialog({
-    super.key,
-    required this.repository,
-  });
+  const RemoteUrlDialog({super.key, required this.repository});
 
   @override
   ConsumerState<RemoteUrlDialog> createState() => _RemoteUrlDialogState();
@@ -36,18 +33,30 @@ class _RemoteUrlDialogState extends ConsumerState<RemoteUrlDialog> {
   }
 
   Future<void> _initForm() async {
-    final remoteUrl =
-        await widget.repository.gitDir.runCommand(['ls-remote', '--get-url', 'origin']);
+    final remoteUrl = await widget.repository.gitDir.runCommand([
+      'ls-remote',
+      '--get-url',
+      'origin',
+    ]);
     _urlFieldBloc.updateValue(remoteUrl.stdout as String);
   }
 
-  late final _updateRemoteOriginUrl = ref.mutation((ref, None _) async {
-    await widget.repository.gitDir.runEffect(['remote', 'set-url', 'origin', _urlFieldBloc.value]);
-  }, onError: (_, error) {
-    AppUtils.showErrorSnackBar(context, error);
-  }, onSuccess: (_, __) {
-    context.nav.pop();
-  });
+  late final _updateRemoteOriginUrl = ref.mutation(
+    (ref, None _) async {
+      await widget.repository.gitDir.runEffect([
+        'remote',
+        'set-url',
+        'origin',
+        _urlFieldBloc.value,
+      ]);
+    },
+    onError: (_, error) {
+      AppUtils.showErrorSnackBar(context, error);
+    },
+    onSuccess: (_, __) {
+      context.nav.pop();
+    },
+  );
 
   @override
   Widget build(BuildContext context) {

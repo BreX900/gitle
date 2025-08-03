@@ -14,8 +14,9 @@ enum PushForce { enabledWithLease, enabled }
 extension GitDirExtensions on GitDir {
   static final RegExp _spaceOrTabRegExp = RegExp(r'[ \t]');
   static final RegExp _initialSpaceRegExp = RegExp('    ');
-  static final RegExp _branchUpstreamRecordRegExp =
-      RegExp(r'^(?<H>[ *]) (?<R>[^ ]+) +(?<C>[^ ]+)( \[(?<U>[^\]]+)])? (?<M>.+)$');
+  static final RegExp _branchUpstreamRecordRegExp = RegExp(
+    r'^(?<H>[ *]) (?<R>[^ ]+) +(?<C>[^ ]+)( \[(?<U>[^\]]+)])? (?<M>.+)$',
+  );
 
   static final _outputController = BehaviorSubject.seeded(<CommandLogDto>[]);
   static ValueStream<List<CommandLogDto>> get outputStream => _outputController.stream;
@@ -23,18 +24,20 @@ extension GitDirExtensions on GitDir {
   Future<List<CommitReference>> lsRemotes({bool heads = false, bool tags = false}) async {
     final result = await runEffect(['ls-remote', if (heads) '--heads', if (tags) '--tags']);
 
-    return CommitReference.fromShowRefOutput(result
-        .split('\n')
-        .map((e) => e.split(_spaceOrTabRegExp).where((e) => e.isNotEmpty).join(' '))
-        .where((element) => element.isNotEmpty)
-        .join('\n'));
+    return CommitReference.fromShowRefOutput(
+      result
+          .split('\n')
+          .map((e) => e.split(_spaceOrTabRegExp).where((e) => e.isNotEmpty).join(' '))
+          .where((element) => element.isNotEmpty)
+          .join('\n'),
+    );
   }
 
   Future<void> checkout(Sha commitOrBranch, {String? newBranchName}) async {
     await runEffect([
       'checkout',
       if (newBranchName != null) ...['-b', newBranchName],
-      commitOrBranch
+      commitOrBranch,
     ]);
   }
 
@@ -86,14 +89,16 @@ extension GitDirExtensions on GitDir {
         lines.add(reader.current.substring(4));
       }
 
-      stashes.add(Stash(
-        // commit: _parseSha(getDataLine('commit')),
-        // parent: getDataLine('parent').isEmpty ? null : _parseSha(getDataLine('parent')),
-        author: LogActionDto.parse(getDataLine('author')),
-        committer: LogActionDto.parse(getDataLine('committer')),
-        name: getDataLine('Reflog:').split(' ')[0],
-        message: lines,
-      ));
+      stashes.add(
+        Stash(
+          // commit: _parseSha(getDataLine('commit')),
+          // parent: getDataLine('parent').isEmpty ? null : _parseSha(getDataLine('parent')),
+          author: LogActionDto.parse(getDataLine('author')),
+          committer: LogActionDto.parse(getDataLine('committer')),
+          name: getDataLine('Reflog:').split(' ')[0],
+          message: lines,
+        ),
+      );
     }
     return stashes;
   }
@@ -131,13 +136,15 @@ extension GitDirExtensions on GitDir {
 
       final match = _branchUpstreamRecordRegExp.firstMatch(line)!;
 
-      branches.add(BranchReferenceWithUpstream(
-        isHead: match.namedGroup('H')! == '*',
-        name: match.namedGroup('R')!,
-        commit: match.namedGroup('C')!,
-        upstream: match.namedGroup('U')?.split(':').firstOrNull,
-        message: match.namedGroup('M')?.split('\n') ?? [],
-      ));
+      branches.add(
+        BranchReferenceWithUpstream(
+          isHead: match.namedGroup('H')! == '*',
+          name: match.namedGroup('R')!,
+          commit: match.namedGroup('C')!,
+          upstream: match.namedGroup('U')?.split(':').firstOrNull,
+          message: match.namedGroup('M')?.split('\n') ?? [],
+        ),
+      );
     }
 
     return branches;
@@ -169,7 +176,7 @@ extension GitDirExtensions on GitDir {
       'fetch',
       if (remoteBranchName != null && localBranch != null) ...[
         'origin',
-        '$remoteBranchName:$localBranch'
+        '$remoteBranchName:$localBranch',
       ] else
         '--all',
       if (prune) '--prune',
@@ -212,7 +219,7 @@ extension GitDirExtensions on GitDir {
     return await runEffect([
       if (editor) ...['-c', 'core.editor=true'],
       'rebase',
-      '--continue'
+      '--continue',
     ]);
   }
 
@@ -270,10 +277,12 @@ extension GitDirExtensions on GitDir {
       final firstFilePath = filePaths.elementAt(0);
       final lastFilePath = filePaths.elementAtOrNull(1);
 
-      files.add(FileDto(
-        status: [if (status1 != null) status1, if (status2 != null) status2],
-        paths: [firstFilePath, if (lastFilePath != null) lastFilePath],
-      ));
+      files.add(
+        FileDto(
+          status: [if (status1 != null) status1, if (status2 != null) status2],
+          paths: [firstFilePath, if (lastFilePath != null) lastFilePath],
+        ),
+      );
     }
     return files;
   }
@@ -334,13 +343,15 @@ extension GitDirExtensions on GitDir {
         lines.add(line.substring(4));
       }
 
-      logs.add(LogDto(
-        commit: data.require('commit'),
-        parent: data['parent'],
-        author: LogActionDto.parse(data.require('author')),
-        committer: LogActionDto.parse(data.require('committer')),
-        message: lines,
-      ));
+      logs.add(
+        LogDto(
+          commit: data.require('commit'),
+          parent: data['parent'],
+          author: LogActionDto.parse(data.require('author')),
+          committer: LogActionDto.parse(data.require('committer')),
+          message: lines,
+        ),
+      );
     }
 
     return logs;
@@ -366,7 +377,7 @@ extension GitDirExtensions on GitDir {
 void _throwFailedProcess(ProcessResult pr, String process, List<String> args) {
   final values = {
     if (pr.stdout != null) 'Standard out': pr.stdout.toString().trim(),
-    if (pr.stderr != null) 'Standard error': pr.stderr.toString().trim()
+    if (pr.stderr != null) 'Standard error': pr.stderr.toString().trim(),
   }..removeWhere((k, v) => v.isEmpty);
 
   String message;

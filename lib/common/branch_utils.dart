@@ -23,6 +23,8 @@ extension BranchTypeExtenions on BranchType? {
 }
 
 abstract final class BranchUtils {
-  static final TextInputFormatter textFormatter =
-      FilteringTextInputFormatter.deny(' ', replacementString: '_');
+  static final TextInputFormatter textFormatter = FilteringTextInputFormatter.deny(
+    ' ',
+    replacementString: '_',
+  );
 }

@@ -15,15 +15,9 @@ void main() async {
   Logger.root.reportRecords();
   Observers.attachAll();
 
-  await Future.wait([
-    Instances.register(),
-    _initializeWindow(),
-  ]);
+  await Future.wait([Instances.register(), _initializeWindow()]);
 
-  runApp(const ProviderScope(
-    observers: [Observers.provider],
-    child: GitleApp(),
-  ));
+  runApp(const ProviderScope(observers: [Observers.provider], child: GitleApp()));
 }
 
 Future<void> _initializeWindow() async {
@@ -34,10 +28,9 @@ Future<void> _initializeWindow() async {
   const targetSize = Size(128 * 10, 128 * 7.5);
   final size = await WindowManager.instance.getSize();
   if (size.width < targetSize.width || size.height < targetSize.height) {
-    await WindowManager.instance.setSize(Size(
-      max(size.width, targetSize.width),
-      max(size.height, targetSize.height),
-    ));
+    await WindowManager.instance.setSize(
+      Size(max(size.width, targetSize.width), max(size.height, targetSize.height)),
+    );
   }
   await WindowManager.instance.setMinimumSize(targetSize);
 }

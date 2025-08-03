@@ -10,11 +10,7 @@ class TagDeleteDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void>
   final GitDir gitDir;
   final String name;
 
-  const TagDeleteDialog({
-    super.key,
-    required this.gitDir,
-    required this.name,
-  });
+  const TagDeleteDialog({super.key, required this.gitDir, required this.name});
 
   @override
   ConsumerState<TagDeleteDialog> createState() => _TagDeleteDialogState();
@@ -31,18 +27,22 @@ class _TagDeleteDialogState extends ConsumerState<TagDeleteDialog> {
     super.dispose();
   }
 
-  late final _deleteBranch = ref.mutation((ref, None _) {
-    return GitProviders.deleteTag(
-      ref,
-      gitDir: widget.gitDir,
-      name: widget.name,
-      remote: _remotesFb.value,
-    );
-  }, onError: (_, error) {
-    AppUtils.showErrorSnackBar(context, error);
-  }, onSuccess: (_, __) {
-    context.nav.pop();
-  });
+  late final _deleteBranch = ref.mutation(
+    (ref, None _) {
+      return GitProviders.deleteTag(
+        ref,
+        gitDir: widget.gitDir,
+        name: widget.name,
+        remote: _remotesFb.value,
+      );
+    },
+    onError: (_, error) {
+      AppUtils.showErrorSnackBar(context, error);
+    },
+    onSuccess: (_, __) {
+      context.nav.pop();
+    },
+  );
 
   @override
   Widget build(BuildContext context) {

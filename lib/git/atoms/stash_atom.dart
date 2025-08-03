@@ -7,10 +7,7 @@ import 'package:gitle/git/providers/repositories_providers.dart';
 class StashAtom extends ConsumerStatefulWidget {
   final RepositoryModel repository;
 
-  const StashAtom({
-    super.key,
-    required this.repository,
-  });
+  const StashAtom({super.key, required this.repository});
 
   @override
   ConsumerState<StashAtom> createState() => _StashAtomState();

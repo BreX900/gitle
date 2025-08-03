@@ -33,10 +33,11 @@ class _MyAppState extends ConsumerState<GitleApp> with WindowListener {
 
       final rebaseFile = File('$nextPath/.git/REBASE_HEAD');
       await _subscription?.cancel();
-      _subscription =
-          rebaseFile.watch(events: FileSystemEvent.create | FileSystemEvent.delete).listen((_) {
-        ref.invalidate(RepositoriesProviders.current);
-      });
+      _subscription = rebaseFile
+          .watch(events: FileSystemEvent.create | FileSystemEvent.delete)
+          .listen((_) {
+            ref.invalidate(RepositoriesProviders.current);
+          });
     });
   }
 
@@ -62,9 +63,7 @@ class _MyAppState extends ConsumerState<GitleApp> with WindowListener {
     return MaterialApp(
       title: 'Gitle',
       debugShowCheckedModeBanner: false,
-      theme: theme.copyWith(
-        scaffoldBackgroundColor: theme.colorScheme.surface,
-      ),
+      theme: theme.copyWith(scaffoldBackgroundColor: theme.colorScheme.surface),
       locale: const Locale('it', 'IT'),
       supportedLocales: kWidgetsSupportedLanguages.map(Locale.new),
       localizationsDelegates: GlobalMaterialLocalizations.delegates,

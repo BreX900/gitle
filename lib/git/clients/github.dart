@@ -18,13 +18,16 @@ extension NotificationsActivitityService on ActivityService {
     DateTime? before,
   }) {
     return PaginationHelper(github).objects(
-        'GET', '/notifications', (data) => Notification.fromJson(data! as Map<String, dynamic>),
-        params: {
-          'all': all,
-          'participating': participating,
-          if (since != null) 'since': since.toUtc().copyWith(microsecond: 0).toIso8601String(),
-          if (before != null) 'before': before.toUtc().copyWith(microsecond: 0).toIso8601String(),
-        });
+      'GET',
+      '/notifications',
+      (data) => Notification.fromJson(data! as Map<String, dynamic>),
+      params: {
+        'all': all,
+        'participating': participating,
+        if (since != null) 'since': since.toUtc().copyWith(microsecond: 0).toIso8601String(),
+        if (before != null) 'before': before.toUtc().copyWith(microsecond: 0).toIso8601String(),
+      },
+    );
   }
 
   Stream<Notification> onNotificationsChanges({
@@ -58,20 +61,26 @@ extension NotificationsActivitityService on ActivityService {
   }) async {
     lg.info('${DateTime.now()} -> $lastModified');
     try {
-      final response = await github.request('GET', '/notifications', headers: {
-        'Accept': v3ApiMimeType,
-        if (lastModified != null) 'If-Modified-Since': lastModified,
-      }, params: {
-        'all': all,
-        'participating': participating,
-        if (since != null) 'since': since.toUtc().copyWith(microsecond: 0).toIso8601String(),
-        if (before != null) 'before': before.toUtc().copyWith(microsecond: 0).toIso8601String(),
-      }, fail: (response) {
-        if (response.statusCode == 304) {
-          // ignore: only_throw_errors
-          throw response;
-        }
-      });
+      final response = await github.request(
+        'GET',
+        '/notifications',
+        headers: {
+          'Accept': v3ApiMimeType,
+          if (lastModified != null) 'If-Modified-Since': lastModified,
+        },
+        params: {
+          'all': all,
+          'participating': participating,
+          if (since != null) 'since': since.toUtc().copyWith(microsecond: 0).toIso8601String(),
+          if (before != null) 'before': before.toUtc().copyWith(microsecond: 0).toIso8601String(),
+        },
+        fail: (response) {
+          if (response.statusCode == 304) {
+            // ignore: only_throw_errors
+            throw response;
+          }
+        },
+      );
       // final response = responses.single;
       // print(responses.map((e) => jsonEncode(e.headers)).toList());
       // print(responses.map((e) => e.body).toList());
@@ -80,8 +89,9 @@ extension NotificationsActivitityService on ActivityService {
 
       final data = response.body.isEmpty ? <dynamic>[] : jsonDecode(response.body) as List;
       return _Result(
-        notifications:
-            data.map((data) => Notification.fromJson(data as Map<String, dynamic>)).toList(),
+        notifications: data
+            .map((data) => Notification.fromJson(data as Map<String, dynamic>))
+            .toList(),
         lastModified: response.headers['last-modified'],
         pollInterval: _getPollInterval(response.headers),
       );
@@ -119,9 +129,7 @@ Future<StreamSubscription<void>> listenNotifications(GitHub gitHub) async {
   final notificationsService = FlutterLocalNotificationsPlugin();
 
   await notificationsService.initialize(
-    const InitializationSettings(
-      macOS: DarwinInitializationSettings(),
-    ),
+    const InitializationSettings(macOS: DarwinInitializationSettings()),
     onDidReceiveBackgroundNotificationResponse: (response) =>
         lg.warning('listenNotifications.onDidReceiveBackgroundNotificationResponse'),
     onDidReceiveNotificationResponse: (response) async {

@@ -26,11 +26,7 @@ class FormCommitAtom extends ConsumerStatefulWidget {
   final GitDir gitDir;
   final ValueGetter<List<String>>? filePaths;
 
-  const FormCommitAtom({
-    super.key,
-    required this.gitDir,
-    this.filePaths,
-  });
+  const FormCommitAtom({super.key, required this.gitDir, this.filePaths});
 
   @override
   ConsumerState<FormCommitAtom> createState() => _FormCommitAtomState();
@@ -56,28 +52,32 @@ class _FormCommitAtomState extends ConsumerState<FormCommitAtom> {
     super.dispose();
   }
 
-  late final _commitPush = ref.mutation((ref, arg) async {
-    final branch = await widget.gitDir.currentBranch();
-    final repository = await ref.read(RepositoriesProviders.current.future);
-    if (repository!.settings.protectedBranches.contains(branch.branchName)) {
-      throw StateError('Cant push to ${branch.branchName}!');
-    }
+  late final _commitPush = ref.mutation(
+    (ref, arg) async {
+      final branch = await widget.gitDir.currentBranch();
+      final repository = await ref.read(RepositoriesProviders.current.future);
+      if (repository!.settings.protectedBranches.contains(branch.branchName)) {
+        throw StateError('Cant push to ${branch.branchName}!');
+      }
 
-    await GitProviders.commitPush(
-      ref,
-      widget.gitDir,
-      amend: _amendFb.value,
-      message: _messageFb.value,
-      filePaths: widget.filePaths?.call() ?? [],
-      push: _pushFb.value != null,
-      setUpstream: _pushFb.value == _PushType.setUpstream,
-      pushForce: _pushForceTypeFb.value,
-    );
-  }, onError: (_, error) {
-    AppUtils.showErrorSnackBar(context, error);
-  }, onSuccess: (_, __) {
-    _form.reset();
-  });
+      await GitProviders.commitPush(
+        ref,
+        widget.gitDir,
+        amend: _amendFb.value,
+        message: _messageFb.value,
+        filePaths: widget.filePaths?.call() ?? [],
+        push: _pushFb.value != null,
+        setUpstream: _pushFb.value == _PushType.setUpstream,
+        pushForce: _pushForceTypeFb.value,
+      );
+    },
+    onError: (_, error) {
+      AppUtils.showErrorSnackBar(context, error);
+    },
+    onSuccess: (_, __) {
+      _form.reset();
+    },
+  );
 
   Future<void> _amendListener(bool amend) async {
     if (!amend) return;
@@ -97,14 +97,8 @@ class _FormCommitAtomState extends ConsumerState<FormCommitAtom> {
       builder: (context) => AlertDialog(
         title: const Text('Replace current text with previous commit message?'),
         actions: [
-          TextButton(
-            onPressed: () => context.nav.pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => context.nav.pop(true),
-            child: const Text('Replace'),
-          ),
+          TextButton(onPressed: () => context.nav.pop(false), child: const Text('Cancel')),
+          TextButton(onPressed: () => context.nav.pop(true), child: const Text('Replace')),
         ],
       ),
     );
@@ -137,10 +131,7 @@ class _FormCommitAtomState extends ConsumerState<FormCommitAtom> {
             ),
           ),
         ),
-        ReactiveSwitchListTile(
-          formControl: _amendFb,
-          title: const Text('Amend last commit'),
-        ),
+        ReactiveSwitchListTile(formControl: _amendFb, title: const Text('Amend last commit')),
         const Divider(),
         ReactiveFormField<_PushType, _PushType>(
           formControl: _pushFb,
@@ -193,8 +184,6 @@ class _FormCommitAtomState extends ConsumerState<FormCommitAtom> {
         ),
       ],
     );
-    return SingleChildScrollView(
-      child: content,
-    );
+    return SingleChildScrollView(child: content);
   }
 }

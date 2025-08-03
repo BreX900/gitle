@@ -41,9 +41,7 @@ class _GitSettingsScreenState extends ConsumerState<GitSettingsScreen> {
     final isDirty = ref.watch(_form.provider.dirty);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-      ),
+      appBar: AppBar(title: const Text('Settings')),
       body: Column(
         children: [
           Padding(
@@ -63,10 +61,12 @@ class _GitSettingsScreenState extends ConsumerState<GitSettingsScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: isDirty
             ? () {
-                unawaited(GitHubProviders.update(
-                  token: _tokenFb.value,
-                  shouldNotify: _shouldNotifyFb.value,
-                ));
+                unawaited(
+                  GitHubProviders.update(
+                    token: _tokenFb.value,
+                    shouldNotify: _shouldNotifyFb.value,
+                  ),
+                );
                 context.nav.pop();
               }
             : null,

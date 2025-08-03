@@ -24,9 +24,7 @@ abstract class GitHubProviders {
     if (token.isEmpty || !shouldNotify) return false;
 
     lg.config('Listening GitHub Notifications');
-    final gitHub = GitHub(
-      auth: Authentication.withToken(token),
-    );
+    final gitHub = GitHub(auth: Authentication.withToken(token));
     ref.onDispose((await listenNotifications(gitHub)).cancel);
     return true;
   });

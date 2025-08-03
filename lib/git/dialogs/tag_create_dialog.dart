@@ -12,11 +12,7 @@ class TagCreateDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void>
   final GitDir gitDir;
   final String startPoint;
 
-  const TagCreateDialog({
-    super.key,
-    required this.gitDir,
-    required this.startPoint,
-  });
+  const TagCreateDialog({super.key, required this.gitDir, required this.startPoint});
 
   @override
   ConsumerState<TagCreateDialog> createState() => _TagCreateDialogState();
@@ -39,19 +35,23 @@ class _TagCreateDialogState extends ConsumerState<TagCreateDialog> {
     super.dispose();
   }
 
-  late final _createTag = ref.mutation((ref, None _) async {
-    await GitProviders.createTag(
-      ref,
-      gitDir: widget.gitDir,
-      commitSha: widget.startPoint,
-      name: _nameFb.value,
-      message: _messageFb.value,
-    );
-  }, onError: (_, error) {
-    AppUtils.showErrorSnackBar(context, error);
-  }, onSuccess: (_, __) {
-    context.nav.pop();
-  });
+  late final _createTag = ref.mutation(
+    (ref, None _) async {
+      await GitProviders.createTag(
+        ref,
+        gitDir: widget.gitDir,
+        commitSha: widget.startPoint,
+        name: _nameFb.value,
+        message: _messageFb.value,
+      );
+    },
+    onError: (_, error) {
+      AppUtils.showErrorSnackBar(context, error);
+    },
+    onSuccess: (_, __) {
+      context.nav.pop();
+    },
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -84,7 +84,7 @@ class _TagCreateDialogState extends ConsumerState<TagCreateDialog> {
             ReactiveSwitchListTile(
               formControl: _pushableToRemoteFb,
               title: const Text('Push to remote'),
-            )
+            ),
           ],
         ),
       ),

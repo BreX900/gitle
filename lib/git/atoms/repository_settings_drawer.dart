@@ -8,21 +8,21 @@ import 'package:mek/mek.dart';
 class RepositorySettingsDrawer extends ConsumerStatefulWidget {
   final RepositoryModel repository;
 
-  const RepositorySettingsDrawer({
-    super.key,
-    required this.repository,
-  });
+  const RepositorySettingsDrawer({super.key, required this.repository});
 
   @override
   ConsumerState<RepositorySettingsDrawer> createState() => _RepositorySettingsDrawerState();
 }
 
 class _RepositorySettingsDrawerState extends ConsumerState<RepositorySettingsDrawer> {
-  late final _toggleBranchProtection = ref.mutation((ref, bool isEnabled) async {
-    await RepositoriesProviders.toggleBranchesProtection(ref, isEnabled: isEnabled);
-  }, onError: (_, error) {
-    AppUtils.showErrorSnackBar(context, error);
-  });
+  late final _toggleBranchProtection = ref.mutation(
+    (ref, bool isEnabled) async {
+      await RepositoriesProviders.toggleBranchesProtection(ref, isEnabled: isEnabled);
+    },
+    onError: (_, error) {
+      AppUtils.showErrorSnackBar(context, error);
+    },
+  );
 
   @override
   Widget build(BuildContext context) {

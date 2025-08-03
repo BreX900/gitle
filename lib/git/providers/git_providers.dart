@@ -5,8 +5,10 @@ import 'package:gitle/git/providers/repositories_providers.dart';
 import 'package:mek/mek.dart';
 
 abstract class GitProviders {
-  static Future<void> checkout(MutationRef ref,
-      ({RepositoryModel repository, String commitOrBranch, String? newBranchName}) args) async {
+  static Future<void> checkout(
+    MutationRef ref,
+    ({RepositoryModel repository, String commitOrBranch, String? newBranchName}) args,
+  ) async {
     try {
       await args.repository.gitDir.checkout(args.commitOrBranch, newBranchName: args.newBranchName);
     } finally {
@@ -172,11 +174,7 @@ abstract class GitProviders {
     required PushForce? force,
   }) async {
     try {
-      await gitDir.push(
-        setUpstream: upstream != null,
-        referenceName: upstream,
-        force: force,
-      );
+      await gitDir.push(setUpstream: upstream != null, referenceName: upstream, force: force);
     } finally {
       ref.invalidate(RepositoriesProviders.current);
     }
@@ -190,11 +188,7 @@ abstract class GitProviders {
     required String? message,
   }) async {
     try {
-      await gitDir.createAnnotatedTag(
-        name,
-        commit: commitSha,
-        message: message,
-      );
+      await gitDir.createAnnotatedTag(name, commit: commitSha, message: message);
       await gitDir.push(toOrigin: true, referenceName: name);
     } finally {
       ref.invalidate(RepositoriesProviders.current);

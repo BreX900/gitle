@@ -11,11 +11,7 @@ class BranchRenameDialog extends ConsumerStatefulWidget with TypedWidgetMixin<vo
   final GitDir gitDir;
   final String branchName;
 
-  const BranchRenameDialog({
-    super.key,
-    required this.gitDir,
-    required this.branchName,
-  });
+  const BranchRenameDialog({super.key, required this.gitDir, required this.branchName});
 
   @override
   ConsumerState<BranchRenameDialog> createState() => _BranchRenameDialogState();
@@ -44,18 +40,22 @@ class _BranchRenameDialogState extends ConsumerState<BranchRenameDialog> {
     super.dispose();
   }
 
-  late final _renameBranch = ref.mutation((ref, None _) async {
-    return await GitProviders.renameBranch(
-      ref,
-      gitDir: widget.gitDir,
-      currentName: widget.branchName,
-      newName: _resolveBranchName(),
-    );
-  }, onError: (_, error) {
-    AppUtils.showErrorSnackBar(context, error);
-  }, onSuccess: (_, __) {
-    context.nav.pop();
-  });
+  late final _renameBranch = ref.mutation(
+    (ref, None _) async {
+      return await GitProviders.renameBranch(
+        ref,
+        gitDir: widget.gitDir,
+        currentName: widget.branchName,
+        newName: _resolveBranchName(),
+      );
+    },
+    onError: (_, error) {
+      AppUtils.showErrorSnackBar(context, error);
+    },
+    onSuccess: (_, __) {
+      context.nav.pop();
+    },
+  );
 
   String _resolveBranchName() => _typeFb.value.toName(_newNameFb.value);
 
@@ -83,10 +83,7 @@ class _BranchRenameDialogState extends ConsumerState<BranchRenameDialog> {
               emptySelectionAllowed: true,
               showSelectedIcon: false,
               segments: BranchType.values.map((type) {
-                return ButtonSegment(
-                  value: type,
-                  label: Text(type.name),
-                );
+                return ButtonSegment(value: type, label: Text(type.name));
               }).toList(),
             ),
             ReactiveTextField(

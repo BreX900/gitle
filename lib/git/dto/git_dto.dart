@@ -30,11 +30,7 @@ class LogActionDto with _$LogActionDto {
   final String email;
   final DateTime date;
 
-  const LogActionDto({
-    required this.username,
-    required this.email,
-    required this.date,
-  });
+  const LogActionDto({required this.username, required this.email, required this.date});
 
   static final _regExp = RegExp('(.*) <(.*)> (.*) (.*)');
 
@@ -114,10 +110,7 @@ class FileDto with _$FileDto {
   final List<FileStatus> status;
   final List<String> paths;
 
-  const FileDto({
-    required this.status,
-    required this.paths,
-  });
+  const FileDto({required this.status, required this.paths});
 
   @override
   String toString() => '${status.map((e) => e.shortName).join().padLeft(2)} ${paths.join(' -> ')}';
@@ -146,11 +139,8 @@ class Mark with _$Mark {
   final CommitReference? remote;
   final CommitReference? local;
 
-  Mark({
-    required this.hasHead,
-    required this.remote,
-    required this.local,
-  }) : assert(remote != null || local != null);
+  Mark({required this.hasHead, required this.remote, required this.local})
+    : assert(remote != null || local != null);
 
   String get sha => (local ?? remote)!.sha;
 
@@ -197,28 +187,16 @@ class Mark with _$Mark {
         }
       }
 
-      marks.add(Mark(
-        hasHead: hasHead,
-        local: local,
-        remote: remote,
-      ));
+      marks.add(Mark(hasHead: hasHead, local: local, remote: remote));
     }
 
     for (final remote in remotes) {
       if (pickedRemotes.contains(remote)) continue;
-      marks.add(Mark(
-        hasHead: false,
-        remote: remote,
-        local: null,
-      ));
+      marks.add(Mark(hasHead: false, remote: remote, local: null));
     }
 
     for (final tag in references.where((element) => element.isTag)) {
-      marks.add(Mark(
-        hasHead: false,
-        remote: tag,
-        local: null,
-      ));
+      marks.add(Mark(hasHead: false, remote: tag, local: null));
     }
 
     return marks;

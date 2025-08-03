@@ -24,9 +24,9 @@ mixin _$RepositorySettingsDto {
   }
 
   @override
-  String toString() =>
-      (ClassToString('RepositorySettingsDto')..add('protectedBranches', _self.protectedBranches))
-          .toString();
+  String toString() => (ClassToString(
+    'RepositorySettingsDto',
+  )..add('protectedBranches', _self.protectedBranches)).toString();
   RepositorySettingsDto change(void Function(_RepositorySettingsDtoChanges c) updates) =>
       (_RepositorySettingsDtoChanges._(_self)..update(updates)).build();
   _RepositorySettingsDtoChanges toChanges() => _RepositorySettingsDtoChanges._(_self);
@@ -34,13 +34,11 @@ mixin _$RepositorySettingsDto {
 
 class _RepositorySettingsDtoChanges {
   _RepositorySettingsDtoChanges._(RepositorySettingsDto dc)
-      : protectedBranches = dc.protectedBranches;
+    : protectedBranches = dc.protectedBranches;
 
   IList<String> protectedBranches;
 
   void update(void Function(_RepositorySettingsDtoChanges c) updates) => updates(this);
 
-  RepositorySettingsDto build() => RepositorySettingsDto(
-        protectedBranches: protectedBranches,
-      );
+  RepositorySettingsDto build() => RepositorySettingsDto(protectedBranches: protectedBranches);
 }

@@ -22,11 +22,15 @@ class BranchPullDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void
 }
 
 class _BranchPullDialogState extends ConsumerState<BranchPullDialog> {
-  late final _pullBranch = ref.mutation(GitProviders.pull, onSuccess: (_, __) {
-    context.nav.pop();
-  }, onError: (_, error) {
-    AppUtils.showErrorSnackBar(context, error);
-  });
+  late final _pullBranch = ref.mutation(
+    GitProviders.pull,
+    onSuccess: (_, __) {
+      context.nav.pop();
+    },
+    onError: (_, error) {
+      AppUtils.showErrorSnackBar(context, error);
+    },
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -57,10 +61,8 @@ class _BranchPullDialogState extends ConsumerState<BranchPullDialog> {
         ),
         ElevatedButton(
           onPressed: isIdle
-              ? () => _pullBranch((
-                    gitDir: widget.gitDir,
-                    remoteBranchName: widget.remoteBranchName,
-                  ))
+              ? () =>
+                    _pullBranch((gitDir: widget.gitDir, remoteBranchName: widget.remoteBranchName))
               : null,
           child: const Text('Pull'),
         ),
