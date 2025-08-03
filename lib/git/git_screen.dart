@@ -91,10 +91,22 @@ class _GitScreenState extends ConsumerState<GitScreen> {
         Consumer(
           builder: (context, ref, child) {
             ref.listen(
-              RepositoriesProviders.current.select((state) => state.valueOrNull?.gitDir.path),
-              (_, path) {
-                if (path == null) return;
-                DefaultTabController.of(context).animateTo(repositories.toIList().indexOf(path));
+              RepositoriesProviders.current.select((state) {
+                return repositories.indexOf(state.valueOrNull?.gitDir.path ?? '');
+              }),
+              (_, index) {
+                if (index == -1) return;
+                DefaultTabController.of(context).animateTo(index);
+              },
+            );
+            ref.listen(
+              RepositoriesProviders.last.select((state) {
+                final lastRepositoryPaths = state.valueOrNull ?? const IList.empty();
+                return lastRepositoryPaths.indexOf(repository.gitDir.path);
+              }),
+              (_, index) {
+                if (index == -1) return;
+                DefaultTabController.of(context).animateTo(index);
               },
             );
             return const SizedBox.shrink();
