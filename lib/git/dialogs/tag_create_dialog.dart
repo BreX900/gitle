@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:git/git.dart';
 import 'package:gitle/common/app_utils.dart';
 import 'package:gitle/common/branch_utils.dart';
@@ -8,17 +7,17 @@ import 'package:gitle/git/widgets/sha_text.dart';
 import 'package:mek/mek.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 
-class TagCreateDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void> {
+class TagCreateDialog extends SourceConsumerStatefulWidget with TypedWidgetMixin<void> {
   final GitDir gitDir;
   final String startPoint;
 
   const TagCreateDialog({super.key, required this.gitDir, required this.startPoint});
 
   @override
-  ConsumerState<TagCreateDialog> createState() => _TagCreateDialogState();
+  SourceConsumerState<TagCreateDialog> createState() => _TagCreateDialogState();
 }
 
-class _TagCreateDialogState extends ConsumerState<TagCreateDialog> {
+class _TagCreateDialogState extends SourceConsumerState<TagCreateDialog> {
   // final _typeFb = FieldBloc(initialValue: <_BranchType>{});
   final _nameFb = FormControlTyped<String>(
     initialValue: '',
@@ -35,7 +34,7 @@ class _TagCreateDialogState extends ConsumerState<TagCreateDialog> {
     super.dispose();
   }
 
-  late final _createTag = ref.mutation(
+  late final _createTag = scope.mutation(
     (ref, None _) async {
       await GitProviders.createTag(
         ref,
@@ -55,7 +54,7 @@ class _TagCreateDialogState extends ConsumerState<TagCreateDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isIdle = !ref.watchIsMutating([_createTag]);
+    final isIdle = !scope.watchIsMutating([_createTag]);
     final createTag = _form.handleSubmit(_createTag.run, keepDisabled: true);
 
     return AlertDialog(

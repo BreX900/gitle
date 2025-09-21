@@ -1,19 +1,18 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gitle/git/providers/git_hub_providers.dart';
 import 'package:mek/mek.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 
-class GitSettingsScreen extends ConsumerStatefulWidget {
+class GitSettingsScreen extends SourceConsumerStatefulWidget {
   const GitSettingsScreen({super.key});
 
   @override
-  ConsumerState<GitSettingsScreen> createState() => _GitSettingsScreenState();
+  SourceConsumerState<GitSettingsScreen> createState() => _GitSettingsScreenState();
 }
 
-class _GitSettingsScreenState extends ConsumerState<GitSettingsScreen> {
+class _GitSettingsScreenState extends SourceConsumerState<GitSettingsScreen> {
   final _tokenFb = FormControlTyped(initialValue: '');
   final _shouldNotifyFb = FormControlTyped(initialValue: true);
 
@@ -38,7 +37,7 @@ class _GitSettingsScreenState extends ConsumerState<GitSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDirty = ref.watch(_form.provider.dirty);
+    final isDirty = scope.watch(_form.source.dirty);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),

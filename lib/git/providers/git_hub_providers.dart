@@ -3,6 +3,7 @@ import 'package:github/github.dart';
 import 'package:gitle/common/logger.dart';
 import 'package:gitle/git/clients/github.dart';
 import 'package:gitle/git/clients/instances.dart';
+import 'package:mek/mek.dart';
 import 'package:mekart/mekart.dart';
 
 abstract class GitHubProviders {
@@ -18,15 +19,33 @@ abstract class GitHubProviders {
     return Instances.gitHubShouldNotifyBin.read();
   });
 
-  static final notifications = FutureProvider((ref) async {
+  static final client = Provider((ref) {
     final token = ref.watch(GitHubProviders.token);
+    if (token.isEmpty) return null;
+    return GitHub(auth: Authentication.withToken(token));
+  });
+
+  static final notificationsListener = FutureProvider((ref) async {
     final shouldNotify = ref.watch(GitHubProviders.shouldNotify);
-    if (token.isEmpty || !shouldNotify) return false;
+    if (!shouldNotify) return false;
+
+    final gitHub = ref.watch(GitHubProviders.client);
+    if (gitHub == null) return false;
 
     lg.config('Listening GitHub Notifications');
-    final gitHub = GitHub(auth: Authentication.withToken(token));
-    ref.onDispose((await listenNotifications(gitHub)).cancel);
+    final manager = NotificationsManager(gitHub);
+    final subscription = await manager.listen(onChange: () => ref.invalidate(notifications));
+    ref.onDispose(subscription.cancel);
     return true;
+  });
+
+  static final notifications = FutureProvider((ref) async {
+    final gitHub = ref.watch(GitHubProviders.client);
+    if (gitHub == null) return null;
+
+    ref.invalidateWhenAppResume();
+
+    return await gitHub.activity.listNotifications().toList();
   });
 
   static Future<void> update({String? token, bool? shouldNotify}) async {
@@ -34,5 +53,17 @@ abstract class GitHubProviders {
       if (token != null) 'token': token,
       if (shouldNotify != null) 'shouldNotify': shouldNotify,
     });
+  }
+
+  static Future<void> markAsRead(MutationRef ref, String threadId) async {
+    final gitHub = ref.read(GitHubProviders.client)!;
+    await gitHub.activity.markThreadRead(threadId);
+    ref.invalidate(notifications);
+  }
+
+  static Future<void> markAllAsRead(MutationRef ref, None _) async {
+    final gitHub = ref.read(GitHubProviders.client)!;
+    await gitHub.activity.markNotificationsRead();
+    ref.invalidate(notifications);
   }
 }

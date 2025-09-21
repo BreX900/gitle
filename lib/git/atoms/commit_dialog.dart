@@ -22,17 +22,17 @@ enum _PushType {
   }
 }
 
-class FormCommitAtom extends ConsumerStatefulWidget {
+class FormCommitAtom extends SourceConsumerStatefulWidget {
   final GitDir gitDir;
   final ValueGetter<List<String>>? filePaths;
 
   const FormCommitAtom({super.key, required this.gitDir, this.filePaths});
 
   @override
-  ConsumerState<FormCommitAtom> createState() => _FormCommitAtomState();
+  SourceConsumerState<FormCommitAtom> createState() => _FormCommitAtomState();
 }
 
-class _FormCommitAtomState extends ConsumerState<FormCommitAtom> {
+class _FormCommitAtomState extends SourceConsumerState<FormCommitAtom> {
   final _messageFb = FormControlTyped(initialValue: '');
   final _amendFb = FormControlTyped(initialValue: false);
   final _pushFb = FormControlTypedOptional<_PushType>();
@@ -52,7 +52,7 @@ class _FormCommitAtomState extends ConsumerState<FormCommitAtom> {
     super.dispose();
   }
 
-  late final _commitPush = ref.mutation(
+  late final _commitPush = scope.mutation(
     (ref, arg) async {
       final branch = await widget.gitDir.currentBranch();
       final repository = await ref.read(RepositoriesProviders.current.future);
@@ -107,14 +107,14 @@ class _FormCommitAtomState extends ConsumerState<FormCommitAtom> {
 
   @override
   Widget build(BuildContext context) {
-    final hasPush = ref.watch(_pushFb.provider.hasValue);
-    final isAmend = ref.watch(_amendFb.provider.value) ?? false;
+    final hasPush = scope.watch(_pushFb.source.hasValue);
+    final isAmend = scope.watch(_amendFb.source.value) ?? false;
 
-    final error = ref.watch(_commitPush.select((state) => state.errorOrNull));
+    final error = scope.watch(_commitPush.source.select((state) => state.errorOrNull));
 
     final repository = ref.watch(RepositoriesProviders.current).requireValue!;
 
-    final isIdle = !ref.watchIsMutating([_commitPush]);
+    final isIdle = !scope.watchIsMutating([_commitPush]);
 
     final content = Column(
       children: [
@@ -135,37 +135,39 @@ class _FormCommitAtomState extends ConsumerState<FormCommitAtom> {
         const Divider(),
         ReactiveFormField<_PushType, _PushType>(
           formControl: _pushFb,
-          builder: (field) => Grid(
-            crossAxisCount: 2,
-            children: _PushType.values.map((value) {
-              final isEnabled = field.control.enabled;
-
-              return RadioListTile(
-                groupValue: field.value,
-                toggleable: true,
-                value: value,
-                onChanged: isEnabled ? field.didChange : null,
-                title: Text(value.translate()),
-              );
-            }).toList(),
+          builder: (field) => RadioGroup(
+            groupValue: field.value,
+            onChanged: field.didChange,
+            child: Grid(
+              crossAxisCount: 2,
+              children: _PushType.values.map((value) {
+                return RadioListTile(
+                  enabled: field.control.enabled,
+                  toggleable: true,
+                  value: value,
+                  title: Text(value.translate()),
+                );
+              }).toList(),
+            ),
           ),
         ),
         if (hasPush)
           ReactiveFormField<PushForce, PushForce>(
             formControl: _pushForceTypeFb,
-            builder: (field) => Grid(
-              crossAxisCount: 2,
-              children: PushForce.values.map((value) {
-                final isEnabled = field.control.enabled;
-
-                return RadioListTile(
-                  groupValue: field.value,
-                  toggleable: true,
-                  value: value,
-                  onChanged: isEnabled ? field.didChange : null,
-                  title: Text(value.translate()),
-                );
-              }).toList(),
+            builder: (field) => RadioGroup<PushForce>(
+              groupValue: field.value,
+              onChanged: field.didChange,
+              child: Grid(
+                crossAxisCount: 2,
+                children: PushForce.values.map((value) {
+                  return RadioListTile(
+                    toggleable: true,
+                    value: value,
+                    enabled: field.control.enabled,
+                    title: Text(value.translate()),
+                  );
+                }).toList(),
+              ),
             ),
           ),
         Padding(

@@ -16,10 +16,17 @@ mixin _$RepositoryModel {
       other is RepositoryModel &&
           runtimeType == other.runtimeType &&
           const _GitDirEquality().equals(_self.gitDir, other.gitDir) &&
-          const _CommitReferenceEquality().equals(_self.currentBranch, other.currentBranch) &&
+          const _CommitReferenceEquality().equals(
+            _self.currentBranch,
+            other.currentBranch,
+          ) &&
           _self.commits == other.commits &&
-          const _ListCommitReferenceEquality().equals(_self.references, other.references) &&
+          const _ListCommitReferenceEquality().equals(
+            _self.references,
+            other.references,
+          ) &&
           _self.upstreams == other.upstreams &&
+          _self.isRebaseInProgress == other.isRebaseInProgress &&
           _self.workingTree == other.workingTree &&
           _self.stashes == other.stashes &&
           _self.marks == other.marks &&
@@ -27,11 +34,21 @@ mixin _$RepositoryModel {
   @override
   int get hashCode {
     var hashCode = 0;
-    hashCode = $hashCombine(hashCode, const _GitDirEquality().hash(_self.gitDir));
-    hashCode = $hashCombine(hashCode, const _CommitReferenceEquality().hash(_self.currentBranch));
+    hashCode = $hashCombine(
+      hashCode,
+      const _GitDirEquality().hash(_self.gitDir),
+    );
+    hashCode = $hashCombine(
+      hashCode,
+      const _CommitReferenceEquality().hash(_self.currentBranch),
+    );
     hashCode = $hashCombine(hashCode, _self.commits.hashCode);
-    hashCode = $hashCombine(hashCode, const _ListCommitReferenceEquality().hash(_self.references));
+    hashCode = $hashCombine(
+      hashCode,
+      const _ListCommitReferenceEquality().hash(_self.references),
+    );
     hashCode = $hashCombine(hashCode, _self.upstreams.hashCode);
+    hashCode = $hashCombine(hashCode, _self.isRebaseInProgress.hashCode);
     hashCode = $hashCombine(hashCode, _self.workingTree.hashCode);
     hashCode = $hashCombine(hashCode, _self.stashes.hashCode);
     hashCode = $hashCombine(hashCode, _self.marks.hashCode);
@@ -47,6 +64,7 @@ mixin _$RepositoryModel {
             ..add('commits', _self.commits)
             ..add('references', _self.references)
             ..add('upstreams', _self.upstreams)
+            ..add('isRebaseInProgress', _self.isRebaseInProgress)
             ..add('workingTree', _self.workingTree)
             ..add('stashes', _self.stashes)
             ..add('marks', _self.marks)

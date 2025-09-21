@@ -5,8 +5,8 @@ import 'package:collection/collection.dart';
 import 'package:git/git.dart';
 import 'package:gitle/common/logger.dart';
 import 'package:gitle/git/dto/git_dto.dart';
+import 'package:mek/mek.dart';
 import 'package:mekart/mekart.dart';
-import 'package:rxdart/rxdart.dart';
 
 enum PushForce { enabledWithLease, enabled }
 
@@ -18,8 +18,8 @@ extension GitDirExtensions on GitDir {
     r'^(?<H>[ *]) (?<R>[^ ]+) +(?<C>[^ ]+)( \[(?<U>[^\]]+)])? (?<M>.+)$',
   );
 
-  static final _outputController = BehaviorSubject.seeded(<CommandLogDto>[]);
-  static ValueStream<List<CommandLogDto>> get outputStream => _outputController.stream;
+  static final _outputController = SourceController(<CommandLogDto>[]);
+  static Source<List<CommandLogDto>> get logsSource => _outputController.source;
 
   Future<List<CommitReference>> lsRemotes({bool heads = false, bool tags = false}) async {
     final result = await runEffect(['ls-remote', if (heads) '--heads', if (tags) '--tags']);
@@ -367,7 +367,7 @@ extension GitDirExtensions on GitDir {
       message: result.exitCode != 0 ? result.stderr : result.stdout,
     );
     lg.fine(commandResult);
-    _outputController.add([commandResult, ..._outputController.value]);
+    _outputController.state = [commandResult, ..._outputController.state];
     if (result.exitCode != 0) _throwFailedProcess(result, 'git', args);
 
     return result.stdout;

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:git/git.dart';
 import 'package:gitle/common/app_utils.dart';
 import 'package:gitle/git/clients/git_extensions.dart';
@@ -7,17 +6,17 @@ import 'package:gitle/git/providers/git_providers.dart';
 import 'package:mek/mek.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 
-class PushDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void> {
+class PushDialog extends SourceConsumerStatefulWidget with TypedWidgetMixin<void> {
   final GitDir gitDir;
   final String branchName;
 
   const PushDialog({super.key, required this.gitDir, required this.branchName});
 
   @override
-  ConsumerState<PushDialog> createState() => _PushDialogState();
+  SourceConsumerState<PushDialog> createState() => _PushDialogState();
 }
 
-class _PushDialogState extends ConsumerState<PushDialog> {
+class _PushDialogState extends SourceConsumerState<PushDialog> {
   final _pushWithUpstreamFb = FormControlTyped<bool>(initialValue: false);
   final _pushForceFb = FormControlTypedOptional<PushForce>();
 
@@ -29,7 +28,7 @@ class _PushDialogState extends ConsumerState<PushDialog> {
     super.dispose();
   }
 
-  late final _push = ref.mutation(
+  late final _push = scope.mutation(
     (ref, None _) async {
       await GitProviders.push(
         ref,
@@ -48,8 +47,8 @@ class _PushDialogState extends ConsumerState<PushDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isIdle = !ref.watchIsMutating([_push]);
-    final isFormDirty = ref.watch(_form.provider.dirty);
+    final isIdle = !scope.watchIsMutating([_push]);
+    final isFormDirty = scope.watch(_form.source.dirty);
     final push = _form.handleSubmit(_push.run);
 
     return AlertDialog(
@@ -65,18 +64,19 @@ class _PushDialogState extends ConsumerState<PushDialog> {
             ),
             ReactiveFormField(
               formControl: _pushForceFb,
-              builder: (field) => Column(
-                children: PushForce.values.map((value) {
-                  final isEnabled = field.control.enabled;
-
-                  return RadioListTile(
-                    groupValue: field.value,
-                    toggleable: true,
-                    value: value,
-                    onChanged: isEnabled ? field.didChange : null,
-                    title: Text(value.translate()),
-                  );
-                }).toList(),
+              builder: (field) => RadioGroup(
+                groupValue: field.value,
+                onChanged: field.didChange,
+                child: Column(
+                  children: PushForce.values.map((value) {
+                    return RadioListTile(
+                      enabled: field.control.enabled,
+                      toggleable: true,
+                      value: value,
+                      title: Text(value.translate()),
+                    );
+                  }).toList(),
+                ),
               ),
             ),
           ],

@@ -70,6 +70,8 @@ abstract class RepositoriesProviders {
     final gitDir = await ref.watch(currentGitDir.future);
     if (gitDir == null) return null;
 
+    ref.invalidateWhenAppResume();
+
     final settings = await ref.watch(
       all.selectAsync((value) => value[gitDir.path] ?? const RepositorySettingsDto()),
     );

@@ -1,22 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:git/git.dart';
 import 'package:gitle/common/app_utils.dart';
 import 'package:gitle/git/providers/git_providers.dart';
 import 'package:mek/mek.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 
-class TagDeleteDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void> {
+class TagDeleteDialog extends SourceConsumerStatefulWidget with TypedWidgetMixin<void> {
   final GitDir gitDir;
   final String name;
 
   const TagDeleteDialog({super.key, required this.gitDir, required this.name});
 
   @override
-  ConsumerState<TagDeleteDialog> createState() => _TagDeleteDialogState();
+  SourceConsumerState<TagDeleteDialog> createState() => _TagDeleteDialogState();
 }
 
-class _TagDeleteDialogState extends ConsumerState<TagDeleteDialog> {
+class _TagDeleteDialogState extends SourceConsumerState<TagDeleteDialog> {
   final _remotesFb = FormControlTyped(initialValue: false);
 
   late final _form = FormArray([_remotesFb]);
@@ -27,7 +26,7 @@ class _TagDeleteDialogState extends ConsumerState<TagDeleteDialog> {
     super.dispose();
   }
 
-  late final _deleteBranch = ref.mutation(
+  late final _deleteBranch = scope.mutation(
     (ref, None _) {
       return GitProviders.deleteTag(
         ref,
@@ -46,7 +45,7 @@ class _TagDeleteDialogState extends ConsumerState<TagDeleteDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isIdle = !ref.watchIsMutating([_deleteBranch]);
+    final isIdle = !scope.watchIsMutating([_deleteBranch]);
     final deleteBranch = _form.handleSubmit(_deleteBranch.run);
 
     return AlertDialog(

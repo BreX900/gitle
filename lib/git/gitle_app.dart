@@ -11,20 +11,20 @@ import 'package:mek/mek.dart';
 import 'package:multi_split_view/multi_split_view.dart';
 import 'package:window_manager/window_manager.dart';
 
-class GitleApp extends ConsumerStatefulWidget {
+class GitleApp extends SourceConsumerStatefulWidget {
   const GitleApp({super.key});
 
   @override
-  ConsumerState<GitleApp> createState() => _MyAppState();
+  SourceConsumerState<GitleApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends ConsumerState<GitleApp> with WindowListener {
+class _MyAppState extends SourceConsumerState<GitleApp> with WindowListener {
   StreamSubscription? _subscription;
 
   @override
   void initState() {
     super.initState();
-    WindowManager.instance.addListener(this);
+    // WindowManager.instance.addListener(this);
 
     ref.listenManual(fireImmediately: true, RepositoriesProviders.current, (prev, next) async {
       final prevPath = prev?.valueOrNull?.gitDir.path;
@@ -43,20 +43,20 @@ class _MyAppState extends ConsumerState<GitleApp> with WindowListener {
 
   @override
   void dispose() {
-    WindowManager.instance.removeListener(this);
+    // WindowManager.instance.removeListener(this);
     unawaited(_subscription?.cancel());
     super.dispose();
   }
 
-  @override
-  void onWindowFocus() {
-    super.onWindowFocus();
-    ref.invalidate(RepositoriesProviders.current);
-  }
+  // @override
+  // void onWindowFocus() {
+  //   super.onWindowFocus();
+  //   ref.invalidate(RepositoriesProviders.current);
+  // }
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(GitHubProviders.notifications, (previous, next) {});
+    ref.listen(GitHubProviders.notificationsListener, (previous, next) {});
 
     final theme = MekTheme.build(context: context);
 

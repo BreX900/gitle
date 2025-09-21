@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:git/git.dart';
 import 'package:gitle/common/app_utils.dart';
 import 'package:gitle/common/branch_utils.dart';
@@ -7,17 +6,17 @@ import 'package:gitle/git/providers/git_providers.dart';
 import 'package:mek/mek.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 
-class BranchRenameDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void> {
+class BranchRenameDialog extends SourceConsumerStatefulWidget with TypedWidgetMixin<void> {
   final GitDir gitDir;
   final String branchName;
 
   const BranchRenameDialog({super.key, required this.gitDir, required this.branchName});
 
   @override
-  ConsumerState<BranchRenameDialog> createState() => _BranchRenameDialogState();
+  SourceConsumerState<BranchRenameDialog> createState() => _BranchRenameDialogState();
 }
 
-class _BranchRenameDialogState extends ConsumerState<BranchRenameDialog> {
+class _BranchRenameDialogState extends SourceConsumerState<BranchRenameDialog> {
   final _typeFb = FormControlTypedOptional<BranchType>();
   final _newNameFb = FormControlTyped<String>(
     initialValue: '',
@@ -40,7 +39,7 @@ class _BranchRenameDialogState extends ConsumerState<BranchRenameDialog> {
     super.dispose();
   }
 
-  late final _renameBranch = ref.mutation(
+  late final _renameBranch = scope.mutation(
     (ref, None _) async {
       return await GitProviders.renameBranch(
         ref,
@@ -61,8 +60,8 @@ class _BranchRenameDialogState extends ConsumerState<BranchRenameDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isIdle = !ref.watchIsMutating([_renameBranch]);
-    final isFormDirty = ref.watch(_form.provider.dirty);
+    final isIdle = !scope.watchIsMutating([_renameBranch]);
+    final isFormDirty = scope.watch(_form.source.dirty);
     final renameBranch = _form.handleSubmit(_renameBranch.run);
 
     return AlertDialog(

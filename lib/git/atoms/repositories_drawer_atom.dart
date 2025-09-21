@@ -10,21 +10,21 @@ import 'package:gitle/git/providers/repositories_providers.dart';
 import 'package:mek/mek.dart';
 import 'package:path/path.dart' as p;
 
-class RepositoriesDrawerAtom extends ConsumerStatefulWidget {
+class RepositoriesDrawerAtom extends SourceConsumerStatefulWidget {
   const RepositoriesDrawerAtom({super.key});
 
   @override
-  ConsumerState<RepositoriesDrawerAtom> createState() => _RepositoriesDrawerAtomState();
+  SourceConsumerState<RepositoriesDrawerAtom> createState() => _RepositoriesDrawerAtomState();
 }
 
-class _RepositoriesDrawerAtomState extends ConsumerState<RepositoriesDrawerAtom> {
-  late final _addRepository = ref.mutation(
+class _RepositoriesDrawerAtomState extends SourceConsumerState<RepositoriesDrawerAtom> {
+  late final _addRepository = scope.mutation(
     RepositoriesProviders.add,
     onError: (_, error) {
       AppUtils.showErrorSnackBar(context, error);
     },
   );
-  late final _removeRepository = ref.mutation(
+  late final _removeRepository = scope.mutation(
     RepositoriesProviders.remove,
     onError: (_, error) {
       AppUtils.showErrorSnackBar(context, error);
@@ -37,7 +37,7 @@ class _RepositoriesDrawerAtomState extends ConsumerState<RepositoriesDrawerAtom>
   }
 
   Widget _buildRepositories(IList<String> repositories) {
-    final isIdle = !ref.watchIsMutating([_addRepository, _removeRepository]);
+    final isIdle = !scope.watchIsMutating([_addRepository, _removeRepository]);
     final repository = ref.watch(
       RepositoriesProviders.current.select((state) {
         return state.valueOrNull?.gitDir.path;
@@ -94,7 +94,7 @@ class _RepositoriesDrawerAtomState extends ConsumerState<RepositoriesDrawerAtom>
   }
 
   Widget _buildContent(IList<String> repositories) {
-    final isIdle = !ref.watchIsMutating([_addRepository, _removeRepository]);
+    final isIdle = !scope.watchIsMutating([_addRepository, _removeRepository]);
 
     return Column(
       children: [

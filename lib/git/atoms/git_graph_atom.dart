@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:git/git.dart';
 import 'package:gitle/common/app_utils.dart';
 import 'package:gitle/common/gitle_icons.dart';
@@ -22,23 +21,23 @@ import 'package:gitle/git/widgets/sha_text.dart';
 import 'package:intl/intl.dart';
 import 'package:mek/mek.dart';
 
-class GitGraphAtom extends ConsumerStatefulWidget {
+class GitGraphAtom extends SourceConsumerStatefulWidget {
   final RepositoryModel repository;
 
   const GitGraphAtom({super.key, required this.repository});
 
   @override
-  ConsumerState<GitGraphAtom> createState() => _GitGraphAtomState();
+  SourceConsumerState<GitGraphAtom> createState() => _GitGraphAtomState();
 }
 
-class _GitGraphAtomState extends ConsumerState<GitGraphAtom> {
-  late final _checkout = ref.mutation(
+class _GitGraphAtomState extends SourceConsumerState<GitGraphAtom> {
+  late final _checkout = scope.mutation(
     GitProviders.checkout,
     onError: (_, error) {
       AppUtils.showErrorSnackBar(context, error);
     },
   );
-  late final _rebase = ref.mutation(
+  late final _rebase = scope.mutation(
     GitProviders.rebase,
     onError: (_, error) {
       AppUtils.showErrorSnackBar(context, error);
@@ -49,7 +48,7 @@ class _GitGraphAtomState extends ConsumerState<GitGraphAtom> {
       ).showSnackBar(SnackBar(content: Text(message ?? 'Rebase completed!')));
     },
   );
-  late final _cherryPick = ref.mutation(
+  late final _cherryPick = scope.mutation(
     (ref, String commitSha) async {
       return await GitProviders.cherryPick(ref, widget.repository.gitDir, commitSha);
     },
@@ -62,7 +61,7 @@ class _GitGraphAtomState extends ConsumerState<GitGraphAtom> {
       ).showSnackBar(SnackBar(content: Text(message ?? 'Rebase completed!')));
     },
   );
-  late final _fetch = ref.mutation(
+  late final _fetch = scope.mutation(
     (ref, (String, String) __) async {
       final (remote, local) = __;
       await GitProviders.fetch(
@@ -76,7 +75,7 @@ class _GitGraphAtomState extends ConsumerState<GitGraphAtom> {
       AppUtils.showErrorSnackBar(context, error);
     },
   );
-  late final _reset = ref.mutation(
+  late final _reset = scope.mutation(
     GitProviders.reset,
     onError: (_, error) {
       AppUtils.showErrorSnackBar(context, error);
@@ -340,7 +339,7 @@ class _GitGraphAtomState extends ConsumerState<GitGraphAtom> {
   Widget build(BuildContext context) {
     final dateFormat = DateFormat.Hm('it').add_yMd();
 
-    final isIdle = !ref.watchIsMutating([_checkout, _rebase, _rebase, _cherryPick, _fetch]);
+    final isIdle = !scope.watchIsMutating([_checkout, _rebase, _rebase, _cherryPick, _fetch]);
 
     final head = widget.repository.currentBranch;
     final marks = widget.repository.marks;

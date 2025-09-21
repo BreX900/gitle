@@ -1,22 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:git/git.dart';
 import 'package:gitle/common/app_utils.dart';
 import 'package:gitle/git/providers/git_providers.dart';
 import 'package:mek/mek.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 
-class BranchDeleteDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void> {
+class BranchDeleteDialog extends SourceConsumerStatefulWidget with TypedWidgetMixin<void> {
   final GitDir gitDir;
   final String branchName;
 
   const BranchDeleteDialog({super.key, required this.gitDir, required this.branchName});
 
   @override
-  ConsumerState<BranchDeleteDialog> createState() => _BranchDeleteDialogState();
+  SourceConsumerState<BranchDeleteDialog> createState() => _BranchDeleteDialogState();
 }
 
-class _BranchDeleteDialogState extends ConsumerState<BranchDeleteDialog> {
+class _BranchDeleteDialogState extends SourceConsumerState<BranchDeleteDialog> {
   final _forceFb = FormControlTyped(initialValue: false);
   final _remotesFb = FormControlTyped(initialValue: false);
 
@@ -28,7 +27,7 @@ class _BranchDeleteDialogState extends ConsumerState<BranchDeleteDialog> {
     super.dispose();
   }
 
-  late final _deleteBranch = ref.mutation(
+  late final _deleteBranch = scope.mutation(
     (ref, None _) {
       return GitProviders.deleteBranch(
         ref,
@@ -48,7 +47,7 @@ class _BranchDeleteDialogState extends ConsumerState<BranchDeleteDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isIdle = !ref.watchIsMutating([_deleteBranch]);
+    final isIdle = !scope.watchIsMutating([_deleteBranch]);
     final deleteBranch = _form.handleSubmit(_deleteBranch.run);
 
     return AlertDialog(

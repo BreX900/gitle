@@ -1,23 +1,22 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gitle/common/app_utils.dart';
 import 'package:gitle/git/clients/git_extensions.dart';
 import 'package:gitle/git/models/repository_model.dart';
 import 'package:mek/mek.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 
-class RemoteUrlDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void> {
+class RemoteUrlDialog extends SourceConsumerStatefulWidget with TypedWidgetMixin<void> {
   final RepositoryModel repository;
 
   const RemoteUrlDialog({super.key, required this.repository});
 
   @override
-  ConsumerState<RemoteUrlDialog> createState() => _RemoteUrlDialogState();
+  SourceConsumerState<RemoteUrlDialog> createState() => _RemoteUrlDialogState();
 }
 
-class _RemoteUrlDialogState extends ConsumerState<RemoteUrlDialog> {
+class _RemoteUrlDialogState extends SourceConsumerState<RemoteUrlDialog> {
   final _urlFieldBloc = FormControlTyped(initialValue: '');
 
   @override
@@ -41,7 +40,7 @@ class _RemoteUrlDialogState extends ConsumerState<RemoteUrlDialog> {
     _urlFieldBloc.updateValue(remoteUrl.stdout as String);
   }
 
-  late final _updateRemoteOriginUrl = ref.mutation(
+  late final _updateRemoteOriginUrl = scope.mutation(
     (ref, None _) async {
       await widget.repository.gitDir.runEffect([
         'remote',
@@ -60,8 +59,8 @@ class _RemoteUrlDialogState extends ConsumerState<RemoteUrlDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isDataIdle = !ref.watchIsMutating([_updateRemoteOriginUrl]);
-    final isFormDirty = ref.watch(_urlFieldBloc.provider.dirty);
+    final isDataIdle = !scope.watchIsMutating([_updateRemoteOriginUrl]);
+    final isFormDirty = scope.watch(_urlFieldBloc.source.dirty);
 
     final updateRemoteOriginUrl = _urlFieldBloc.handleSubmit(_updateRemoteOriginUrl.run);
 

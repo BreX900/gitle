@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gitle/git/clients/git_extensions.dart';
 import 'package:mek/mek.dart';
 
-class GitLogsScreen extends ConsumerWidget {
+class GitLogsScreen extends SourceConsumerWidget {
   const GitLogsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final logs = ref.watch(GitDirExtensions.outputStream.provider);
+  Widget build(BuildContext context, ConsumerScope scope) {
+    final logs = scope.watch(GitDirExtensions.logsSource);
 
     final child = Scaffold(
       appBar: AppBar(),

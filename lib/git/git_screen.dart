@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:collection/collection.dart';
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:flutter/material.dart' hide Notification;
@@ -26,14 +28,14 @@ final _screenProvider = FutureProvider.autoDispose((ref) async {
   ).wait;
 });
 
-class GitScreen extends ConsumerStatefulWidget {
+class GitScreen extends SourceConsumerStatefulWidget {
   const GitScreen({super.key});
 
   @override
-  ConsumerState<GitScreen> createState() => _GitScreenState();
+  SourceConsumerState<GitScreen> createState() => _GitScreenState();
 }
 
-class _GitScreenState extends ConsumerState<GitScreen> {
+class _GitScreenState extends SourceConsumerState<GitScreen> {
   final _workingTreeKey = GlobalKey<WorkingTreeAtomState>();
 
   final _referenceNames = FormControlTyped(initialValue: const ISet<String>.empty());
@@ -46,7 +48,7 @@ class _GitScreenState extends ConsumerState<GitScreen> {
 
   void _refresh() => ref.invalidateWithAncestors(RepositoriesProviders.current);
 
-  late final _fetch = ref.mutation(
+  late final _fetch = scope.mutation(
     (ref, (GitDir, {bool prune}) __) async {
       final (gitDir, :prune) = __;
       await GitProviders.fetch(ref, gitDir, prune: prune);
@@ -55,7 +57,7 @@ class _GitScreenState extends ConsumerState<GitScreen> {
       AppUtils.showErrorSnackBar(context, error);
     },
   );
-  late final _rebaseContinue = ref.mutation(
+  late final _rebaseContinue = scope.mutation(
     GitProviders.rebaseContinue,
     onError: (_, error) {
       AppUtils.showErrorSnackBar(context, error);
@@ -64,7 +66,7 @@ class _GitScreenState extends ConsumerState<GitScreen> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
     },
   );
-  late final _rebaseAbort = ref.mutation(
+  late final _rebaseAbort = scope.mutation(
     GitProviders.rebaseAbort,
     onError: (_, error) {
       AppUtils.showErrorSnackBar(context, error);
@@ -73,7 +75,7 @@ class _GitScreenState extends ConsumerState<GitScreen> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
     },
   );
-  late final _removeRepository = ref.mutation(
+  late final _removeRepository = scope.mutation(
     RepositoriesProviders.remove,
     onError: (_, error) {
       AppUtils.showErrorSnackBar(context, error);
@@ -85,7 +87,10 @@ class _GitScreenState extends ConsumerState<GitScreen> {
     },
   );
 
-  Widget buildRepository(IList<String> repositories, RepositoryModel repository) {
+  Widget buildRepository({
+    required IList<String> repositories,
+    required RepositoryModel repository,
+  }) {
     return Column(
       children: [
         Consumer(
@@ -204,7 +209,7 @@ class _GitScreenState extends ConsumerState<GitScreen> {
     final isLoading = state.isLoading;
     final repository = state.valueOrNull?.$2;
 
-    final isGitIdle = !ref.watchIsMutating([_fetch, _rebaseContinue]);
+    final isGitIdle = !scope.watchIsMutating([_fetch, _rebaseContinue]);
 
     Widget? branchesDropdown;
     if (repository != null) {
@@ -329,7 +334,7 @@ class _GitScreenState extends ConsumerState<GitScreen> {
           return ErrorView(error: error, onRefresh: _refresh);
         },
         data: (data) {
-          final repository = data.$2;
+          final (repositories, repository) = data;
           if (repository == null) {
             return Builder(
               builder: (context) {
@@ -341,8 +346,9 @@ class _GitScreenState extends ConsumerState<GitScreen> {
             );
           }
           return DefaultTabController(
-            length: data.$1.length,
-            child: buildRepository(data.$1, repository),
+            length: repositories.length,
+            initialIndex: max(repositories.indexOf(repository.gitDir.path), 0),
+            child: buildRepository(repositories: repositories, repository: repository),
           );
         },
       ),

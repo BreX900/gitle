@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:git/git.dart';
 import 'package:gitle/common/app_utils.dart';
 import 'package:gitle/git/providers/git_providers.dart';
 import 'package:mek/mek.dart';
 
-class BranchPullDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void> {
+class BranchPullDialog extends SourceConsumerStatefulWidget with TypedWidgetMixin<void> {
   final GitDir gitDir;
   final String localBranch;
   final String remoteBranchName;
@@ -18,11 +17,11 @@ class BranchPullDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void
   });
 
   @override
-  ConsumerState<BranchPullDialog> createState() => _BranchPullDialogState();
+  SourceConsumerState<BranchPullDialog> createState() => _BranchPullDialogState();
 }
 
-class _BranchPullDialogState extends ConsumerState<BranchPullDialog> {
-  late final _pullBranch = ref.mutation(
+class _BranchPullDialogState extends SourceConsumerState<BranchPullDialog> {
+  late final _pullBranch = scope.mutation(
     GitProviders.pull,
     onSuccess: (_, __) {
       context.nav.pop();
@@ -34,7 +33,7 @@ class _BranchPullDialogState extends ConsumerState<BranchPullDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isIdle = !ref.watchIsMutating([_pullBranch]);
+    final isIdle = !scope.watchIsMutating([_pullBranch]);
 
     return AlertDialog(
       title: Text.rich(

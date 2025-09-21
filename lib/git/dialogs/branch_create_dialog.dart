@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:git/git.dart';
 import 'package:gitle/common/app_utils.dart';
 import 'package:gitle/common/branch_utils.dart';
@@ -9,17 +8,17 @@ import 'package:gitle/git/widgets/sha_text.dart';
 import 'package:mek/mek.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 
-class BranchCreateDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void> {
+class BranchCreateDialog extends SourceConsumerStatefulWidget with TypedWidgetMixin<void> {
   final GitDir gitDir;
   final Sha startPoint;
 
   const BranchCreateDialog({super.key, required this.gitDir, required this.startPoint});
 
   @override
-  ConsumerState<BranchCreateDialog> createState() => _BranchCreateDialogState();
+  SourceConsumerState<BranchCreateDialog> createState() => _BranchCreateDialogState();
 }
 
-class _BranchCreateDialogState extends ConsumerState<BranchCreateDialog> {
+class _BranchCreateDialogState extends SourceConsumerState<BranchCreateDialog> {
   final _typeFb = FormControlTypedOptional<BranchType>();
   final _nameFb = FormControlTyped<String>(
     initialValue: '',
@@ -35,7 +34,7 @@ class _BranchCreateDialogState extends ConsumerState<BranchCreateDialog> {
     super.dispose();
   }
 
-  late final _createBranch = ref.mutation(
+  late final _createBranch = scope.mutation(
     (ref, None _) {
       return GitProviders.createBranch(
         ref,
@@ -57,7 +56,7 @@ class _BranchCreateDialogState extends ConsumerState<BranchCreateDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isIdle = !ref.watchIsMutating([_createBranch]);
+    final isIdle = !scope.watchIsMutating([_createBranch]);
     final createBranch = _form.handleSubmit(_createBranch.run, keepDisabled: true);
 
     return AlertDialog(

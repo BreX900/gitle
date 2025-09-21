@@ -4,31 +4,34 @@ import 'dart:convert';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:github/github.dart';
 import 'package:gitle/common/logger.dart';
+import 'package:gitle/git/clients/local_notification_manager.dart';
+import 'package:gitle/git/dto/github_dto.dart';
 // ignore: depend_on_referenced_packages
 import 'package:http/http.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 const _defaultPollInterval = Duration(seconds: 60);
 
 extension NotificationsActivitityService on ActivityService {
-  Stream<Notification> listNotificationsV2({
-    bool all = false,
-    bool participating = false,
-    DateTime? since,
-    DateTime? before,
-  }) {
-    return PaginationHelper(github).objects(
-      'GET',
-      '/notifications',
-      (data) => Notification.fromJson(data! as Map<String, dynamic>),
-      params: {
-        'all': all,
-        'participating': participating,
-        if (since != null) 'since': since.toUtc().copyWith(microsecond: 0).toIso8601String(),
-        if (before != null) 'before': before.toUtc().copyWith(microsecond: 0).toIso8601String(),
-      },
-    );
-  }
+  // Stream<Notification> listNotificationsV2({
+  //   bool all = false,
+  //   bool participating = false,
+  //   DateTime? since,
+  //   DateTime? before,
+  // }) {
+  //   return PaginationHelper(github).objects(
+  //     'GET',
+  //     '/notifications',
+  //     (data) => Notification.fromJson(data! as Map<String, dynamic>),
+  //     params: {
+  //       'all': all,
+  //       'participating': participating,
+  //       if (since != null) 'since': since.toUtc().copyWith(microsecond: 0).toIso8601String(),
+  //       if (before != null) 'before': before.toUtc().copyWith(microsecond: 0).toIso8601String(),
+  //     },
+  //   );
+  // }
 
   Stream<Notification> onNotificationsChanges({
     bool all = false,
@@ -84,8 +87,8 @@ extension NotificationsActivitityService on ActivityService {
       // final response = responses.single;
       // print(responses.map((e) => jsonEncode(e.headers)).toList());
       // print(responses.map((e) => e.body).toList());
-      lg.finest(jsonEncode(response.headers));
-      lg.finest(response.body);
+      // lg.finest(jsonEncode(response.headers));
+      // lg.finest(response.body);
 
       final data = response.body.isEmpty ? <dynamic>[] : jsonDecode(response.body) as List;
       return _Result(
@@ -96,8 +99,8 @@ extension NotificationsActivitityService on ActivityService {
         pollInterval: _getPollInterval(response.headers),
       );
     } on Response catch (response) {
-      lg.finest(jsonEncode(response.headers));
-      lg.finest(jsonEncode(response.body));
+      // lg.finest(jsonEncode(response.headers));
+      // lg.finest(jsonEncode(response.body));
 
       return _Result(
         notifications: [],
@@ -125,42 +128,130 @@ class _Result {
   });
 }
 
-Future<StreamSubscription<void>> listenNotifications(GitHub gitHub) async {
-  final notificationsService = FlutterLocalNotificationsPlugin();
+class NotificationsManager {
+  static const _githubCategory = 'github';
+  static const _doneActionId = 'done';
+  static const _readActionId = 'read';
 
-  await notificationsService.initialize(
-    const InitializationSettings(macOS: DarwinInitializationSettings()),
-    onDidReceiveBackgroundNotificationResponse: (response) =>
-        lg.warning('listenNotifications.onDidReceiveBackgroundNotificationResponse'),
-    onDidReceiveNotificationResponse: (response) async {
-      final notification = Notification.fromJson(jsonDecode(response.payload!));
-      await gitHub.activity.markThreadRead(notification.id!);
+  static var _notificationId = 0;
+  static final _notificationIds = <String, int>{};
 
-      final latestCommentUrl = notification.subject?.latestCommentUrl;
-      if (latestCommentUrl == null || !latestCommentUrl.contains('/pulls/')) return;
+  FlutterLocalNotificationsPlugin get _notificationsClient => FlutterLocalNotificationsPlugin();
+  MacOSFlutterLocalNotificationsPlugin get _notificationsMacOsClient =>
+      _notificationsClient.resolvePlatformSpecificImplementation()!;
+  final GitHub _githubClient;
 
-      final pullResponse = await gitHub.requestJson('GET', latestCommentUrl);
-      final pullRequest = PullRequest.fromJson(pullResponse);
-      await launchUrl(Uri.parse(pullRequest.htmlUrl!));
-    }, // Work!
-  );
+  const NotificationsManager(this._githubClient);
 
-  final notificationsPlatformService = notificationsService
-      .resolvePlatformSpecificImplementation<MacOSFlutterLocalNotificationsPlugin>()!;
-  await notificationsPlatformService.requestPermissions();
-
-  var notificationId = 0;
-  final notificationIds = <String, int>{};
-
-  // gitHub.activity.pollEventsForOrganization(name)
-  return gitHub.activity.onNotificationsChanges().listen((notification) async {
-    // print(jsonEncode(notification));
-
-    await notificationsPlatformService.show(
-      notificationIds.putIfAbsent(notification.id!, () => ++notificationId),
-      notification.repository!.fullName,
-      '${notification.subject!.type!}: ${notification.subject!.title!}',
-      payload: jsonEncode(notification.toJson()),
+  Future<StreamSubscription<void>> listen({required void Function() onChange}) async {
+    await _notificationsClient.initialize(
+      InitializationSettings(
+        macOS: DarwinInitializationSettings(
+          notificationCategories: [
+            DarwinNotificationCategory(
+              _githubCategory,
+              options: {DarwinNotificationCategoryOption.customDismissAction},
+              actions: [
+                DarwinNotificationAction.plain(_readActionId, 'Read'),
+                DarwinNotificationAction.plain(
+                  _doneActionId,
+                  'Done',
+                  options: {DarwinNotificationActionOption.destructive},
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      onDidReceiveBackgroundNotificationResponse: onReceiveLocalBackgroundNotification,
+      onDidReceiveNotificationResponse: handleLocalLocalNotification, // Work!
     );
-  });
+
+    await _notificationsMacOsClient.requestPermissions();
+
+    // gitHub.activity.pollEventsForOrganization(name)
+    return _githubClient.activity
+        .onNotificationsChanges()
+        .doOnData((_) => onChange())
+        .listen(_onReceiveRemoteNotification);
+  }
+
+  Future<void> handleLocalLocalNotification(NotificationResponse localNotification) async {
+    print('_> handleLocalLocalNotification ${localNotification.payload!}');
+
+    final remoteNotification = Notification.fromJson(jsonDecode(localNotification.payload!));
+
+    if (localNotification.actionId == _doneActionId) {
+      await _githubClient.activity.markThreadDone(remoteNotification.id!);
+      return;
+    }
+    await _githubClient.activity.markThreadRead(remoteNotification.id!);
+    if (localNotification.actionId == _readActionId) return;
+
+    final latestCommentUrl = remoteNotification.subject?.latestCommentUrl;
+    if (latestCommentUrl != null && latestCommentUrl.contains('/pulls/')) {
+      // _githubClient.pullRequests.get(slug, number)
+      // https://docs.github.com/en/rest/pulls/pulls?apiVersion=2022-11-28#get-a-pull-request
+      final pullResponse = await _githubClient.requestJson(
+        statusCode: 200,
+        'GET',
+        latestCommentUrl,
+      );
+      print('_> PullRequest ${jsonEncode(pullResponse)}');
+      final pullRequest = PullRequest.fromJson(pullResponse);
+      if (pullRequest.htmlUrl case final htmlUrl?) {
+        await launchUrl(Uri.parse(htmlUrl));
+        return;
+      }
+    }
+    final path = switch (NotificationSubjectType.fromJson(remoteNotification.subject!.type!)) {
+      NotificationSubjectType.checkSuite => '/actions',
+      NotificationSubjectType.issue => '/issues',
+      NotificationSubjectType.pullRequest => '/pulls',
+      NotificationSubjectType.release => '/releases',
+    };
+    await launchUrl(Uri.parse('${remoteNotification.repository!.htmlUrl}$path'));
+  }
+
+  Future<void> _onReceiveRemoteNotification(Notification remoteNotification) async {
+    if (_notificationIds.containsKey(remoteNotification.id)) return;
+    if (!_checkShow(remoteNotification.subject)) return;
+
+    print('_> _onReceiveRemoteNotification ${jsonEncode(remoteNotification)}');
+    await _notificationsMacOsClient.show(
+      _notificationIds.putIfAbsent(remoteNotification.id!, () => ++_notificationId),
+      '${remoteNotification.repository!.name}: ${remoteNotification.subject!.type!}',
+      remoteNotification.subject!.title,
+      notificationDetails: const DarwinNotificationDetails(categoryIdentifier: _githubCategory),
+      payload: jsonEncode(remoteNotification.toJson()),
+    );
+  }
+
+  bool _checkShow(NotificationSubject? subject) {
+    if (subject == null) return true;
+    return switch (NotificationSubjectType.fromJson(subject.type!)) {
+      NotificationSubjectType.issue => false,
+      NotificationSubjectType.checkSuite => subject.title?.contains('failed') ?? false,
+      NotificationSubjectType.pullRequest => true,
+      NotificationSubjectType.release => false,
+    };
+  }
+
+  // https://github.com/stripe/stripe-terminal-ios/releases/tag/4.7.0?notification_referrer_id=NT_kwDOBEYMobQxODY5NjkzNDYzMDo3MTY5OTYxNw
+}
+
+extension on ActivityService {
+  /// Marks a thread as "done".
+  ///
+  /// Marking a thread as "done" is equivalent to marking a notification in your notification inbox
+  /// on GitHub as done: https://github.com/notifications.
+  /// API docs: https://developer.github.com/v3/activity/notifications/#mark-a-thread-as-done
+  Future<bool> markThreadDone(String threadId) async {
+    final response = await github.request(
+      statusCode: 200,
+      'DELETE',
+      '/notifications/threads/$threadId',
+    );
+    return response.statusCode == StatusCodes.RESET_CONTENT;
+  }
 }
