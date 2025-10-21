@@ -97,7 +97,7 @@ class _GitScreenState extends SourceConsumerState<GitScreen> {
           builder: (context, ref, child) {
             ref.listen(
               RepositoriesProviders.current.select((state) {
-                return repositories.indexOf(state.valueOrNull?.gitDir.path ?? '');
+                return repositories.indexOf(state.value?.gitDir.path ?? '');
               }),
               (_, index) {
                 if (index == -1) return;
@@ -106,7 +106,7 @@ class _GitScreenState extends SourceConsumerState<GitScreen> {
             );
             ref.listen(
               RepositoriesProviders.last.select((state) {
-                final lastRepositoryPaths = state.valueOrNull ?? const IList.empty();
+                final lastRepositoryPaths = state.value ?? const IList.empty();
                 return lastRepositoryPaths.indexOf(repository.gitDir.path);
               }),
               (_, index) {
@@ -207,7 +207,7 @@ class _GitScreenState extends SourceConsumerState<GitScreen> {
 
     final state = ref.watch(_screenProvider);
     final isLoading = state.isLoading;
-    final repository = state.valueOrNull?.$2;
+    final repository = state.value?.$2;
 
     final isGitIdle = !scope.watchIsMutating([_fetch, _rebaseContinue]);
 

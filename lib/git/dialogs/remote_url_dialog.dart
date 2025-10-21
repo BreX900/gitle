@@ -40,29 +40,28 @@ class _RemoteUrlDialogState extends SourceConsumerState<RemoteUrlDialog> {
     _urlFieldBloc.updateValue(remoteUrl.stdout as String);
   }
 
-  late final _updateRemoteOriginUrl = scope.mutation(
-    (ref, None _) async {
-      await widget.repository.gitDir.runEffect([
-        'remote',
-        'set-url',
-        'origin',
-        _urlFieldBloc.value,
-      ]);
-    },
-    onError: (_, error) {
-      AppUtils.showErrorSnackBar(context, error);
-    },
-    onSuccess: (_, __) {
-      context.nav.pop();
-    },
-  );
+  late final _updateRemoteOriginUrlMutation = scope.mutationV2((ref, None _) async {
+    await widget.repository.gitDir.runEffect(['remote', 'set-url', 'origin', _urlFieldBloc.value]);
+  });
+
+  void _updateRemoteOriginUrl() {
+    _urlFieldBloc.markAsDisabled();
+    _updateRemoteOriginUrlMutation(
+      none,
+      onError: (error) {
+        _urlFieldBloc.markAsEnabled();
+        AppUtils.showErrorSnackBar(context, error);
+      },
+      onSuccess: (_) => context.nav.pop(),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final isDataIdle = !scope.watchIsMutating([_updateRemoteOriginUrl]);
+    final isDataIdle = !scope.watchIsMutating([_updateRemoteOriginUrlMutation]);
     final isFormDirty = scope.watch(_urlFieldBloc.source.dirty);
 
-    final updateRemoteOriginUrl = _urlFieldBloc.handleSubmit(_updateRemoteOriginUrl.run);
+    final updateRemoteOriginUrl = _urlFieldBloc.handleSubmit(_updateRemoteOriginUrl);
 
     return AlertDialog(
       title: const Text('Remote origin url'),
@@ -76,7 +75,7 @@ class _RemoteUrlDialogState extends SourceConsumerState<RemoteUrlDialog> {
           child: const Text('Cancel'),
         ),
         ElevatedButton(
-          onPressed: isDataIdle && isFormDirty ? () => updateRemoteOriginUrl(none) : null,
+          onPressed: isDataIdle && isFormDirty ? updateRemoteOriginUrl : null,
           child: const Text('Change'),
         ),
       ],

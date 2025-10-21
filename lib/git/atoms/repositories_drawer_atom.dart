@@ -40,7 +40,7 @@ class _RepositoriesDrawerAtomState extends SourceConsumerState<RepositoriesDrawe
     final isIdle = !scope.watchIsMutating([_addRepository, _removeRepository]);
     final repository = ref.watch(
       RepositoriesProviders.current.select((state) {
-        return state.valueOrNull?.gitDir.path;
+        return state.value?.gitDir.path;
       }),
     );
 

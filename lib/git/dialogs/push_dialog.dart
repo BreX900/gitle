@@ -28,28 +28,32 @@ class _PushDialogState extends SourceConsumerState<PushDialog> {
     super.dispose();
   }
 
-  late final _push = scope.mutation(
-    (ref, None _) async {
-      await GitProviders.push(
-        ref,
-        gitDir: widget.gitDir,
-        force: _pushForceFb.value,
-        upstream: _pushWithUpstreamFb.value ? widget.branchName : null,
-      );
-    },
-    onError: (_, error) {
-      AppUtils.showErrorSnackBar(context, error);
-    },
-    onSuccess: (_, __) {
-      context.nav.pop();
-    },
-  );
+  late final _pushMutation = scope.mutationV2((ref, None _) async {
+    await GitProviders.push(
+      ref,
+      gitDir: widget.gitDir,
+      force: _pushForceFb.value,
+      upstream: _pushWithUpstreamFb.value ? widget.branchName : null,
+    );
+  });
+
+  void _push() {
+    _form.markAsDisabled();
+    _pushMutation(
+      none,
+      onError: (error) {
+        _form.markAsEnabled();
+        AppUtils.showErrorSnackBar(context, error);
+      },
+      onSuccess: (_) => context.nav.pop(),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final isIdle = !scope.watchIsMutating([_push]);
+    final isIdle = !scope.watchIsMutating([_pushMutation]);
     final isFormDirty = scope.watch(_form.source.dirty);
-    final push = _form.handleSubmit(_push.run);
+    final push = _form.handleSubmit(_push);
 
     return AlertDialog(
       title: Text('Push ${widget.branchName}'),
@@ -62,9 +66,9 @@ class _PushDialogState extends SourceConsumerState<PushDialog> {
               formControl: _pushWithUpstreamFb,
               title: const Text('Push with upstream'),
             ),
-            ReactiveFormField(
+            ReactiveFormField<PushForce, PushForce>(
               formControl: _pushForceFb,
-              builder: (field) => RadioGroup(
+              builder: (field) => RadioGroup<PushForce>(
                 groupValue: field.value,
                 onChanged: field.didChange,
                 child: Column(
@@ -87,10 +91,7 @@ class _PushDialogState extends SourceConsumerState<PushDialog> {
           onPressed: isIdle ? () => Navigator.of(context).pop() : null,
           child: const Text('Cancel'),
         ),
-        ElevatedButton(
-          onPressed: isIdle && isFormDirty ? () => push(none) : null,
-          child: const Text('Push'),
-        ),
+        ElevatedButton(onPressed: isIdle && isFormDirty ? push : null, child: const Text('Push')),
       ],
     );
   }

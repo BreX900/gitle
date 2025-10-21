@@ -62,7 +62,7 @@ abstract class RepositoriesProviders {
     });
   });
 
-  static final referencesNames = StateProvider.autoDispose.family((ref, String _) {
+  static final referencesNames = Provider.autoDispose.family((ref, String _) {
     return const ISet<String>.empty();
   });
 
@@ -86,9 +86,10 @@ abstract class RepositoriesProviders {
 
     final referencesNames = ref.watch(RepositoriesProviders.referencesNames(gitDir.path));
 
+    final gitDirPath = gitDir.path;
     return await Isolate.run(() async {
       return await _read(
-        gitDir,
+        gitDirPath,
         referencesNames: referencesNames,
         settings: settings,
         isRebaseInProgress: isRebaseInProgress,
@@ -157,11 +158,12 @@ abstract class RepositoriesProviders {
   }
 
   static Future<RepositoryModel> _read(
-    GitDir gitDir, {
+    String gitDirPath, {
     required Iterable<String> referencesNames,
     required RepositorySettingsDto settings,
     required bool isRebaseInProgress,
   }) async {
+    final gitDir = await GitDir.fromExisting(gitDirPath);
     final data = await (
       gitDir.currentBranch(),
       gitDir.showRef(), // head: true

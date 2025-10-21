@@ -1,3 +1,4 @@
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:github/github.dart';
 import 'package:gitle/common/logger.dart';
@@ -8,14 +9,18 @@ import 'package:mekart/mekart.dart';
 
 abstract class GitHubProviders {
   static CachedBinStore<Map<String, dynamic>> get _bin => Instances.gitHubBin;
+  static FlutterLocalNotificationsPlugin get _notificationsClient =>
+      FlutterLocalNotificationsPlugin();
 
   static final token = Provider((ref) {
-    ref.onDispose(Instances.gitHubTokenBin.onChanges.listen((vl) => ref.state = vl).cancel);
+    ref.onDispose(Instances.gitHubTokenBin.onChanges.listen((vl) => ref.invalidateSelf()).cancel);
     return Instances.gitHubTokenBin.read();
   });
 
   static final shouldNotify = Provider((ref) {
-    ref.onDispose(Instances.gitHubShouldNotifyBin.onChanges.listen((vl) => ref.state = vl).cancel);
+    ref.onDispose(
+      Instances.gitHubShouldNotifyBin.onChanges.listen((vl) => ref.invalidateSelf()).cancel,
+    );
     return Instances.gitHubShouldNotifyBin.read();
   });
 
@@ -64,6 +69,7 @@ abstract class GitHubProviders {
   static Future<void> markAllAsRead(MutationRef ref, None _) async {
     final gitHub = ref.read(GitHubProviders.client)!;
     await gitHub.activity.markNotificationsRead();
+    await _notificationsClient.cancelAll();
     ref.invalidate(notifications);
   }
 }

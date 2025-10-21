@@ -39,30 +39,34 @@ class _BranchRenameDialogState extends SourceConsumerState<BranchRenameDialog> {
     super.dispose();
   }
 
-  late final _renameBranch = scope.mutation(
-    (ref, None _) async {
-      return await GitProviders.renameBranch(
-        ref,
-        gitDir: widget.gitDir,
-        currentName: widget.branchName,
-        newName: _resolveBranchName(),
-      );
-    },
-    onError: (_, error) {
-      AppUtils.showErrorSnackBar(context, error);
-    },
-    onSuccess: (_, __) {
-      context.nav.pop();
-    },
-  );
+  late final _renameBranchMutation = scope.mutationV2((ref, None _) async {
+    return await GitProviders.renameBranch(
+      ref,
+      gitDir: widget.gitDir,
+      currentName: widget.branchName,
+      newName: _resolveBranchName(),
+    );
+  });
+
+  void _renameBranch() {
+    _form.markAsDisabled();
+    _renameBranchMutation(
+      none,
+      onError: (error) {
+        _form.markAsEnabled();
+        AppUtils.showErrorSnackBar(context, error);
+      },
+      onSuccess: (_) => context.nav.pop(),
+    );
+  }
 
   String _resolveBranchName() => _typeFb.value.toName(_newNameFb.value);
 
   @override
   Widget build(BuildContext context) {
-    final isIdle = !scope.watchIsMutating([_renameBranch]);
+    final isIdle = !scope.watchIsMutating([_renameBranchMutation]);
     final isFormDirty = scope.watch(_form.source.dirty);
-    final renameBranch = _form.handleSubmit(_renameBranch.run);
+    final renameBranch = _form.handleSubmit(_renameBranch);
 
     return AlertDialog(
       title: Row(
@@ -101,7 +105,7 @@ class _BranchRenameDialogState extends SourceConsumerState<BranchRenameDialog> {
           child: const Text('Cancel'),
         ),
         ElevatedButton(
-          onPressed: isIdle && isFormDirty ? () => renameBranch(none) : null,
+          onPressed: isIdle && isFormDirty ? renameBranch : null,
           child: const Text('Rename'),
         ),
       ],

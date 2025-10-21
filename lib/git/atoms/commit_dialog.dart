@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:git/git.dart';
 import 'package:gitle/common/app_utils.dart';
 import 'package:gitle/git/clients/git_extensions.dart';
@@ -135,7 +134,7 @@ class _FormCommitAtomState extends SourceConsumerState<FormCommitAtom> {
         const Divider(),
         ReactiveFormField<_PushType, _PushType>(
           formControl: _pushFb,
-          builder: (field) => RadioGroup(
+          builder: (field) => RadioGroup<_PushType>(
             groupValue: field.value,
             onChanged: field.didChange,
             child: Grid(

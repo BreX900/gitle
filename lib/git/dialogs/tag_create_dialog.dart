@@ -34,28 +34,33 @@ class _TagCreateDialogState extends SourceConsumerState<TagCreateDialog> {
     super.dispose();
   }
 
-  late final _createTag = scope.mutation(
-    (ref, None _) async {
-      await GitProviders.createTag(
-        ref,
-        gitDir: widget.gitDir,
-        commitSha: widget.startPoint,
-        name: _nameFb.value,
-        message: _messageFb.value,
-      );
-    },
-    onError: (_, error) {
-      AppUtils.showErrorSnackBar(context, error);
-    },
-    onSuccess: (_, __) {
-      context.nav.pop();
-    },
-  );
+  late final _createTagMutation = scope.mutationV2((ref, None _) async {
+    await GitProviders.createTag(
+      ref,
+      gitDir: widget.gitDir,
+      commitSha: widget.startPoint,
+      name: _nameFb.value,
+      message: _messageFb.value,
+    );
+  });
+
+  void _createTag() {
+    _form.markAsDisabled();
+
+    _createTagMutation(
+      none,
+      onError: (error) {
+        _form.markAsEnabled();
+        AppUtils.showErrorSnackBar(context, error);
+      },
+      onSuccess: (_) => context.nav.pop(),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final isIdle = !scope.watchIsMutating([_createTag]);
-    final createTag = _form.handleSubmit(_createTag.run, keepDisabled: true);
+    final isIdle = !scope.watchIsMutating([_createTagMutation]);
+    final createTag = _form.handleSubmit(_createTag);
 
     return AlertDialog(
       title: Row(
@@ -92,10 +97,7 @@ class _TagCreateDialogState extends SourceConsumerState<TagCreateDialog> {
           onPressed: isIdle ? () => Navigator.of(context).pop() : null,
           child: const Text('Cancel'),
         ),
-        ElevatedButton(
-          onPressed: isIdle ? () => createTag(none) : null,
-          child: const Text('Create'),
-        ),
+        ElevatedButton(onPressed: isIdle ? createTag : null, child: const Text('Create')),
       ],
     );
   }

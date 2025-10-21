@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gitle/git/git_screen.dart';
 import 'package:gitle/git/providers/git_hub_providers.dart';
 import 'package:gitle/git/providers/repositories_providers.dart';
@@ -27,8 +26,8 @@ class _MyAppState extends SourceConsumerState<GitleApp> with WindowListener {
     // WindowManager.instance.addListener(this);
 
     ref.listenManual(fireImmediately: true, RepositoriesProviders.current, (prev, next) async {
-      final prevPath = prev?.valueOrNull?.gitDir.path;
-      final nextPath = next.valueOrNull?.gitDir.path;
+      final prevPath = prev?.value?.gitDir.path;
+      final nextPath = next.value?.gitDir.path;
       if (prevPath == nextPath) return;
 
       final rebaseFile = File('$nextPath/.git/REBASE_HEAD');

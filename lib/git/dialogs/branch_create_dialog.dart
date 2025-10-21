@@ -34,30 +34,34 @@ class _BranchCreateDialogState extends SourceConsumerState<BranchCreateDialog> {
     super.dispose();
   }
 
-  late final _createBranch = scope.mutation(
-    (ref, None _) {
-      return GitProviders.createBranch(
-        ref,
-        gitDir: widget.gitDir,
-        branchName: _resolveBranchName(),
-        startPoint: widget.startPoint,
-        checkout: _checkoutFb.value,
-      );
-    },
-    onError: (_, error) {
-      AppUtils.showErrorSnackBar(context, error);
-    },
-    onSuccess: (_, __) {
-      context.nav.pop();
-    },
-  );
+  late final _createBranchMutation = scope.mutationV2((ref, None _) {
+    return GitProviders.createBranch(
+      ref,
+      gitDir: widget.gitDir,
+      branchName: _resolveBranchName(),
+      startPoint: widget.startPoint,
+      checkout: _checkoutFb.value,
+    );
+  });
+
+  void _createBranch() {
+    _form.markAsDisabled();
+    _createBranchMutation(
+      none,
+      onError: (error) {
+        _form.markAsEnabled();
+        AppUtils.showErrorSnackBar(context, error);
+      },
+      onSuccess: (_) => context.nav.pop(),
+    );
+  }
 
   String _resolveBranchName() => _typeFb.value.toName(_nameFb.value);
 
   @override
   Widget build(BuildContext context) {
-    final isIdle = !scope.watchIsMutating([_createBranch]);
-    final createBranch = _form.handleSubmit(_createBranch.run, keepDisabled: true);
+    final isIdle = !scope.watchIsMutating([_createBranchMutation]);
+    final createBranch = _form.handleSubmit(_createBranch);
 
     return AlertDialog(
       title: Row(
@@ -96,10 +100,7 @@ class _BranchCreateDialogState extends SourceConsumerState<BranchCreateDialog> {
           onPressed: isIdle ? () => Navigator.of(context).pop() : null,
           child: const Text('Cancel'),
         ),
-        ElevatedButton(
-          onPressed: isIdle ? () => createBranch(none) : null,
-          child: const Text('Create'),
-        ),
+        ElevatedButton(onPressed: isIdle ? createBranch : null, child: const Text('Create')),
       ],
     );
   }

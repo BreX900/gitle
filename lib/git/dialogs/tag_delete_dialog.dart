@@ -26,27 +26,29 @@ class _TagDeleteDialogState extends SourceConsumerState<TagDeleteDialog> {
     super.dispose();
   }
 
-  late final _deleteBranch = scope.mutation(
-    (ref, None _) {
-      return GitProviders.deleteTag(
-        ref,
-        gitDir: widget.gitDir,
-        name: widget.name,
-        remote: _remotesFb.value,
-      );
-    },
-    onError: (_, error) {
-      AppUtils.showErrorSnackBar(context, error);
-    },
-    onSuccess: (_, __) {
-      context.nav.pop();
-    },
-  );
+  late final _deleteBranchMutation = scope.mutationV2((ref, None _) {
+    return GitProviders.deleteTag(
+      ref,
+      gitDir: widget.gitDir,
+      name: widget.name,
+      remote: _remotesFb.value,
+    );
+  });
+
+  void _deleteBranch() {
+    _deleteBranchMutation(
+      none,
+      onError: (error) {
+        AppUtils.showErrorSnackBar(context, error);
+      },
+      onSuccess: (_) => context.nav.pop(),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final isIdle = !scope.watchIsMutating([_deleteBranch]);
-    final deleteBranch = _form.handleSubmit(_deleteBranch.run);
+    final isIdle = !scope.watchIsMutating([_deleteBranchMutation]);
+    final deleteBranch = _form.handleSubmit(_deleteBranch);
 
     return AlertDialog(
       title: Text(
@@ -71,10 +73,7 @@ class _TagDeleteDialogState extends SourceConsumerState<TagDeleteDialog> {
           onPressed: isIdle ? () => Navigator.of(context).pop() : null,
           child: const Text('Cancel'),
         ),
-        ElevatedButton(
-          onPressed: isIdle ? () => deleteBranch(none) : null,
-          child: const Text('Delete'),
-        ),
+        ElevatedButton(onPressed: isIdle ? deleteBranch : null, child: const Text('Delete')),
       ],
     );
   }
