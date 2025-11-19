@@ -1,0 +1,193 @@
+import 'package:flutter/material.dart';
+import 'package:gitle/git/dto/repository_dto.dart';
+import 'package:gitle/git/providers/dashboard_providers.dart';
+import 'package:gitle/git/providers/repositories_providers.dart';
+import 'package:gitle/git/widgets/input_dialog.dart';
+import 'package:mek/mek.dart';
+import 'package:path/path.dart' as path_;
+
+class RepositoriesTabBarScene extends StatelessWidget {
+  final DashboardConfigDto config;
+
+  const RepositoriesTabBarScene({super.key, required this.config});
+
+  Future<void> _showGroupUpsertDialog(BuildContext context, String? uid) async {
+    final groupUid = await showDialog<String?>(
+      context: context,
+      builder: (context) => InputDialog(title: const Text('Create group'), value: uid ?? ''),
+    );
+    if (groupUid == null) return;
+
+    await DashboardProviders.upsertGroup(groupUid, oldUid: uid);
+  }
+
+  Widget _buildTab<T extends Object>({
+    required T value,
+    required void Function(T destination, {required bool after}) onMove,
+    void Function()? onUpdate,
+    required void Function() onDelete,
+    required String text,
+  }) {
+    final tab = Tab(text: text);
+
+    return PreferredSize(
+      key: ObjectKey(value),
+      preferredSize: tab.preferredSize,
+      child: DraggableTarget<T>(
+        data: value,
+        onAccepted: (position, data) =>
+            onMove(data, after: position == DraggableTargetDestination.after),
+        direction: Axis.horizontal,
+        child: PopupMenuArea(
+          items: [
+            PopupMenuItemTile(
+              onTap: onDelete,
+              leading: const Icon(Icons.delete),
+              title: const Text('Delete'),
+            ),
+            if (onUpdate != null)
+              PopupMenuItemTile(
+                onTap: onUpdate,
+                leading: const Icon(Icons.edit),
+                title: const Text('Edit'),
+              ),
+          ],
+          child: Padding(padding: const EdgeInsets.symmetric(horizontal: 16.0), child: tab),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _ControlledTabBar(
+                index: config.groupIndex,
+                onTap: (index) => DashboardProviders.selectGroup(config.groups[index].uid),
+                tabs: config.groups.map((group) {
+                  final groupUid = group.uid;
+
+                  if (groupUid == null) {
+                    return const Tab(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Icon(Icons.home),
+                      ),
+                    );
+                  }
+
+                  return _buildTab<String>(
+                    value: groupUid,
+                    onMove: (data, {required after}) =>
+                        DashboardProviders.moveGroup(data, groupUid, after: after),
+                    onUpdate: () => _showGroupUpsertDialog(context, groupUid),
+                    onDelete: () => DashboardProviders.deleteGroup(groupUid),
+                    text: groupUid,
+                  );
+                }).toList(),
+              ),
+            ),
+            IconButton(
+              onPressed: () => _showGroupUpsertDialog(context, null),
+              icon: const Icon(Icons.add),
+            ),
+          ],
+        ),
+        if (config.group.items.isNotEmpty)
+          Row(
+            children: [
+              Expanded(
+                child: _ControlledTabBar(
+                  index: config.group.itemIndex ?? 0,
+                  onTap: (index) => DashboardProviders.selectItem(config.group.items[index]),
+                  tabs: config.group.items.map((itemUid) {
+                    return _buildTab<String>(
+                      value: itemUid,
+                      onMove: (data, {required after}) =>
+                          DashboardProviders.moveItem(data, itemUid, after: after),
+                      onDelete: () => DashboardProviders.deleteItem(itemUid),
+                      text: path_.basename(itemUid),
+                    );
+                  }).toList(),
+                ),
+              ),
+              IconButton(
+                onPressed: () => RepositoriesProviders.add(null, null),
+                icon: const Icon(Icons.add),
+              ),
+            ],
+          ),
+      ],
+    );
+  }
+}
+
+class _ControlledTabBar extends StatefulWidget {
+  final int index;
+  final ValueChanged<int> onTap;
+  final List<Widget> tabs;
+
+  const _ControlledTabBar({
+    super.key,
+    required this.index,
+    required this.onTap,
+    required this.tabs,
+  });
+
+  @override
+  State<_ControlledTabBar> createState() => _ControlledTabBarState();
+}
+
+class _ControlledTabBarState extends State<_ControlledTabBar> with TickerProviderStateMixin {
+  late TabController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TabController(
+      vsync: this,
+      length: widget.tabs.length,
+      initialIndex: widget.index,
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant _ControlledTabBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.tabs.length != oldWidget.tabs.length) {
+      _controller.dispose();
+      _controller = TabController(
+        vsync: this,
+        length: widget.tabs.length,
+        initialIndex: widget.index,
+      );
+    }
+    final previousIndex = oldWidget.index;
+    final index = widget.index;
+    if (index != previousIndex && index != _controller.index) {
+      _controller.animateTo(index);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TabBar(
+      controller: _controller,
+      tabAlignment: TabAlignment.start,
+      isScrollable: true,
+      onTap: widget.onTap,
+      labelPadding: EdgeInsets.zero,
+      tabs: widget.tabs,
+    );
+  }
+}

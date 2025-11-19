@@ -51,7 +51,7 @@ class _FormCommitAtomState extends SourceConsumerState<FormCommitAtom> {
     super.dispose();
   }
 
-  late final _commitPush = scope.mutation(
+  late final _commitPush = ref.mutation(
     (ref, arg) async {
       final branch = await widget.gitDir.currentBranch();
       final repository = await ref.read(RepositoriesProviders.current.future);
@@ -106,14 +106,14 @@ class _FormCommitAtomState extends SourceConsumerState<FormCommitAtom> {
 
   @override
   Widget build(BuildContext context) {
-    final hasPush = scope.watch(_pushFb.source.hasValue);
-    final isAmend = scope.watch(_amendFb.source.value) ?? false;
+    final hasPush = !ref.watchSource(_pushFb.source.value.isNull);
+    final isAmend = ref.watchSource(_amendFb.source.value) ?? false;
 
-    final error = scope.watch(_commitPush.source.select((state) => state.errorOrNull));
+    final error = ref.watchSource(_commitPush.source.select((state) => state.errorOrNull));
 
     final repository = ref.watch(RepositoriesProviders.current).requireValue!;
 
-    final isIdle = !scope.watchIsMutating([_commitPush]);
+    final isIdle = !ref.watchIsMutating([_commitPush]);
 
     final content = Column(
       children: [

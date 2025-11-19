@@ -1,6 +1,3 @@
-import 'dart:math';
-
-import 'package:collection/collection.dart';
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:flutter/material.dart' hide Notification;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,16 +11,19 @@ import 'package:gitle/git/atoms/stash_atom.dart';
 import 'package:gitle/git/atoms/working_tree_atom.dart';
 import 'package:gitle/git/clients/git_extensions.dart';
 import 'package:gitle/git/dialogs/remote_url_dialog.dart';
+import 'package:gitle/git/dto/repository_dto.dart';
 import 'package:gitle/git/models/repository_model.dart';
+import 'package:gitle/git/providers/dashboard_providers.dart';
 import 'package:gitle/git/providers/git_providers.dart';
 import 'package:gitle/git/providers/repositories_providers.dart';
+import 'package:gitle/git/widgets/tab_layout.dart';
 import 'package:mek/mek.dart';
 import 'package:multi_split_view/multi_split_view.dart';
 import 'package:path/path.dart' as p;
 
 final _screenProvider = FutureProvider.autoDispose((ref) async {
   return await (
-    ref.watch(RepositoriesProviders.last.future),
+    ref.watch(DashboardProviders.config.future),
     ref.watch(RepositoriesProviders.current.future),
   ).wait;
 });
@@ -48,153 +48,95 @@ class _GitScreenState extends SourceConsumerState<GitScreen> {
 
   void _refresh() => ref.invalidateWithAncestors(RepositoriesProviders.current);
 
-  late final _fetch = scope.mutation(
-    (ref, (GitDir, {bool prune}) __) async {
-      final (gitDir, :prune) = __;
-      await GitProviders.fetch(ref, gitDir, prune: prune);
-    },
-    onError: (_, error) {
-      AppUtils.showErrorSnackBar(context, error);
-    },
-  );
-  late final _rebaseContinue = scope.mutation(
+  late final _fetch = ref.mutation((ref, (GitDir, {bool prune}) __) async {
+    final (gitDir, :prune) = __;
+    await GitProviders.fetch(ref, gitDir, prune: prune);
+  }, onError: (_, error) => AppUtils.showErrorSnackBar(context, error));
+
+  late final _rebaseContinue = ref.mutation(
     GitProviders.rebaseContinue,
-    onError: (_, error) {
-      AppUtils.showErrorSnackBar(context, error);
-    },
-    onSuccess: (_, message) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-    },
+    onError: (_, error) => AppUtils.showErrorSnackBar(context, error),
+    onSuccess: (_, message) =>
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message))),
   );
-  late final _rebaseAbort = scope.mutation(
+
+  late final _rebaseAbort = ref.mutation(
     GitProviders.rebaseAbort,
-    onError: (_, error) {
-      AppUtils.showErrorSnackBar(context, error);
-    },
-    onSuccess: (_, message) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-    },
+    onError: (_, error) => AppUtils.showErrorSnackBar(context, error),
+    onSuccess: (_, message) =>
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message))),
   );
-  late final _removeRepository = scope.mutation(
+
+  late final _removeRepository = ref.mutation(
     RepositoriesProviders.remove,
-    onError: (_, error) {
-      AppUtils.showErrorSnackBar(context, error);
-    },
-    onSuccess: (_, message) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Removed repository!')));
-    },
+    onError: (_, error) => AppUtils.showErrorSnackBar(context, error),
+    onSuccess: (_, message) => ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Removed repository!'))),
   );
 
   Widget buildRepository({
-    required IList<String> repositories,
-    required RepositoryModel repository,
+    required DashboardConfigDto config,
+    required RepositoryModel? repository,
   }) {
-    return Column(
+    if (repository == null) {
+      return Builder(
+        builder: (context) {
+          return InfoView(
+            onTap: () => Scaffold.of(context).openDrawer(),
+            title: const Text('Select repository'),
+          );
+        },
+      );
+    }
+
+    return MultiSplitView(
+      axis: Axis.vertical,
+      initialAreas: [
+        Area(minimalSize: kMinInteractiveDimension * 2),
+        Area(minimalSize: kMinInteractiveDimension),
+      ],
       children: [
-        Consumer(
-          builder: (context, ref, child) {
-            ref.listen(
-              RepositoriesProviders.current.select((state) {
-                return repositories.indexOf(state.value?.gitDir.path ?? '');
-              }),
-              (_, index) {
-                if (index == -1) return;
-                DefaultTabController.of(context).animateTo(index);
-              },
-            );
-            ref.listen(
-              RepositoriesProviders.last.select((state) {
-                final lastRepositoryPaths = state.value ?? const IList.empty();
-                return lastRepositoryPaths.indexOf(repository.gitDir.path);
-              }),
-              (_, index) {
-                if (index == -1) return;
-                DefaultTabController.of(context).animateTo(index);
-              },
-            );
-            return const SizedBox.shrink();
-          },
-        ),
-        SizedBox(
-          width: double.infinity,
-          child: TabBar(
-            tabAlignment: TabAlignment.start,
-            isScrollable: true,
-            onTap: (index) => RepositoriesProviders.select(repositories[index]),
-            tabs: repositories.mapIndexed((index, repositoryPath) {
-              final tab = Tab(text: p.basename(repositoryPath));
-              return PreferredSize(
-                preferredSize: tab.preferredSize,
-                child: Draggable(
-                  data: repositoryPath,
-                  feedback: Material(child: tab),
-                  child: GestureDetector(
-                    onTertiaryTapDown: repositoryPath != repository.gitDir.path
-                        ? (_) => RepositoriesProviders.removeFromLast(repositoryPath)
-                        : null,
-                    onSecondaryTap: index > 0
-                        ? () => RepositoriesProviders.upgradeLast(repositoryPath)
-                        : null,
-                    child: tab,
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-        Expanded(
-          child: MultiSplitView(
-            axis: Axis.vertical,
-            initialAreas: [
-              Area(minimalSize: kMinInteractiveDimension * 2),
-              Area(minimalSize: kMinInteractiveDimension),
-            ],
-            children: [
-              MultiSplitView(
-                initialAreas: [
-                  Area(minimalSize: kMinInteractiveDimension * 6),
-                  Area(minimalSize: kMinInteractiveDimension * 9),
-                ],
-                children: [
-                  Surface(
-                    child: WorkingTreeAtom(key: _workingTreeKey, repository: repository),
-                  ),
-                  Surface(
-                    child: DefaultTabController(
-                      length: 2,
-                      child: Column(
+        MultiSplitView(
+          initialAreas: [
+            Area(minimalSize: kMinInteractiveDimension * 6),
+            Area(minimalSize: kMinInteractiveDimension * 9),
+          ],
+          children: [
+            Surface(
+              child: WorkingTreeAtom(key: _workingTreeKey, repository: repository),
+            ),
+            Surface(
+              child: DefaultTabController(
+                length: 2,
+                child: Column(
+                  children: [
+                    const TabBar(
+                      tabs: [
+                        Tab(text: 'Commit'),
+                        Tab(text: 'Stash'),
+                      ],
+                    ),
+                    Expanded(
+                      child: TabBarView(
                         children: [
-                          const TabBar(
-                            tabs: [
-                              Tab(text: 'Commit'),
-                              Tab(text: 'Stash'),
-                            ],
+                          FormCommitAtom(
+                            gitDir: repository.gitDir,
+                            filePaths: () => _workingTreeKey.currentState!.selection
+                                .expand((e) => e.paths)
+                                .toList(),
                           ),
-                          Expanded(
-                            child: TabBarView(
-                              children: [
-                                FormCommitAtom(
-                                  gitDir: repository.gitDir,
-                                  filePaths: () => _workingTreeKey.currentState!.selection
-                                      .expand((e) => e.paths)
-                                      .toList(),
-                                ),
-                                StashAtom(repository: repository),
-                              ],
-                            ),
-                          ),
+                          StashAtom(repository: repository),
                         ],
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-              Surface(child: GitGraphAtom(repository: repository)),
-            ],
-          ),
+            ),
+          ],
         ),
+        Surface(child: GitGraphAtom(repository: repository)),
       ],
     );
   }
@@ -209,7 +151,7 @@ class _GitScreenState extends SourceConsumerState<GitScreen> {
     final isLoading = state.isLoading;
     final repository = state.value?.$2;
 
-    final isGitIdle = !scope.watchIsMutating([_fetch, _rebaseContinue]);
+    final isGitIdle = !ref.watchIsMutating([_fetch, _rebaseContinue]);
 
     Widget? branchesDropdown;
     if (repository != null) {
@@ -334,21 +276,18 @@ class _GitScreenState extends SourceConsumerState<GitScreen> {
           return ErrorView(error: error, onRefresh: _refresh);
         },
         data: (data) {
-          final (repositories, repository) = data;
-          if (repository == null) {
-            return Builder(
-              builder: (context) {
-                return InfoView(
-                  onTap: () => Scaffold.of(context).openDrawer(),
-                  title: const Text('Select repository'),
-                );
-              },
-            );
-          }
-          return DefaultTabController(
-            length: repositories.length,
-            initialIndex: max(repositories.indexOf(repository.gitDir.path), 0),
-            child: buildRepository(repositories: repositories, repository: repository),
+          final (config, repository) = data;
+
+          return Column(
+            children: [
+              SizedBox(
+                width: double.infinity,
+                child: RepositoriesTabBarScene(config: config),
+              ),
+              Expanded(
+                child: buildRepository(config: config, repository: repository),
+              ),
+            ],
           );
         },
       ),

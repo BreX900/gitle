@@ -11,6 +11,7 @@ Future<void> onReceiveLocalBackgroundNotification(NotificationResponse localNoti
   final token = Instances.gitHubTokenBin.read();
   if (token.isEmpty) return;
 
-  final gitHub = GitHub(auth: Authentication.withToken(token));
-  await NotificationsManager(gitHub).handleLocalLocalNotification(localNotification);
+  NotificationsManager.instance.githubClient = GitHub(auth: Authentication.withToken(token));
+  await NotificationsManager.instance.initialize(shouldRequestPermissions: false);
+  await NotificationsManager.instance.handleLocalLocalNotification(localNotification);
 }

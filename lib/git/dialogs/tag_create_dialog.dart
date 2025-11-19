@@ -34,7 +34,7 @@ class _TagCreateDialogState extends SourceConsumerState<TagCreateDialog> {
     super.dispose();
   }
 
-  late final _createTagMutation = scope.mutationV2((ref, None _) async {
+  late final _createTagMutation = ref.mutationV2((ref, None _) async {
     await GitProviders.createTag(
       ref,
       gitDir: widget.gitDir,
@@ -59,7 +59,7 @@ class _TagCreateDialogState extends SourceConsumerState<TagCreateDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isIdle = !scope.watchIsMutating([_createTagMutation]);
+    final isIdle = !ref.watchIsMutating([_createTagMutation]);
     final createTag = _form.handleSubmit(_createTag);
 
     return AlertDialog(

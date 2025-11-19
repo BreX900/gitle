@@ -31,55 +31,38 @@ class GitGraphAtom extends SourceConsumerStatefulWidget {
 }
 
 class _GitGraphAtomState extends SourceConsumerState<GitGraphAtom> {
-  late final _checkout = scope.mutation(
+  late final _checkout = ref.mutation(
     GitProviders.checkout,
-    onError: (_, error) {
-      AppUtils.showErrorSnackBar(context, error);
-    },
+    onError: (_, error) => AppUtils.showErrorSnackBar(context, error),
   );
-  late final _rebase = scope.mutation(
+  late final _rebase = ref.mutation(
     GitProviders.rebase,
-    onError: (_, error) {
-      AppUtils.showErrorSnackBar(context, error);
-    },
-    onSuccess: (_, message) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message ?? 'Rebase completed!')));
-    },
+    onError: (_, error) => AppUtils.showErrorSnackBar(context, error),
+    onSuccess: (_, message) => ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message ?? 'Rebase completed!'))),
   );
-  late final _cherryPick = scope.mutation(
+  late final _cherryPick = ref.mutation(
     (ref, String commitSha) async {
       return await GitProviders.cherryPick(ref, widget.repository.gitDir, commitSha);
     },
-    onError: (_, error) {
-      AppUtils.showErrorSnackBar(context, error);
-    },
-    onSuccess: (_, message) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message ?? 'Rebase completed!')));
-    },
+    onError: (_, error) => AppUtils.showErrorSnackBar(context, error),
+    onSuccess: (_, message) => ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message ?? 'Rebase completed!'))),
   );
-  late final _fetch = scope.mutation(
-    (ref, (String, String) __) async {
-      final (remote, local) = __;
-      await GitProviders.fetch(
-        ref,
-        widget.repository.gitDir,
-        remoteBranchName: remote,
-        localBranch: local,
-      );
-    },
-    onError: (_, error) {
-      AppUtils.showErrorSnackBar(context, error);
-    },
-  );
-  late final _reset = scope.mutation(
+  late final _fetch = ref.mutation((ref, (String, String) __) async {
+    final (remote, local) = __;
+    await GitProviders.fetch(
+      ref,
+      widget.repository.gitDir,
+      remoteBranchName: remote,
+      localBranch: local,
+    );
+  }, onError: (_, error) => AppUtils.showErrorSnackBar(context, error));
+  late final _reset = ref.mutation(
     GitProviders.reset,
-    onError: (_, error) {
-      AppUtils.showErrorSnackBar(context, error);
-    },
+    onError: (_, error) => AppUtils.showErrorSnackBar(context, error),
   );
 
   Future<void> _showTagCreateDialog(GitDir gitDir, Sha commit) async {
@@ -339,7 +322,7 @@ class _GitGraphAtomState extends SourceConsumerState<GitGraphAtom> {
   Widget build(BuildContext context) {
     final dateFormat = DateFormat.Hm('it').add_yMd();
 
-    final isIdle = !scope.watchIsMutating([_checkout, _rebase, _rebase, _cherryPick, _fetch]);
+    final isIdle = !ref.watchIsMutating([_checkout, _rebase, _rebase, _cherryPick, _fetch]);
 
     final head = widget.repository.currentBranch;
     final marks = widget.repository.marks;

@@ -10,11 +10,13 @@ part of 'repository_model.dart';
 
 mixin _$RepositoryModel {
   RepositoryModel get _self => this as RepositoryModel;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is RepositoryModel &&
           runtimeType == other.runtimeType &&
+          _self.path == other.path &&
           const _GitDirEquality().equals(_self.gitDir, other.gitDir) &&
           const _CommitReferenceEquality().equals(
             _self.currentBranch,
@@ -31,9 +33,11 @@ mixin _$RepositoryModel {
           _self.stashes == other.stashes &&
           _self.marks == other.marks &&
           _self.settings == other.settings;
+
   @override
   int get hashCode {
     var hashCode = 0;
+    hashCode = $hashCombine(hashCode, _self.path.hashCode);
     hashCode = $hashCombine(
       hashCode,
       const _GitDirEquality().hash(_self.gitDir),
@@ -59,6 +63,7 @@ mixin _$RepositoryModel {
   @override
   String toString() =>
       (ClassToString('RepositoryModel')
+            ..add('path', _self.path)
             ..add('gitDir', _self.gitDir)
             ..add('currentBranch', _self.currentBranch)
             ..add('commits', _self.commits)

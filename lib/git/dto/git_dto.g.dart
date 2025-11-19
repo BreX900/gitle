@@ -10,6 +10,7 @@ part of 'git_dto.dart';
 
 mixin _$CommandLogDto {
   CommandLogDto get _self => this as CommandLogDto;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -19,6 +20,7 @@ mixin _$CommandLogDto {
           $listEquality.equals(_self.args, other.args) &&
           _self.exitCode == other.exitCode &&
           _self.message == other.message;
+
   @override
   int get hashCode {
     var hashCode = 0;
@@ -32,6 +34,7 @@ mixin _$CommandLogDto {
 
 mixin _$LogActionDto {
   LogActionDto get _self => this as LogActionDto;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -40,6 +43,7 @@ mixin _$LogActionDto {
           _self.username == other.username &&
           _self.email == other.email &&
           _self.date == other.date;
+
   @override
   int get hashCode {
     var hashCode = 0;
@@ -52,6 +56,7 @@ mixin _$LogActionDto {
 
 mixin _$LogDto {
   LogDto get _self => this as LogDto;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -62,6 +67,7 @@ mixin _$LogDto {
           _self.author == other.author &&
           _self.committer == other.committer &&
           $listEquality.equals(_self.message, other.message);
+
   @override
   int get hashCode {
     var hashCode = 0;
@@ -76,6 +82,7 @@ mixin _$LogDto {
 
 mixin _$Stash {
   Stash get _self => this as Stash;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -85,6 +92,7 @@ mixin _$Stash {
           _self.author == other.author &&
           _self.committer == other.committer &&
           $listEquality.equals(_self.message, other.message);
+
   @override
   int get hashCode {
     var hashCode = 0;
@@ -107,6 +115,7 @@ mixin _$Stash {
 
 mixin _$FileDto {
   FileDto get _self => this as FileDto;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -114,6 +123,7 @@ mixin _$FileDto {
           runtimeType == other.runtimeType &&
           $listEquality.equals(_self.status, other.status) &&
           $listEquality.equals(_self.paths, other.paths);
+
   @override
   int get hashCode {
     var hashCode = 0;
@@ -132,6 +142,7 @@ mixin _$FileDto {
 
 mixin _$BranchReferenceWithUpstream {
   BranchReferenceWithUpstream get _self => this as BranchReferenceWithUpstream;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -142,6 +153,7 @@ mixin _$BranchReferenceWithUpstream {
           _self.commit == other.commit &&
           _self.upstream == other.upstream &&
           $listEquality.equals(_self.message, other.message);
+
   @override
   int get hashCode {
     var hashCode = 0;
@@ -166,6 +178,7 @@ mixin _$BranchReferenceWithUpstream {
 
 mixin _$Mark {
   Mark get _self => this as Mark;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -174,6 +187,7 @@ mixin _$Mark {
           _self.hasHead == other.hasHead &&
           _self.remote == other.remote &&
           _self.local == other.local;
+
   @override
   int get hashCode {
     var hashCode = 0;

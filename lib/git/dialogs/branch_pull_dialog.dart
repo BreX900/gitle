@@ -21,19 +21,15 @@ class BranchPullDialog extends SourceConsumerStatefulWidget with TypedWidgetMixi
 }
 
 class _BranchPullDialogState extends SourceConsumerState<BranchPullDialog> {
-  late final _pullBranch = scope.mutation(
+  late final _pullBranch = ref.mutation(
     GitProviders.pull,
-    onSuccess: (_, __) {
-      context.nav.pop();
-    },
-    onError: (_, error) {
-      AppUtils.showErrorSnackBar(context, error);
-    },
+    onError: (_, error) => AppUtils.showErrorSnackBar(context, error),
+    onSuccess: (_, __) => context.nav.pop(),
   );
 
   @override
   Widget build(BuildContext context) {
-    final isIdle = !scope.watchIsMutating([_pullBranch]);
+    final isIdle = !ref.watchIsMutating([_pullBranch]);
 
     return AlertDialog(
       title: Text.rich(

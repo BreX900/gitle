@@ -27,7 +27,7 @@ class _BranchDeleteDialogState extends SourceConsumerState<BranchDeleteDialog> {
     super.dispose();
   }
 
-  late final _deleteBranchMutation = scope.mutationV2((ref, None _) {
+  late final _deleteBranchMutation = ref.mutationV2((ref, None _) {
     return GitProviders.deleteBranch(
       ref,
       gitDir: widget.gitDir,
@@ -51,7 +51,7 @@ class _BranchDeleteDialogState extends SourceConsumerState<BranchDeleteDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isIdle = !scope.watchIsMutating([_deleteBranchMutation]);
+    final isIdle = !ref.watchIsMutating([_deleteBranchMutation]);
     final deleteBranch = _form.handleSubmit(_deleteBranch);
 
     return AlertDialog(

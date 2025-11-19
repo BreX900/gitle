@@ -19,7 +19,7 @@ scripts:
     dart pub global run flutter_launcher_icons
 
   deploy: >-
-    flutter build macos &&
+    flutter build macos --dart-define-from-file=.env &&
     rm -r -f ~/Desktop/Gitle.app &&
     mv ./build/macos/Build/Products/Release/Gitle.app ~/Desktop/Gitle.app &&
     flutter clean &&
@@ -44,6 +44,7 @@ dependencies:
   flutter_local_notifications: ^19.4.1
   url_launcher: ^6.3.2
   path_provider: ^2.1.5
+  dio:
 
   # Dart
   path: ^1.9.0
@@ -52,7 +53,8 @@ dependencies:
   logging: ^1.3.0
   rxdart: ^0.28.0
   fast_immutable_collections: ^11.0.4
-  json_annotation:
+  json_annotation: ^4.9.0
+  mek_data_class: ^2.1.0
 
   # Dart UI
   intl: ^0.20.2
@@ -62,17 +64,15 @@ dependencies:
   multi_split_view: ^2.4.0
   reactive_forms: ^18.1.1
 
-  mek_data_class: ^1.4.0
-
   mekart: { path: ../packages/mekart }
   mek: { path: ../packages/mek_framework }
 
 dev_dependencies:
   mek_lints: ^5.0.0
 
-  build_runner: ^2.7.1
-  mek_data_class_generator: ^3.0.0
-  json_serializable:
+  build_runner: ^2.10.5
+  mek_data_class_generator: ^4.2.1
+  json_serializable: ^6.11.2
 
 flutter:
   uses-material-design: true

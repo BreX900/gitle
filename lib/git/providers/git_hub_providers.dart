@@ -38,8 +38,10 @@ abstract class GitHubProviders {
     if (gitHub == null) return false;
 
     lg.config('Listening GitHub Notifications');
-    final manager = NotificationsManager(gitHub);
-    final subscription = await manager.listen(onChange: () => ref.invalidate(notifications));
+    NotificationsManager.instance.githubClient = gitHub;
+    final subscription = await NotificationsManager.instance.listen(
+      onChange: () => ref.invalidate(notifications),
+    );
     ref.onDispose(subscription.cancel);
     return true;
   });

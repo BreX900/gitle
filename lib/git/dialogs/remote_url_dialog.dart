@@ -40,7 +40,7 @@ class _RemoteUrlDialogState extends SourceConsumerState<RemoteUrlDialog> {
     _urlFieldBloc.updateValue(remoteUrl.stdout as String);
   }
 
-  late final _updateRemoteOriginUrlMutation = scope.mutationV2((ref, None _) async {
+  late final _updateRemoteOriginUrlMutation = ref.mutationV2((ref, None _) async {
     await widget.repository.gitDir.runEffect(['remote', 'set-url', 'origin', _urlFieldBloc.value]);
   });
 
@@ -58,8 +58,8 @@ class _RemoteUrlDialogState extends SourceConsumerState<RemoteUrlDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isDataIdle = !scope.watchIsMutating([_updateRemoteOriginUrlMutation]);
-    final isFormDirty = scope.watch(_urlFieldBloc.source.dirty);
+    final isDataIdle = !ref.watchIsMutating([_updateRemoteOriginUrlMutation]);
+    final isFormDirty = ref.watchSource(_urlFieldBloc.source.dirty);
 
     final updateRemoteOriginUrl = _urlFieldBloc.handleSubmit(_updateRemoteOriginUrl);
 

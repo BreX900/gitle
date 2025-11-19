@@ -39,7 +39,7 @@ class _BranchRenameDialogState extends SourceConsumerState<BranchRenameDialog> {
     super.dispose();
   }
 
-  late final _renameBranchMutation = scope.mutationV2((ref, None _) async {
+  late final _renameBranchMutation = ref.mutationV2((ref, None _) async {
     return await GitProviders.renameBranch(
       ref,
       gitDir: widget.gitDir,
@@ -64,8 +64,8 @@ class _BranchRenameDialogState extends SourceConsumerState<BranchRenameDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isIdle = !scope.watchIsMutating([_renameBranchMutation]);
-    final isFormDirty = scope.watch(_form.source.dirty);
+    final isIdle = !ref.watchIsMutating([_renameBranchMutation]);
+    final isFormDirty = ref.watchSource(_form.source.dirty);
     final renameBranch = _form.handleSubmit(_renameBranch);
 
     return AlertDialog(

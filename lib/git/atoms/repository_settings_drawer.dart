@@ -15,16 +15,16 @@ class RepositorySettingsDrawer extends SourceConsumerStatefulWidget {
 }
 
 class _RepositorySettingsDrawerState extends SourceConsumerState<RepositorySettingsDrawer> {
-  late final _toggleBranchProtection = scope.mutation((ref, bool isEnabled) async {
+  late final _toggleBranchProtection = ref.mutation((ref, bool isEnabled) async {
     await RepositoriesProviders.toggleBranchesProtection(ref, isEnabled: isEnabled);
   }, onError: (_, error) => AppUtils.showErrorSnackBar(context, error));
 
-  late final _markAsRead = scope.mutation(
+  late final _markAsRead = ref.mutation(
     GitHubProviders.markAsRead,
     onError: (_, error) => AppUtils.showErrorSnackBar(context, error),
   );
 
-  late final _markAllAsRead = scope.mutation(
+  late final _markAllAsRead = ref.mutation(
     GitHubProviders.markAllAsRead,
     onError: (_, error) => AppUtils.showErrorSnackBar(context, error),
   );

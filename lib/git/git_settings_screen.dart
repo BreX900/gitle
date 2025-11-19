@@ -37,7 +37,7 @@ class _GitSettingsScreenState extends SourceConsumerState<GitSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDirty = scope.watch(_form.source.dirty);
+    final isDirty = ref.watchSource(_form.source.dirty);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),

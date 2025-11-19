@@ -34,7 +34,7 @@ class _BranchCreateDialogState extends SourceConsumerState<BranchCreateDialog> {
     super.dispose();
   }
 
-  late final _createBranchMutation = scope.mutationV2((ref, None _) {
+  late final _createBranchMutation = ref.mutationV2((ref, None _) {
     return GitProviders.createBranch(
       ref,
       gitDir: widget.gitDir,
@@ -60,7 +60,7 @@ class _BranchCreateDialogState extends SourceConsumerState<BranchCreateDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isIdle = !scope.watchIsMutating([_createBranchMutation]);
+    final isIdle = !ref.watchIsMutating([_createBranchMutation]);
     final createBranch = _form.handleSubmit(_createBranch);
 
     return AlertDialog(

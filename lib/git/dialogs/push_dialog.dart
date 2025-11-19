@@ -28,7 +28,7 @@ class _PushDialogState extends SourceConsumerState<PushDialog> {
     super.dispose();
   }
 
-  late final _pushMutation = scope.mutationV2((ref, None _) async {
+  late final _pushMutation = ref.mutationV2((ref, None _) async {
     await GitProviders.push(
       ref,
       gitDir: widget.gitDir,
@@ -51,8 +51,8 @@ class _PushDialogState extends SourceConsumerState<PushDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isIdle = !scope.watchIsMutating([_pushMutation]);
-    final isFormDirty = scope.watch(_form.source.dirty);
+    final isIdle = !ref.watchIsMutating([_pushMutation]);
+    final isFormDirty = ref.watchSource(_form.source.dirty);
     final push = _form.handleSubmit(_push);
 
     return AlertDialog(

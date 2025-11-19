@@ -26,7 +26,7 @@ class _TagDeleteDialogState extends SourceConsumerState<TagDeleteDialog> {
     super.dispose();
   }
 
-  late final _deleteBranchMutation = scope.mutationV2((ref, None _) {
+  late final _deleteBranchMutation = ref.mutationV2((ref, None _) {
     return GitProviders.deleteTag(
       ref,
       gitDir: widget.gitDir,
@@ -38,16 +38,14 @@ class _TagDeleteDialogState extends SourceConsumerState<TagDeleteDialog> {
   void _deleteBranch() {
     _deleteBranchMutation(
       none,
-      onError: (error) {
-        AppUtils.showErrorSnackBar(context, error);
-      },
+      onError: (error) => AppUtils.showErrorSnackBar(context, error),
       onSuccess: (_) => context.nav.pop(),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final isIdle = !scope.watchIsMutating([_deleteBranchMutation]);
+    final isIdle = !ref.watchIsMutating([_deleteBranchMutation]);
     final deleteBranch = _form.handleSubmit(_deleteBranch);
 
     return AlertDialog(

@@ -11,6 +11,7 @@ import 'package:gitle/git/clients/instances.dart';
 import 'package:gitle/git/dto/git_dto.dart';
 import 'package:gitle/git/dto/repository_dto.dart';
 import 'package:gitle/git/models/repository_model.dart';
+import 'package:gitle/git/providers/dashboard_providers.dart';
 import 'package:mek/mek.dart';
 import 'package:mekart/mekart.dart';
 import 'package:rxdart/rxdart.dart';
@@ -21,38 +22,23 @@ class InvalidGitDirFailure implements Exception {
   const InvalidGitDirFailure({required this.path});
 }
 
-extension on BinSession {
+extension RepositoriesBin on BinSession {
   BinStore<IMap<String, RepositorySettingsDto>> get repositories => BinStore(
     session: this,
-    name: Instances.resolveBinName('repositories'),
+    name: Instances.resolveBinName('repositories_v4'),
     deserializer: RepositorySettingsDto.fromBin,
     serializer: RepositorySettingsDto.toBin,
     fallbackData: RepositorySettingsDto.initialBin,
-  );
-  BinStore<String?> get currentRepository => BinStore(
-    session: this,
-    name: Instances.resolveBinName('repository'),
-    deserializer: (data) => data as String,
-    fallbackData: null,
-  );
-  BinStore<IList<String>> get lastRepositories => BinStore(
-    session: this,
-    name: Instances.resolveBinName('last_repositories_v3'),
-    deserializer: (data) => (data as List).cast<String>().lockUnsafe,
-    serializer: (data) => data.unlockView,
-    fallbackData: const IList<String>.empty(),
   );
 }
 
 abstract class RepositoriesProviders {
   static final all = StreamProvider((ref) => Instances.bin.repositories.stream);
 
-  static final last = StreamProvider((ref) {
-    return Instances.bin.lastRepositories.stream;
-  });
-
   static final currentGitDir = StreamProvider((ref) {
-    return Instances.bin.currentRepository.stream.switchMap((path) async* {
+    return Instances.bin.dashboard.stream.map((data) => data.group.itemUid).distinct().switchMap((
+      path,
+    ) async* {
       if (path == null) {
         yield null;
         return;
@@ -97,49 +83,61 @@ abstract class RepositoriesProviders {
     });
   });
 
-  static Future<void> add(MutationRef ref, void _) async {
-    final dirPath = await FilePicker.platform.getDirectoryPath();
-    if (dirPath == null) return;
+  static Future<void> add(MutationRef? ref, void _) async {
+    final rawRepositoryPath = await FilePicker.platform.getDirectoryPath();
+    if (rawRepositoryPath == null) return;
+
+    final repositoryPath = Directory(rawRepositoryPath).absolute.resolveSymbolicLinksSync();
 
     await Instances.bin.runTransaction((tx) async {
       final paths = await tx.repositories.read();
-      if (paths.containsKey(dirPath)) throw StateError('Already has $dirPath');
+      if (paths.containsKey(repositoryPath)) throw StateError('Already has $repositoryPath');
+      var dashboard = await tx.dashboard.read();
+      final group = dashboard.group;
 
-      await tx.repositories.set(dirPath, const RepositorySettingsDto());
-      await tx.currentRepository.write(dirPath);
+      dashboard = dashboard.copyWith(
+        groupUid: group.uid,
+        groups: dashboard.groups.replaceFirst(
+          from: group,
+          to: group.copyWith(itemUid: repositoryPath, items: group.items.add(repositoryPath)),
+        ),
+      );
+
+      await tx.repositories.set(repositoryPath, const RepositorySettingsDto());
+      await tx.dashboard.write(dashboard);
     });
   }
 
-  static Future<void> select(String repositoryPath) async {
-    await Instances.bin.currentRepository.write(repositoryPath);
+  static Future<void> select(String path) async {
     await Instances.bin.runTransaction((tx) async {
-      final lastRepositories = await tx.lastRepositories.requireRead();
-      if (lastRepositories.contains(repositoryPath)) return;
-      await tx.lastRepositories.write(lastRepositories.add(repositoryPath));
-    });
-  }
-
-  static Future<void> removeFromLast(String repositoryPath) async {
-    await Instances.bin.runTransaction((tx) async {
-      final lastRepositories = await tx.lastRepositories.requireRead();
-      await tx.lastRepositories.write(lastRepositories.remove(repositoryPath));
-    });
-  }
-
-  static Future<void> upgradeLast(String repositoryPath) async {
-    await Instances.bin.runTransaction((tx) async {
-      var lastRepositories = await tx.lastRepositories.requireRead();
-      final index = lastRepositories.indexOf(repositoryPath);
-      if (index == 0) return;
-      lastRepositories = lastRepositories.removeAt(index).insert(index - 1, repositoryPath);
-      await tx.lastRepositories.write(lastRepositories);
+      var dashboard = await tx.dashboard.requireRead();
+      final group = dashboard.groups.firstWhere(
+        (group) => group.items.contains(path),
+        orElse: () => dashboard.group,
+      );
+      dashboard = dashboard.copyWith(
+        groupUid: group.uid,
+        groups: dashboard.groups.replaceFirst(
+          from: group,
+          to: group.copyWith(itemUid: path, items: group.items.add(path)),
+        ),
+      );
+      await tx.dashboard.write(dashboard);
     });
   }
 
   static Future<void> remove(MutationRef ref, String dirPath) async {
     await Instances.bin.runTransaction((tx) async {
-      final currentDirPath = await tx.currentRepository.read();
-      if (currentDirPath == dirPath) await tx.currentRepository.write('');
+      var dashboard = await tx.dashboard.read();
+      dashboard = dashboard.copyWith(
+        groups: dashboard.groups.map((group) {
+          return group.copyWith(
+            itemUid: group.itemUid == dirPath ? null : group.itemUid,
+            items: group.items.where((e) => e != dirPath).toIList(),
+          );
+        }).toIList(),
+      );
+      await tx.dashboard.write(dashboard);
       await tx.repositories.remove(dirPath);
     });
   }
@@ -175,6 +173,7 @@ abstract class RepositoriesProviders {
     ).wait;
 
     return RepositoryModel(
+      path: await Directory(gitDirPath).absolute.resolveSymbolicLinks(),
       gitDir: gitDir,
       currentBranch: data.$1,
       commits: data.$3.lockUnsafe,

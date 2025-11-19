@@ -9,6 +9,7 @@ part 'repository_model.g.dart';
 
 @DataClass()
 class RepositoryModel with _$RepositoryModel {
+  final String path;
   @DataField(equality: _GitDirEquality())
   final GitDir gitDir;
   @DataField(equality: _CommitReferenceEquality())
@@ -29,6 +30,7 @@ class RepositoryModel with _$RepositoryModel {
   final RepositorySettingsDto settings;
 
   const RepositoryModel({
+    required this.path,
     required this.gitDir,
     required this.currentBranch,
     required this.commits,

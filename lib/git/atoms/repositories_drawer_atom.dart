@@ -18,17 +18,13 @@ class RepositoriesDrawerAtom extends SourceConsumerStatefulWidget {
 }
 
 class _RepositoriesDrawerAtomState extends SourceConsumerState<RepositoriesDrawerAtom> {
-  late final _addRepository = scope.mutation(
+  late final _addRepository = ref.mutation(
     RepositoriesProviders.add,
-    onError: (_, error) {
-      AppUtils.showErrorSnackBar(context, error);
-    },
+    onError: (_, error) => AppUtils.showErrorSnackBar(context, error),
   );
-  late final _removeRepository = scope.mutation(
+  late final _removeRepository = ref.mutation(
     RepositoriesProviders.remove,
-    onError: (_, error) {
-      AppUtils.showErrorSnackBar(context, error);
-    },
+    onError: (_, error) => AppUtils.showErrorSnackBar(context, error),
   );
 
   Future<void> _selectRepository(String repositoryPath) async {
@@ -37,7 +33,7 @@ class _RepositoriesDrawerAtomState extends SourceConsumerState<RepositoriesDrawe
   }
 
   Widget _buildRepositories(IList<String> repositories) {
-    final isIdle = !scope.watchIsMutating([_addRepository, _removeRepository]);
+    final isIdle = !ref.watchIsMutating([_addRepository, _removeRepository]);
     final repository = ref.watch(
       RepositoriesProviders.current.select((state) {
         return state.value?.gitDir.path;
@@ -94,7 +90,7 @@ class _RepositoriesDrawerAtomState extends SourceConsumerState<RepositoriesDrawe
   }
 
   Widget _buildContent(IList<String> repositories) {
-    final isIdle = !scope.watchIsMutating([_addRepository, _removeRepository]);
+    final isIdle = !ref.watchIsMutating([_addRepository, _removeRepository]);
 
     return Column(
       children: [
