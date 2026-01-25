@@ -252,6 +252,11 @@ class _GitScreenState extends SourceConsumerState<GitScreen> {
             ),
           const EndDrawerButton(),
         ],
+        bottom: state.whenOrNull(
+          skipLoadingOnRefresh: true,
+          skipLoadingOnReload: true,
+          data: (data) => RepositoriesTabBarScene(config: data.$1),
+        ),
         flexibleSpace: FlexibleLinearProgressBar(visible: !isGitIdle || isLoading),
       ),
       drawer: const RepositoriesDrawerAtom(),
@@ -275,21 +280,7 @@ class _GitScreenState extends SourceConsumerState<GitScreen> {
           }
           return ErrorView(error: error, onRefresh: _refresh);
         },
-        data: (data) {
-          final (config, repository) = data;
-
-          return Column(
-            children: [
-              SizedBox(
-                width: double.infinity,
-                child: RepositoriesTabBarScene(config: config),
-              ),
-              Expanded(
-                child: buildRepository(config: config, repository: repository),
-              ),
-            ],
-          );
-        },
+        data: (data) => buildRepository(config: data.$1, repository: data.$2),
       ),
     );
   }

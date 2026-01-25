@@ -43,6 +43,9 @@ class _FormCommitAtomState extends SourceConsumerState<FormCommitAtom> {
   void initState() {
     super.initState();
     _amendFb.valueChanges.listen(_amendListener);
+    _pushFb.valueChanges.listen((value) {
+      if (value == null) _pushForceTypeFb.reset();
+    });
   }
 
   @override
@@ -70,12 +73,8 @@ class _FormCommitAtomState extends SourceConsumerState<FormCommitAtom> {
         pushForce: _pushForceTypeFb.value,
       );
     },
-    onError: (_, error) {
-      AppUtils.showErrorSnackBar(context, error);
-    },
-    onSuccess: (_, __) {
-      _form.reset();
-    },
+    onError: (_, error) => AppUtils.showErrorSnackBar(context, error),
+    onSuccess: (_, __) => _form.reset(),
   );
 
   Future<void> _amendListener(bool amend) async {

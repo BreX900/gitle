@@ -6,10 +6,13 @@ import 'package:gitle/git/widgets/input_dialog.dart';
 import 'package:mek/mek.dart';
 import 'package:path/path.dart' as path_;
 
-class RepositoriesTabBarScene extends StatelessWidget {
+class RepositoriesTabBarScene extends StatelessWidget implements PreferredSizeWidget {
   final DashboardConfigDto config;
 
   const RepositoriesTabBarScene({super.key, required this.config});
+
+  @override
+  Size get preferredSize => const Size.fromHeight(46.0 * 2);
 
   Future<void> _showGroupUpsertDialog(BuildContext context, String? uid) async {
     final groupUid = await showDialog<String?>(
@@ -91,9 +94,11 @@ class RepositoriesTabBarScene extends StatelessWidget {
                 }).toList(),
               ),
             ),
-            IconButton(
+            TextButton.icon(
               onPressed: () => _showGroupUpsertDialog(context, null),
+              iconAlignment: .end,
               icon: const Icon(Icons.add),
+              label: const Text('Create Group'),
             ),
           ],
         ),
@@ -115,9 +120,11 @@ class RepositoriesTabBarScene extends StatelessWidget {
                   }).toList(),
                 ),
               ),
-              IconButton(
+              TextButton.icon(
                 onPressed: () => RepositoriesProviders.add(null, null),
+                iconAlignment: .end,
                 icon: const Icon(Icons.add),
+                label: const Text('Open Repository'),
               ),
             ],
           ),
@@ -131,12 +138,7 @@ class _ControlledTabBar extends StatefulWidget {
   final ValueChanged<int> onTap;
   final List<Widget> tabs;
 
-  const _ControlledTabBar({
-    super.key,
-    required this.index,
-    required this.onTap,
-    required this.tabs,
-  });
+  const _ControlledTabBar({required this.index, required this.onTap, required this.tabs});
 
   @override
   State<_ControlledTabBar> createState() => _ControlledTabBarState();

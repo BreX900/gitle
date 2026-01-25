@@ -52,7 +52,6 @@ class _PushDialogState extends SourceConsumerState<PushDialog> {
   @override
   Widget build(BuildContext context) {
     final isIdle = !ref.watchIsMutating([_pushMutation]);
-    final isFormDirty = ref.watchSource(_form.source.dirty);
     final push = _form.handleSubmit(_push);
 
     return AlertDialog(
@@ -91,7 +90,7 @@ class _PushDialogState extends SourceConsumerState<PushDialog> {
           onPressed: isIdle ? () => Navigator.of(context).pop() : null,
           child: const Text('Cancel'),
         ),
-        ElevatedButton(onPressed: isIdle && isFormDirty ? push : null, child: const Text('Push')),
+        ElevatedButton(onPressed: isIdle ? push : null, child: const Text('Push')),
       ],
     );
   }
