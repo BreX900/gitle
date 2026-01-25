@@ -168,22 +168,29 @@ class _FormCommitAtomState extends SourceConsumerState<FormCommitAtom> {
               ),
             ),
           ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton(
-                onPressed: isIdle && (!repository.isWorkingTreeClean || isAmend)
-                    ? () => _commitPush(null)
-                    : null,
-                child: hasPush ? const Text('Commit/Push') : const Text('Commit'),
-              ),
-            ],
-          ),
-        ),
       ],
     );
-    return SingleChildScrollView(child: content);
+    return HarmonicSingleChildScrollView(
+      child: Column(
+        mainAxisAlignment: .spaceBetween,
+        children: [
+          content,
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                FilledButton(
+                  onPressed: isIdle && (!repository.isWorkingTreeClean || isAmend)
+                      ? () => _commitPush(null)
+                      : null,
+                  child: hasPush ? const Text('Commit/Push') : const Text('Commit'),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

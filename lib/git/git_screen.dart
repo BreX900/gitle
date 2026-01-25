@@ -16,16 +16,16 @@ import 'package:gitle/git/models/repository_model.dart';
 import 'package:gitle/git/providers/dashboard_providers.dart';
 import 'package:gitle/git/providers/git_providers.dart';
 import 'package:gitle/git/providers/repositories_providers.dart';
-import 'package:gitle/git/widgets/tab_layout.dart';
+import 'package:gitle/git/widgets/repositories_tab_bar_scene.dart';
 import 'package:mek/mek.dart';
 import 'package:multi_split_view/multi_split_view.dart';
 import 'package:path/path.dart' as p;
 
-final _screenProvider = FutureProvider.autoDispose((ref) async {
-  return await (
-    ref.watch(DashboardProviders.config.future),
-    ref.watch(RepositoriesProviders.current.future),
-  ).wait;
+final _screenProvider = FutureProvider.autoDispose((ref) {
+  return (
+    ref.watch(DashboardProviders.config).requireValue,
+    ref.watch(RepositoriesProviders.current).requireValue,
+  );
 });
 
 class GitScreen extends SourceConsumerStatefulWidget {
@@ -36,8 +36,6 @@ class GitScreen extends SourceConsumerStatefulWidget {
 }
 
 class _GitScreenState extends SourceConsumerState<GitScreen> {
-  final _workingTreeKey = GlobalKey<WorkingTreeAtomState>();
-
   final _referenceNames = FormControlTyped(initialValue: const ISet<String>.empty());
 
   @override
@@ -89,56 +87,7 @@ class _GitScreenState extends SourceConsumerState<GitScreen> {
         },
       );
     }
-
-    return MultiSplitView(
-      axis: Axis.vertical,
-      initialAreas: [
-        Area(minimalSize: kMinInteractiveDimension * 2),
-        Area(minimalSize: kMinInteractiveDimension),
-      ],
-      children: [
-        MultiSplitView(
-          initialAreas: [
-            Area(minimalSize: kMinInteractiveDimension * 6),
-            Area(minimalSize: kMinInteractiveDimension * 9),
-          ],
-          children: [
-            Surface(
-              child: WorkingTreeAtom(key: _workingTreeKey, repository: repository),
-            ),
-            Surface(
-              child: DefaultTabController(
-                length: 2,
-                child: Column(
-                  children: [
-                    const TabBar(
-                      tabs: [
-                        Tab(text: 'Commit'),
-                        Tab(text: 'Stash'),
-                      ],
-                    ),
-                    Expanded(
-                      child: TabBarView(
-                        children: [
-                          FormCommitAtom(
-                            gitDir: repository.gitDir,
-                            filePaths: () => _workingTreeKey.currentState!.selection
-                                .expand((e) => e.paths)
-                                .toList(),
-                          ),
-                          StashAtom(repository: repository),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-        Surface(child: GitGraphAtom(repository: repository)),
-      ],
-    );
+    return _GitView(repository: repository);
   }
 
   @override
@@ -282,6 +231,72 @@ class _GitScreenState extends SourceConsumerState<GitScreen> {
         },
         data: (data) => buildRepository(config: data.$1, repository: data.$2),
       ),
+    );
+  }
+}
+
+class _GitView extends StatefulWidget {
+  final RepositoryModel repository;
+
+  const _GitView({super.key, required this.repository});
+
+  @override
+  State<_GitView> createState() => _GitViewState();
+}
+
+class _GitViewState extends State<_GitView> {
+  final _workingTreeKey = GlobalKey<WorkingTreeAtomState>();
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiSplitView(
+      axis: Axis.vertical,
+      initialAreas: [
+        Area(minimalSize: kMinInteractiveDimension * 2),
+        Area(minimalSize: kMinInteractiveDimension),
+      ],
+      children: [
+        MultiSplitView(
+          initialAreas: [
+            Area(minimalSize: kMinInteractiveDimension * 6),
+            Area(minimalSize: kMinInteractiveDimension * 9),
+          ],
+          children: [
+            Surface(
+              child: WorkingTreeAtom(key: _workingTreeKey, repository: widget.repository),
+            ),
+            Surface(
+              child: DefaultTabController(
+                length: 2,
+                child: Column(
+                  children: [
+                    const TabBar(
+                      tabs: [
+                        Tab(text: 'Commit'),
+                        Tab(text: 'Stash'),
+                      ],
+                    ),
+                    Expanded(
+                      child: TabBarView(
+                        children: [
+                          FormCommitAtom(
+                            gitDir: widget.repository.gitDir,
+                            filePaths: () => _workingTreeKey.currentState!.selection
+                                .expand((e) => e.paths)
+                                .toList(),
+                          ),
+                          StashAtom(repository: widget.repository),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        Surface(child: GitGraphAtom(repository: widget.repository)),
+      ],
     );
   }
 }

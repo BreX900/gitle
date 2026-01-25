@@ -90,7 +90,7 @@ class _PushDialogState extends SourceConsumerState<PushDialog> {
           onPressed: isIdle ? () => Navigator.of(context).pop() : null,
           child: const Text('Cancel'),
         ),
-        ElevatedButton(onPressed: isIdle ? push : null, child: const Text('Push')),
+        FilledButton(onPressed: isIdle ? push : null, child: const Text('Push')),
       ],
     );
   }

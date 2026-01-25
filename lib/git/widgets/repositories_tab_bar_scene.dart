@@ -6,13 +6,16 @@ import 'package:gitle/git/widgets/input_dialog.dart';
 import 'package:mek/mek.dart';
 import 'package:path/path.dart' as path_;
 
+// Tab height + indicator height
+const double _kTabHeight = 46.0 + 2.0;
+
 class RepositoriesTabBarScene extends StatelessWidget implements PreferredSizeWidget {
   final DashboardConfigDto config;
 
   const RepositoriesTabBarScene({super.key, required this.config});
 
   @override
-  Size get preferredSize => const Size.fromHeight(46.0 * 2);
+  Size get preferredSize => const Size.fromHeight(_kTabHeight * 2);
 
   Future<void> _showGroupUpsertDialog(BuildContext context, String? uid) async {
     final groupUid = await showDialog<String?>(
@@ -63,63 +66,67 @@ class RepositoriesTabBarScene extends StatelessWidget implements PreferredSizeWi
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: _ControlledTabBar(
-                index: config.groupIndex,
-                onTap: (index) => DashboardProviders.selectGroup(config.groups[index].uid),
-                tabs: config.groups.map((group) {
-                  final groupUid = group.uid;
-
-                  if (groupUid == null) {
-                    return const Tab(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Icon(Icons.home),
-                      ),
-                    );
-                  }
-
-                  return _buildTab<String>(
-                    value: groupUid,
-                    onMove: (data, {required after}) =>
-                        DashboardProviders.moveGroup(data, groupUid, after: after),
-                    onUpdate: () => _showGroupUpsertDialog(context, groupUid),
-                    onDelete: () => DashboardProviders.deleteGroup(groupUid),
-                    text: groupUid,
-                  );
-                }).toList(),
-              ),
-            ),
-            TextButton.icon(
-              onPressed: () => _showGroupUpsertDialog(context, null),
-              iconAlignment: .end,
-              icon: const Icon(Icons.add),
-              label: const Text('Create Group'),
-            ),
-          ],
-        ),
-        if (config.group.items.isNotEmpty)
+    return SizedBox.fromSize(
+      size: preferredSize,
+      child: Column(
+        children: [
           Row(
             children: [
               Expanded(
                 child: _ControlledTabBar(
-                  index: config.group.itemIndex ?? 0,
-                  onTap: (index) => DashboardProviders.selectItem(config.group.items[index]),
-                  tabs: config.group.items.map((itemUid) {
+                  index: config.groupIndex,
+                  onTap: (index) => DashboardProviders.selectGroup(config.groups[index].uid),
+                  tabs: config.groups.map((group) {
+                    final groupUid = group.uid;
+
+                    if (groupUid == null) {
+                      return const Tab(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Icon(Icons.home),
+                        ),
+                      );
+                    }
+
                     return _buildTab<String>(
-                      value: itemUid,
+                      value: groupUid,
                       onMove: (data, {required after}) =>
-                          DashboardProviders.moveItem(data, itemUid, after: after),
-                      onDelete: () => DashboardProviders.deleteItem(itemUid),
-                      text: path_.basename(itemUid),
+                          DashboardProviders.moveGroup(data, groupUid, after: after),
+                      onUpdate: () => _showGroupUpsertDialog(context, groupUid),
+                      onDelete: () => DashboardProviders.deleteGroup(groupUid),
+                      text: groupUid,
                     );
                   }).toList(),
                 ),
               ),
+              TextButton.icon(
+                onPressed: () => _showGroupUpsertDialog(context, null),
+                iconAlignment: .end,
+                icon: const Icon(Icons.add),
+                label: const Text('Create Group'),
+              ),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: .end,
+            children: [
+              if (config.group.items.isNotEmpty)
+                Expanded(
+                  child: _ControlledTabBar(
+                    index: config.group.itemIndex ?? 0,
+                    onTap: (index) => DashboardProviders.selectItem(config.group.items[index]),
+                    padding: const EdgeInsets.only(left: 56.0),
+                    tabs: config.group.items.map((itemUid) {
+                      return _buildTab<String>(
+                        value: itemUid,
+                        onMove: (data, {required after}) =>
+                            DashboardProviders.moveItem(data, itemUid, after: after),
+                        onDelete: () => DashboardProviders.deleteItem(itemUid),
+                        text: path_.basename(itemUid),
+                      );
+                    }).toList(),
+                  ),
+                ),
               TextButton.icon(
                 onPressed: () => RepositoriesProviders.add(null, null),
                 iconAlignment: .end,
@@ -128,7 +135,8 @@ class RepositoriesTabBarScene extends StatelessWidget implements PreferredSizeWi
               ),
             ],
           ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -136,9 +144,15 @@ class RepositoriesTabBarScene extends StatelessWidget implements PreferredSizeWi
 class _ControlledTabBar extends StatefulWidget {
   final int index;
   final ValueChanged<int> onTap;
+  final EdgeInsetsGeometry? padding;
   final List<Widget> tabs;
 
-  const _ControlledTabBar({required this.index, required this.onTap, required this.tabs});
+  const _ControlledTabBar({
+    required this.index,
+    required this.onTap,
+    this.padding,
+    required this.tabs,
+  });
 
   @override
   State<_ControlledTabBar> createState() => _ControlledTabBarState();
@@ -188,7 +202,8 @@ class _ControlledTabBarState extends State<_ControlledTabBar> with TickerProvide
       tabAlignment: TabAlignment.start,
       isScrollable: true,
       onTap: widget.onTap,
-      labelPadding: EdgeInsets.zero,
+      padding: widget.padding,
+      labelPadding: .zero,
       tabs: widget.tabs,
     );
   }
