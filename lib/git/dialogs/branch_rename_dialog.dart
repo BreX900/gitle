@@ -68,6 +68,8 @@ class _BranchRenameDialogState extends SourceConsumerState<BranchRenameDialog> {
     final isFormDirty = ref.watchSource(_form.source.dirty);
     final renameBranch = _form.handleSubmit(_renameBranch);
 
+    print(isFormDirty);
+
     return AlertDialog(
       title: Row(
         children: [

@@ -12,10 +12,14 @@ class RepositorySettingsDto with _$RepositorySettingsDto {
   );
 
   final IList<String> protectedBranches;
+  // final CodeMagicConfigDto? codeMagic;
 
   bool get hasBranchProtection => protectedBranches.isNotEmpty;
 
-  const RepositorySettingsDto({this.protectedBranches = const IListConst([])});
+  const RepositorySettingsDto({
+    this.protectedBranches = const IListConst([]),
+    // required this.codeMagic,
+  });
 
   static IMap<String, RepositorySettingsDto> fromBin(Object? data) {
     return IMap.fromJson(

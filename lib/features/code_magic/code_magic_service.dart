@@ -3,9 +3,10 @@ import 'dart:async';
 import 'package:collection/collection.dart';
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:gitle/ci/code_magic_api.dart';
 import 'package:gitle/common/logger.dart';
-import 'package:gitle/git/clients/github.dart';
+import 'package:gitle/features/code_magic/code_magic_api.dart';
+import 'package:gitle/features/code_magic/code_magic_dto.dart';
+import 'package:gitle/features/notifications/notifications_manager.dart';
 
 const _apiToken = String.fromEnvironment('CODEMAGIC_API_TOKEN');
 // const _appId = String.fromEnvironment('CODEMAGIC_APP_ID');
@@ -17,11 +18,15 @@ mixin CodeMagicNotificationsManager on NotificationsManagerCore {
 
   final _pendingAppIds = <String>{};
 
-  Future<void> watchCodeMagicBuilds() async {
+  // final _codeMagicController = StreamController<BuildsResponse>.broadcast();
+
+  // Stream<BuildsResponse> get onCodeMagicBuildsChange => _codeMagicController.stream;
+
+  Stream<BuildsResponse> watchCodeMagicBuilds() async* {
     while (true) {
       lg.info('${DateTime.now()} Checking CodeMagic builds...');
       try {
-        await _handle();
+        yield await _handle();
       } catch (error, stackTrace) {
         Zone.current.handleUncaughtError(error, stackTrace);
       }
@@ -32,7 +37,7 @@ mixin CodeMagicNotificationsManager on NotificationsManagerCore {
     }
   }
 
-  Future<void> _handle() async {
+  Future<BuildsResponse> _handle() async {
     final response = await _codeMagicApi.fetchBuilds();
     final builds = response.builds
         .where((e) => e.status.isPending)
@@ -52,9 +57,9 @@ mixin CodeMagicNotificationsManager on NotificationsManagerCore {
       // notificationsMacOsClient.getActiveNotifications();
 
       await notificationsMacOsClient.show(
-        _appsNotificationIds.putIfAbsent(appId, generateNotificationId),
-        '🚜 ${app.appName}',
-        '$buildCount builds is in pending...',
+        id: _appsNotificationIds.putIfAbsent(appId, generateNotificationId),
+        title: '🚜 ${app.appName}',
+        body: '$buildCount builds is in pending...',
         notificationDetails: const DarwinNotificationDetails(
           categoryIdentifier: 'codemagic-builds',
         ),
@@ -68,9 +73,9 @@ mixin CodeMagicNotificationsManager on NotificationsManagerCore {
       lg.info('${_pendingAppIds.length} Finished App Build "${app.appName}"!');
 
       await notificationsMacOsClient.show(
-        _appsNotificationIds.putIfAbsent(appId, generateNotificationId),
-        '✅ ${app.appName}',
-        'All builds is completed!',
+        id: _appsNotificationIds.putIfAbsent(appId, generateNotificationId),
+        title: '✅ ${app.appName}',
+        body: 'All builds is completed!',
         notificationDetails: const DarwinNotificationDetails(
           presentSound: true,
           presentAlert: true,
@@ -78,6 +83,8 @@ mixin CodeMagicNotificationsManager on NotificationsManagerCore {
         ),
       );
     }
+
+    return response;
   }
 }
 

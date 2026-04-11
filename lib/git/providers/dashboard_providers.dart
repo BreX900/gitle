@@ -93,7 +93,9 @@ abstract final class DashboardProviders {
       var dashboard = await tx.dashboard.requireRead();
 
       dashboard = dashboard.copyWith(
-        groupUid: dashboard.groupUid == uid ? null : dashboard.groupUid,
+        groupUid: dashboard.groupUid == uid
+            ? _findHereditary(dashboard.groups, (e) => e.uid == uid)?.uid
+            : dashboard.groupUid,
         groups: dashboard.groups.removeWhere((e) => e.uid == uid).toIList(),
       );
       await tx.dashboard.write(dashboard);
@@ -108,13 +110,28 @@ abstract final class DashboardProviders {
         groups: dashboard.groups.replaceFirst(
           from: dashboard.group,
           to: dashboard.group.copyWith(
-            itemUid: dashboard.group.itemUid == uid ? null : dashboard.group.itemUid,
+            itemUid: dashboard.group.itemUid == uid
+                ? _findHereditary(dashboard.group.items, (e) => e == uid)
+                : dashboard.group.itemUid,
             items: dashboard.group.items.remove(uid),
           ),
         ),
       );
       await tx.dashboard.write(dashboard);
     });
+  }
+
+  static T? _findHereditary<T>(IList<T> elements, bool Function(T element) test) {
+    final index = elements.indexWhere(test);
+    if (index == -1) return null;
+
+    if (index + 1 case final nextIndex when nextIndex <= elements.length) {
+      return elements[nextIndex];
+    }
+    if (index - 1 case final previousIndex when previousIndex >= 0) {
+      return elements[previousIndex];
+    }
+    return null;
   }
 }
 

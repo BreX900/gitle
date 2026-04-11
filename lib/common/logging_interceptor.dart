@@ -29,6 +29,7 @@ class LoggingInterceptor extends Interceptor {
       final file = File('${directory.path}/${segments.last}.json');
       await file.writeAsString(const JsonEncoder.withIndent('  ').convert(response.data));
 
+      // ignore: avoid_print
       print('Saved to file://${file.path}');
     } catch (error, stackTrace) {
       Zone.current.handleUncaughtError(error, stackTrace);

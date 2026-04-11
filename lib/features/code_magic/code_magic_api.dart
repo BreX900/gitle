@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:gitle/ci/code_magic_dto.dart';
 import 'package:gitle/common/logging_interceptor.dart';
+import 'package:gitle/features/code_magic/code_magic_dto.dart';
 
 class CodeMagicApi {
   final Dio _client;

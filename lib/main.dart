@@ -4,7 +4,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Notification;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:gitle/git/clients/github.dart';
+import 'package:gitle/features/notifications/notifications_manager.dart';
 import 'package:gitle/git/clients/instances.dart';
 import 'package:gitle/git/gitle_app.dart';
 import 'package:logging/logging.dart';
@@ -20,7 +20,6 @@ void main() async {
   await Future.wait([Instances.register(), _initializeWindow()]);
 
   await NotificationsManager.instance.initialize();
-  unawaited(NotificationsManager.instance.watchCodeMagicBuilds());
 
   runApp(const ProviderScope(observers: [Observers.provider], child: GitleApp()));
 }

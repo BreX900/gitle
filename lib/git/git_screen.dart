@@ -16,9 +16,9 @@ import 'package:gitle/git/models/repository_model.dart';
 import 'package:gitle/git/providers/dashboard_providers.dart';
 import 'package:gitle/git/providers/git_providers.dart';
 import 'package:gitle/git/providers/repositories_providers.dart';
+import 'package:gitle/git/widgets/dashboard_layout.dart';
 import 'package:gitle/git/widgets/repositories_tab_bar_scene.dart';
 import 'package:mek/mek.dart';
-import 'package:multi_split_view/multi_split_view.dart';
 import 'package:path/path.dart' as p;
 
 final _screenProvider = FutureProvider.autoDispose((ref) {
@@ -87,7 +87,7 @@ class _GitScreenState extends SourceConsumerState<GitScreen> {
         },
       );
     }
-    return _GitView(repository: repository);
+    return _GitView(key: ValueKey(repository.path), repository: repository);
   }
 
   @override
@@ -181,7 +181,7 @@ class _GitScreenState extends SourceConsumerState<GitScreen> {
           //   ),
           if (repository != null)
             IconButton(
-              onPressed: () async => showTypedDialog(
+              onPressed: () => showTypedDialog(
                 context: context,
                 builder: (context) => RemoteUrlDialog(repository: repository),
               ),
@@ -249,86 +249,34 @@ class _GitViewState extends State<_GitView> {
 
   @override
   Widget build(BuildContext context) {
-    return MultiSplitView(
-      axis: Axis.vertical,
-      initialAreas: [
-        Area(minimalSize: kMinInteractiveDimension * 2),
-        Area(minimalSize: kMinInteractiveDimension),
-      ],
-      children: [
-        MultiSplitView(
-          initialAreas: [
-            Area(minimalSize: kMinInteractiveDimension * 6),
-            Area(minimalSize: kMinInteractiveDimension * 9),
-          ],
+    return DashboardLayout(
+      left: WorkingTreeAtom(key: _workingTreeKey, repository: widget.repository),
+      right: DefaultTabController(
+        length: 2,
+        child: Column(
           children: [
-            Surface(
-              child: WorkingTreeAtom(key: _workingTreeKey, repository: widget.repository),
+            const TabBar(
+              tabs: [
+                Tab(text: 'Commit'),
+                Tab(text: 'Stash'),
+              ],
             ),
-            Surface(
-              child: DefaultTabController(
-                length: 2,
-                child: Column(
-                  children: [
-                    const TabBar(
-                      tabs: [
-                        Tab(text: 'Commit'),
-                        Tab(text: 'Stash'),
-                      ],
-                    ),
-                    Expanded(
-                      child: TabBarView(
-                        children: [
-                          FormCommitAtom(
-                            gitDir: widget.repository.gitDir,
-                            filePaths: () => _workingTreeKey.currentState!.selection
-                                .expand((e) => e.paths)
-                                .toList(),
-                          ),
-                          StashAtom(repository: widget.repository),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+            Expanded(
+              child: TabBarView(
+                children: [
+                  FormCommitAtom(
+                    gitDir: widget.repository.gitDir,
+                    filePaths: () =>
+                        _workingTreeKey.currentState!.selection.expand((e) => e.paths).toList(),
+                  ),
+                  StashAtom(repository: widget.repository),
+                ],
               ),
             ),
           ],
         ),
-        Surface(child: GitGraphAtom(repository: widget.repository)),
-      ],
+      ),
+      bottom: GitGraphAtom(repository: widget.repository),
     );
   }
 }
-
-// Widget buildBranches(RepositoryDto repository) {
-//   return ListView(
-//     primary: false,
-//     children: repository.commits.map((commit) {
-//       return ListTile(
-//         onTap: () async {
-//           final gitDir = await GitDir.fromExisting(repository.path);
-//           gitDir.checkout(commit.reference);
-//           ref.invalidate(RepositoriesProviders.current);
-//         },
-//         title: Text(commit.reference),
-//         subtitle: Text('${commit.reference == repository.currentBranch.reference}'),
-//         trailing: Row(
-//           mainAxisSize: MainAxisSize.min,
-//           children: [
-//             IconButton(
-//               onPressed: () {},
-//               tooltip: 'Rebase Develop',
-//               icon: const Icon(Icons.arrow_downward),
-//             ),
-//             IconButton(
-//               onPressed: () {},
-//               tooltip: 'Rebase Develop',
-//               icon: const Icon(Icons.arrow_downward),
-//             ),
-//           ],
-//         ),
-//       );
-//     }).toList(),
-//   );
-// }

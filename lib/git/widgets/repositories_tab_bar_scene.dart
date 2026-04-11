@@ -20,7 +20,8 @@ class RepositoriesTabBarScene extends StatelessWidget implements PreferredSizeWi
   Future<void> _showGroupUpsertDialog(BuildContext context, String? uid) async {
     final groupUid = await showDialog<String?>(
       context: context,
-      builder: (context) => InputDialog(title: const Text('Create group'), value: uid ?? ''),
+      builder: (context) =>
+          InputDialog(title: Text('${uid == null ? 'Create' : 'Update'} group'), value: uid ?? ''),
     );
     if (groupUid == null) return;
 
@@ -46,17 +47,31 @@ class RepositoriesTabBarScene extends StatelessWidget implements PreferredSizeWi
         direction: Axis.horizontal,
         child: PopupMenuArea(
           items: [
-            PopupMenuItemTile(
-              onTap: onDelete,
-              leading: const Icon(Icons.delete),
-              title: const Text('Delete'),
-            ),
+            // PopupMenuItemTile(
+            //   onTap: () async {
+            //     // Create a new window
+            //     final controller = await WindowController.create(
+            //       WindowConfiguration(
+            //         hiddenAtLaunch: false,
+            //         arguments: 'YOUR_WINDOW_ARGUMENTS_HERE',
+            //       ),
+            //     );
+            //     await controller.show();
+            //   },
+            //   leading: const Icon(Icons.open_in_new),
+            //   title: const Text('Open in new window'),
+            // ),
             if (onUpdate != null)
               PopupMenuItemTile(
                 onTap: onUpdate,
                 leading: const Icon(Icons.edit),
                 title: const Text('Edit'),
               ),
+            PopupMenuItemTile(
+              onTap: onDelete,
+              leading: const Icon(Icons.delete),
+              title: const Text('Delete'),
+            ),
           ],
           child: Padding(padding: const EdgeInsets.symmetric(horizontal: 16.0), child: tab),
         ),

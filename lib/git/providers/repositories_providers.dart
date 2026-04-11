@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
 
+import 'package:collection/collection.dart';
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -57,6 +58,7 @@ abstract class RepositoriesProviders {
     if (gitDir == null) return null;
 
     ref.invalidateWhenAppResume();
+    print('current ${ref.isFirstBuild} ${ref.isReload} ${ref.isRefresh}');
 
     final settings = await ref.watch(
       all.selectAsync((value) => value[gitDir.path] ?? const RepositorySettingsDto()),
@@ -84,7 +86,7 @@ abstract class RepositoriesProviders {
   });
 
   static Future<void> add(MutationRef? ref, void _) async {
-    final rawRepositoryPath = await FilePicker.platform.getDirectoryPath();
+    final rawRepositoryPath = await FilePicker.getDirectoryPath();
     if (rawRepositoryPath == null) return;
 
     final repositoryPath = Directory(rawRepositoryPath).absolute.resolveSymbolicLinksSync();
@@ -111,17 +113,26 @@ abstract class RepositoriesProviders {
   static Future<void> select(String path) async {
     await Instances.bin.runTransaction((tx) async {
       var dashboard = await tx.dashboard.requireRead();
-      final group = dashboard.groups.firstWhere(
-        (group) => group.items.contains(path),
-        orElse: () => dashboard.group,
-      );
-      dashboard = dashboard.copyWith(
-        groupUid: group.uid,
-        groups: dashboard.groups.replaceFirst(
-          from: group,
-          to: group.copyWith(itemUid: path, items: group.items.add(path)),
-        ),
-      );
+
+      final group = dashboard.groups.firstWhereOrNull((group) => group.items.contains(path));
+      if (group != null) {
+        dashboard = dashboard.copyWith(
+          groupUid: group.uid,
+          groups: dashboard.groups.replaceFirst(
+            from: group,
+            to: group.copyWith(itemUid: path),
+          ),
+        );
+      } else {
+        dashboard = dashboard.copyWith(
+          groupUid: dashboard.group.uid,
+          groups: dashboard.groups.replaceFirst(
+            from: dashboard.group,
+            to: dashboard.group.copyWith(itemUid: path, items: dashboard.group.items.add(path)),
+          ),
+        );
+      }
+
       await tx.dashboard.write(dashboard);
     });
   }
