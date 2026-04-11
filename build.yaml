@@ -1,26 +1,40 @@
-
-
 targets:
   $default:
     builders:
       source_gen:combining_builder:
-        generate_for:
-          - '**/*_dto.dart'
-          - '**/*_model.dart'
         options:
-          ignore_for_file:
-            - cast_nullable_to_non_nullable
-            - avoid_annotating_with_dynamic
+          build_extensions:
+            '^lib/{{}}.dart': 'lib/generated/{{}}.g.dart'
+#          ignore_for_file:
+#            - cast_nullable_to_non_nullable
+#            - avoid_bool_literals_in_conditional_expressions
+#            - avoid_annotating_with_dynamic
+#            - unnecessary_lambdas
+#            - unnecessary_null_checks
+#            - unnecessary_cast
 
       mek_data_class_generator:
-        generate_for:
-          - '**/*_dto.dart'
-          - '**/*_model.dart'
+        options:
+          run_only_if_triggered: true
 
       json_serializable:
-        generate_for:
-          - '**/*_dto.dart'
-          - '**/*_model.dart'
         options:
-          create_to_json: false
+          run_only_if_triggered: true
+          checked: true
           create_factory: false
+          create_to_json: false
+
+#      mek_assets:
+#        generate_for:
+#          - 'pubspec.yaml'
+#          - 'assets/**'
+#        options:
+#          output_directory: lib/generated
+
+triggers:
+  mek_data_class_generator:mek_data_class_generator:
+    - annotation DataClass
+  json_serializable:json_serializable:
+    - annotation JsonSerializable
+    - annotation JsonEnum
+    - annotation JsonLiteral

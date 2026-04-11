@@ -3,7 +3,7 @@ import 'package:git/git.dart';
 import 'package:gitle/features/git/git_extensions.dart';
 import 'package:mek_data_class/mek_data_class.dart';
 
-part 'git_dto.g.dart';
+part '../../generated/features/git/git_dto.g.dart';
 
 @DataClass(stringify: false)
 class CommandLogDto with _$CommandLogDto {

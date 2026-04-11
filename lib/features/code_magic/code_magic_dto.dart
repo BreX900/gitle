@@ -1,7 +1,7 @@
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:json_annotation/json_annotation.dart';
 
-part 'code_magic_dto.g.dart';
+part '../../generated/features/code_magic/code_magic_dto.g.dart';
 
 @JsonSerializable(createFactory: true)
 class BuildsResponse {

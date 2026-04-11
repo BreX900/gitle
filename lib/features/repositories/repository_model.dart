@@ -5,7 +5,7 @@ import 'package:gitle/features/git/git_dto.dart';
 import 'package:gitle/features/repositories/repository_dto.dart';
 import 'package:mek_data_class/mek_data_class.dart';
 
-part 'repository_model.g.dart';
+part '../../generated/features/repositories/repository_model.g.dart';
 
 @DataClass()
 class RepositoryModel with _$RepositoryModel {

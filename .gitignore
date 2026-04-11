@@ -50,3 +50,4 @@ app.*.map.json
 /macos/Flutter/GeneratedPluginRegistrant.swift
 /windows/flutter/generated_plugin_registrant.*
 /windows/flutter/generated_plugins.cmake
+/lib/generated/

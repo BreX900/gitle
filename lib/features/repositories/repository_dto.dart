@@ -2,7 +2,7 @@ import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:mek_data_class/mek_data_class.dart';
 
-part 'repository_dto.g.dart';
+part '../../generated/features/repositories/repository_dto.g.dart';
 
 @DataClass(changeable: true)
 class RepositorySettingsDto with _$RepositorySettingsDto {

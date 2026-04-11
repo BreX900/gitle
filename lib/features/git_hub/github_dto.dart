@@ -1,6 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 
-part 'github_dto.g.dart';
+part '../../generated/features/git_hub/github_dto.g.dart';
 
 @JsonEnum(alwaysCreate: true, fieldRename: FieldRename.pascal)
 enum NotificationSubjectType {
