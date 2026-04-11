@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:git/git.dart';
 import 'package:gitle/common/app_utils.dart';
-import 'package:gitle/git/clients/git_extensions.dart';
-import 'package:gitle/git/providers/git_providers.dart';
+import 'package:gitle/features/git/git_extensions.dart';
+import 'package:gitle/features/git/git_providers.dart';
 import 'package:mek/mek.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 

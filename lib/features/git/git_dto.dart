@@ -1,6 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:git/git.dart';
-import 'package:gitle/git/clients/git_extensions.dart';
+import 'package:gitle/features/git/git_extensions.dart';
 import 'package:mek_data_class/mek_data_class.dart';
 
 part 'git_dto.g.dart';

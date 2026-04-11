@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:git/git.dart';
 import 'package:gitle/common/app_utils.dart';
-import 'package:gitle/git/providers/git_providers.dart';
+import 'package:gitle/features/git/git_providers.dart';
 import 'package:mek/mek.dart';
 
 class BranchPullDialog extends SourceConsumerStatefulWidget with TypedWidgetMixin<void> {

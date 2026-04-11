@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:gitle/git/dto/repository_dto.dart';
-import 'package:gitle/git/providers/dashboard_providers.dart';
-import 'package:gitle/git/providers/repositories_providers.dart';
+import 'package:gitle/features/dashboard/dashboard_providers.dart';
+import 'package:gitle/features/repositories/repositories_providers.dart';
+import 'package:gitle/features/repositories/repository_dto.dart';
 import 'package:gitle/git/widgets/input_dialog.dart';
 import 'package:mek/mek.dart';
 import 'package:path/path.dart' as path_;

@@ -1,7 +1,7 @@
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:gitle/git/clients/instances.dart';
-import 'package:gitle/git/dto/repository_dto.dart';
+import 'package:gitle/common/instances.dart';
+import 'package:gitle/features/repositories/repository_dto.dart';
 import 'package:mekart/mekart.dart';
 
 abstract final class DashboardProviders {

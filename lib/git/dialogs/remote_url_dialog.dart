@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:gitle/common/app_utils.dart';
-import 'package:gitle/git/clients/git_extensions.dart';
-import 'package:gitle/git/models/repository_model.dart';
+import 'package:gitle/features/git/git_extensions.dart';
+import 'package:gitle/features/repositories/repository_model.dart';
 import 'package:mek/mek.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 

@@ -1,8 +1,8 @@
 import 'package:collection/collection.dart';
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:git/git.dart';
-import 'package:gitle/git/dto/git_dto.dart';
-import 'package:gitle/git/dto/repository_dto.dart';
+import 'package:gitle/features/git/git_dto.dart';
+import 'package:gitle/features/repositories/repository_dto.dart';
 import 'package:mek_data_class/mek_data_class.dart';
 
 part 'repository_model.g.dart';

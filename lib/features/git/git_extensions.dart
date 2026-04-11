@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:git/git.dart';
 import 'package:gitle/common/logger.dart';
-import 'package:gitle/git/dto/git_dto.dart';
+import 'package:gitle/features/git/git_dto.dart';
 import 'package:mek/mek.dart';
 import 'package:mekart/mekart.dart';
 

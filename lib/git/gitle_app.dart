@@ -3,9 +3,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:gitle/features/git_hub/git_hub_providers.dart';
+import 'package:gitle/features/repositories/repositories_providers.dart';
 import 'package:gitle/git/git_screen.dart';
-import 'package:gitle/git/providers/git_hub_providers.dart';
-import 'package:gitle/git/providers/repositories_providers.dart';
 import 'package:mek/mek.dart';
 import 'package:multi_split_view/multi_split_view.dart';
 import 'package:window_manager/window_manager.dart';

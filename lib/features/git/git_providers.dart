@@ -1,7 +1,7 @@
 import 'package:git/git.dart';
-import 'package:gitle/git/clients/git_extensions.dart';
-import 'package:gitle/git/models/repository_model.dart';
-import 'package:gitle/git/providers/repositories_providers.dart';
+import 'package:gitle/features/git/git_extensions.dart';
+import 'package:gitle/features/repositories/repositories_providers.dart';
+import 'package:gitle/features/repositories/repository_model.dart';
 import 'package:mek/mek.dart';
 
 abstract class GitProviders {

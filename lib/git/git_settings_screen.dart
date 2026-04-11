@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:gitle/git/providers/git_hub_providers.dart';
+import 'package:gitle/features/git_hub/git_hub_providers.dart';
 import 'package:mek/mek.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 

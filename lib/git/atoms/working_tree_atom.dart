@@ -1,8 +1,8 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:gitle/git/dto/git_dto.dart';
-import 'package:gitle/git/models/repository_model.dart';
+import 'package:gitle/features/git/git_dto.dart';
+import 'package:gitle/features/repositories/repository_model.dart';
 import 'package:path/path.dart' as path_;
 
 class WorkingTreeAtom extends StatefulWidget {

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:gitle/common/app_utils.dart';
 import 'package:gitle/features/code_magic/code_magic_dto.dart';
 import 'package:gitle/features/code_magic/code_magic_providers.dart';
-import 'package:gitle/git/models/repository_model.dart';
-import 'package:gitle/git/providers/git_hub_providers.dart';
-import 'package:gitle/git/providers/repositories_providers.dart';
+import 'package:gitle/features/git_hub/git_hub_providers.dart';
+import 'package:gitle/features/repositories/repositories_providers.dart';
+import 'package:gitle/features/repositories/repository_model.dart';
 import 'package:mek/mek.dart';
 
 class RepositorySettingsDrawer extends SourceConsumerStatefulWidget {
