@@ -8,19 +8,12 @@ import 'package:gitle/features/code_magic/code_magic_api.dart';
 import 'package:gitle/features/code_magic/code_magic_dto.dart';
 import 'package:gitle/features/notifications/notifications_manager.dart';
 
-const _apiToken = String.fromEnvironment('CODEMAGIC_API_TOKEN');
-// const _appId = String.fromEnvironment('CODEMAGIC_APP_ID');
-
 mixin CodeMagicNotificationsManager on NotificationsManagerCore {
   static final _appsNotificationIds = <String, int>{};
 
-  final _codeMagicApi = CodeMagicApi(_apiToken);
+  CodeMagicApi get _codeMagicApi => CodeMagicApi.instance;
 
   final _pendingAppIds = <String>{};
-
-  // final _codeMagicController = StreamController<BuildsResponse>.broadcast();
-
-  // Stream<BuildsResponse> get onCodeMagicBuildsChange => _codeMagicController.stream;
 
   Stream<BuildsResponse> watchCodeMagicBuilds() async* {
     while (true) {
@@ -52,13 +45,13 @@ mixin CodeMagicNotificationsManager on NotificationsManagerCore {
       final app = response.applications.firstWhere((e) => e.id == appId);
 
       _pendingAppIds.add(appId);
-      lg.info('${_pendingAppIds.length} New App Building "${app.appName}"...');
+      lg.info('${_pendingAppIds.length} New App Building "${app.name}"...');
 
       // notificationsMacOsClient.getActiveNotifications();
 
       await notificationsMacOsClient.show(
         id: _appsNotificationIds.putIfAbsent(appId, generateNotificationId),
-        title: '🚜 ${app.appName}',
+        title: '🚜 ${app.name}',
         body: '$buildCount builds is in pending...',
         notificationDetails: const DarwinNotificationDetails(
           categoryIdentifier: 'codemagic-builds',
@@ -70,11 +63,11 @@ mixin CodeMagicNotificationsManager on NotificationsManagerCore {
       final app = response.applications.firstWhere((e) => e.id == appId);
 
       _pendingAppIds.remove(appId);
-      lg.info('${_pendingAppIds.length} Finished App Build "${app.appName}"!');
+      lg.info('${_pendingAppIds.length} Finished App Build "${app.name}"!');
 
       await notificationsMacOsClient.show(
         id: _appsNotificationIds.putIfAbsent(appId, generateNotificationId),
-        title: '✅ ${app.appName}',
+        title: '✅ ${app.name}',
         body: 'All builds is completed!',
         notificationDetails: const DarwinNotificationDetails(
           presentSound: true,
@@ -86,9 +79,4 @@ mixin CodeMagicNotificationsManager on NotificationsManagerCore {
 
     return response;
   }
-}
-
-extension<K, V> on Map<K, V> {
-  Map<K, V> where(bool Function(K key, V value) predicate) =>
-      Map.fromEntries(entries.where((entry) => predicate(entry.key, entry.value)));
 }

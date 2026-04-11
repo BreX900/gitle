@@ -27,7 +27,7 @@ class RepositoryModel with _$RepositoryModel {
 
   final IList<Mark> marks;
 
-  final RepositoryConfigEntity settings;
+  final RepositoryConfigEntity config;
 
   const RepositoryModel({
     required this.path,
@@ -40,7 +40,7 @@ class RepositoryModel with _$RepositoryModel {
     required this.workingTree,
     required this.stashes,
     required this.marks,
-    required this.settings,
+    required this.config,
   });
 
   bool get isWorkingTreeClean => workingTree.isEmpty;

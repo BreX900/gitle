@@ -7,7 +7,7 @@ class DashboardLayout extends StatefulWidget {
   final Widget right;
   final Widget bottom;
 
-  const DashboardLayout({required this.left, required this.right, required this.bottom});
+  const DashboardLayout({super.key, required this.left, required this.right, required this.bottom});
 
   @override
   State<DashboardLayout> createState() => _DashboardLayoutState();

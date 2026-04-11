@@ -1,19 +1,15 @@
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:mek_data_class/mek_data_class.dart';
 
 part '../../generated/features/code_magic/code_magic_entities.g.dart';
 
+@DataClass(copyable: true)
 @JsonSerializable(createToJson: true, createFactory: true)
-class CodeMagicConfigEntity {
-  final String repositoryPath;
-  final String appId;
-  final IList<CodeMagicWorkflowEntity> workflows;
+class CodeMagicConfigEntity with _$CodeMagicConfigEntity {
+  final IList<CodeMagicJobEntity> jobs;
 
-  const CodeMagicConfigEntity({
-    required this.repositoryPath,
-    required this.appId,
-    required this.workflows,
-  });
+  const CodeMagicConfigEntity({this.jobs = const IList.empty()});
 
   factory CodeMagicConfigEntity.fromJson(Map<String, dynamic> map) =>
       _$CodeMagicConfigEntityFromJson(map);
@@ -21,13 +17,13 @@ class CodeMagicConfigEntity {
 }
 
 @JsonSerializable(createToJson: true, createFactory: true)
-class CodeMagicWorkflowEntity {
-  final String name;
-  final IList<String> ids;
+class CodeMagicJobEntity {
+  final String appId;
+  final IList<String> workflowIds;
 
-  const CodeMagicWorkflowEntity({required this.name, required this.ids});
+  const CodeMagicJobEntity({required this.appId, required this.workflowIds});
 
-  factory CodeMagicWorkflowEntity.fromJson(Map<String, dynamic> map) =>
-      _$CodeMagicWorkflowEntityFromJson(map);
-  Map<String, dynamic> toJson() => _$CodeMagicWorkflowEntityToJson(this);
+  factory CodeMagicJobEntity.fromJson(Map<String, dynamic> map) =>
+      _$CodeMagicJobEntityFromJson(map);
+  Map<String, dynamic> toJson() => _$CodeMagicJobEntityToJson(this);
 }

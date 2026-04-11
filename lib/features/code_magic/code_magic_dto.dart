@@ -17,9 +17,10 @@ class BuildsResponse {
 class Application {
   @JsonKey(name: '_id')
   final String id;
-  final String appName;
+  @JsonKey(name: 'appName')
+  final String name;
 
-  const Application({required this.id, required this.appName});
+  const Application({required this.id, required this.name});
 
   factory Application.fromJson(Map<String, dynamic> map) => _$ApplicationFromJson(map);
 }

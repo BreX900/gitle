@@ -58,7 +58,6 @@ abstract class RepositoriesProviders {
     if (gitDir == null) return null;
 
     ref.invalidateWhenAppResume();
-    print('current ${ref.isFirstBuild} ${ref.isReload} ${ref.isRefresh}');
 
     final settings = await ref.watch(
       all.selectAsync((value) => value[gitDir.path] ?? const RepositoryConfigEntity()),
@@ -156,7 +155,7 @@ abstract class RepositoriesProviders {
   static Future<void> toggleBranchesProtection(MutationRef ref, {required bool isEnabled}) async {
     final gitDir = await ref.read(currentGitDir.future);
     final repository = await ref.read(current.future);
-    final settings = repository!.settings.copyWith(
+    final settings = repository!.config.copyWith(
       protectedBranches: isEnabled
           ? const IListConst(['master', 'develop', 'main'])
           : const IListConst([]),
@@ -193,7 +192,7 @@ abstract class RepositoriesProviders {
       workingTree: data.$4.lockUnsafe,
       stashes: data.$5.lockUnsafe,
       marks: Mark.from(references: data.$2, branches: data.$6).lockUnsafe,
-      settings: settings,
+      config: settings,
     );
   }
 }

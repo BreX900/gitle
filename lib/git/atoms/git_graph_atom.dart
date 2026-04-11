@@ -68,7 +68,8 @@ class _GitGraphAtomState extends SourceConsumerState<GitGraphAtom> {
   Future<void> _showTagCreateDialog(GitDir gitDir, Sha commit) async {
     await showTypedDialog(
       context: context,
-      builder: (context) => TagCreateDialog(gitDir: gitDir, startPoint: commit),
+      builder: (context) =>
+          TagCreateDialog(config: widget.repository.config, gitDir: gitDir, startPoint: commit),
     );
   }
 

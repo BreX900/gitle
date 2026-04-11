@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:github/github.dart';
 import 'package:gitle/common/logger.dart';
+// ignore: depend_on_referenced_packages
 import 'package:http/http.dart';
 
 extension NotificationsActivitityService on ActivityService {

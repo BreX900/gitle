@@ -58,7 +58,7 @@ class _FormCommitAtomState extends SourceConsumerState<FormCommitAtom> {
     (ref, arg) async {
       final branch = await widget.gitDir.currentBranch();
       final repository = await ref.read(RepositoriesProviders.current.future);
-      if (repository!.settings.protectedBranches.contains(branch.branchName)) {
+      if (repository!.config.protectedBranches.contains(branch.branchName)) {
         throw StateError('Cant push to ${branch.branchName}!');
       }
 

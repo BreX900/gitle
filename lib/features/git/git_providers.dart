@@ -1,4 +1,6 @@
 import 'package:git/git.dart';
+import 'package:gitle/features/code_magic/code_magic_api.dart';
+import 'package:gitle/features/code_magic/code_magic_entities.dart';
 import 'package:gitle/features/git/git_extensions.dart';
 import 'package:gitle/features/repositories/repositories_providers.dart';
 import 'package:gitle/features/repositories/repository_model.dart';
@@ -186,12 +188,22 @@ abstract class GitProviders {
     required String? commitSha,
     required String name,
     required String? message,
+    required CodeMagicJobEntity? codeMagicJob,
   }) async {
     try {
       await gitDir.createAnnotatedTag(name, commit: commitSha, message: message);
       await gitDir.push(toOrigin: true, referenceName: name);
     } finally {
       ref.invalidate(RepositoriesProviders.current);
+    }
+    if (codeMagicJob != null) {
+      for (final workflowId in codeMagicJob.workflowIds) {
+        await CodeMagicApi.instance.startNewBuild(
+          appId: codeMagicJob.appId,
+          workflowId: workflowId,
+        );
+        print('Started build for appId: ${codeMagicJob.appId}, workflowId: $workflowId');
+      }
     }
   }
 

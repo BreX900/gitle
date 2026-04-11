@@ -245,6 +245,7 @@ extension GitDirExtensions on GitDir {
   /// https://git-scm.com/book/en/v2/Git-Basics-Tagging
   /// https://git-scm.com/docs/git-tag
   Future<void> createAnnotatedTag(String name, {Sha? commit, String? message}) async {
+    // ignore: parameter_assignments
     message = message?.trim();
     await runEffect([
       'tag',

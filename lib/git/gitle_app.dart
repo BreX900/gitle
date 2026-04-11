@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:gitle/features/code_magic/code_magic_providers.dart';
 import 'package:gitle/features/git_hub/git_hub_providers.dart';
 import 'package:gitle/features/repositories/repositories_providers.dart';
 import 'package:gitle/git/git_screen.dart';
@@ -38,6 +39,12 @@ class _MyAppState extends SourceConsumerState<GitleApp> with WindowListener {
             ref.invalidate(RepositoriesProviders.current);
           });
     });
+
+    /// Start listening GitHub notifications
+    ref.listenManual(GitHubProviders.notificationsListener, (_, _) {});
+
+    /// Start listening CodeMagic build notifications
+    ref.listenManual(CodeMagicProviders.builds, (_, _) {});
   }
 
   @override
@@ -55,8 +62,6 @@ class _MyAppState extends SourceConsumerState<GitleApp> with WindowListener {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(GitHubProviders.notificationsListener, (previous, next) {});
-
     final theme = MekTheme.build(context: context);
 
     return MaterialApp(

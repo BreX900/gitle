@@ -14,11 +14,14 @@ class RepositoryConfigEntity with _$RepositoryConfigEntity {
   );
 
   final IList<String> protectedBranches;
-  final CodeMagicConfigEntity? codeMagic;
+  final CodeMagicConfigEntity codeMagic;
 
   bool get hasBranchProtection => protectedBranches.isNotEmpty;
 
-  const RepositoryConfigEntity({this.protectedBranches = const IListConst([]), this.codeMagic});
+  const RepositoryConfigEntity({
+    this.protectedBranches = const IListConst([]),
+    this.codeMagic = const CodeMagicConfigEntity(),
+  });
 
   static IMap<String, RepositoryConfigEntity> fromBin(Object? data) {
     return IMap.fromJson(
