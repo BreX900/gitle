@@ -1,7 +1,7 @@
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gitle/common/instances.dart';
-import 'package:gitle/features/repositories/repository_dto.dart';
+import 'package:gitle/features/dashboard/dashboard_config_entity.dart';
 import 'package:mekart/mekart.dart';
 
 abstract final class DashboardProviders {
@@ -13,7 +13,7 @@ abstract final class DashboardProviders {
     await Instances.bin.runTransaction((tx) async {
       var dashboard = await tx.dashboard.requireRead();
 
-      IList<GroupDto> groups;
+      IList<DashboardGroupEntity> groups;
       if (oldUid != null) {
         final group = dashboard.groups.firstWhere((e) => e.uid == oldUid);
         groups = dashboard.groups.replaceFirst(
@@ -21,7 +21,7 @@ abstract final class DashboardProviders {
           to: group.copyWith(uid: uid),
         );
       } else {
-        final group = GroupDto(uid: uid, itemUid: null, items: const IList.empty());
+        final group = DashboardGroupEntity(uid: uid, itemUid: null, items: const IList.empty());
         groups = dashboard.groups.add(group);
       }
 
@@ -136,14 +136,14 @@ abstract final class DashboardProviders {
 }
 
 extension DashboardBin on BinSession {
-  BinStore<DashboardConfigDto> get dashboard => BinStore(
+  BinStore<DashboardConfigEntity> get dashboard => BinStore(
     session: this,
     name: Instances.resolveBinName('last_repositories_v8'),
-    deserializer: (data) => DashboardConfigDto.fromJson(data as Map<String, dynamic>),
+    deserializer: (data) => DashboardConfigEntity.fromJson(data as Map<String, dynamic>),
     serializer: (data) => data,
-    fallbackData: const DashboardConfigDto(
+    fallbackData: const DashboardConfigEntity(
       groupUid: null,
-      groups: IListConst([GroupDto(uid: null, itemUid: null, items: IList.empty())]),
+      groups: IListConst([DashboardGroupEntity(uid: null, itemUid: null, items: IList.empty())]),
     ),
   );
 }

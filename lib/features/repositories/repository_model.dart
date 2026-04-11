@@ -2,7 +2,7 @@ import 'package:collection/collection.dart';
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:git/git.dart';
 import 'package:gitle/features/git/git_dto.dart';
-import 'package:gitle/features/repositories/repository_dto.dart';
+import 'package:gitle/features/repositories/repository_entity.dart';
 import 'package:mek_data_class/mek_data_class.dart';
 
 part '../../generated/features/repositories/repository_model.g.dart';
@@ -27,7 +27,7 @@ class RepositoryModel with _$RepositoryModel {
 
   final IList<Mark> marks;
 
-  final RepositorySettingsDto settings;
+  final RepositoryConfigEntity settings;
 
   const RepositoryModel({
     required this.path,

@@ -3,11 +3,11 @@ import 'package:flutter/material.dart' hide Notification;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:git/git.dart';
 import 'package:gitle/common/app_utils.dart';
+import 'package:gitle/features/dashboard/dashboard_config_entity.dart';
 import 'package:gitle/features/dashboard/dashboard_providers.dart';
 import 'package:gitle/features/git/git_extensions.dart';
 import 'package:gitle/features/git/git_providers.dart';
 import 'package:gitle/features/repositories/repositories_providers.dart';
-import 'package:gitle/features/repositories/repository_dto.dart';
 import 'package:gitle/features/repositories/repository_model.dart';
 import 'package:gitle/git/atoms/commit_dialog.dart';
 import 'package:gitle/git/atoms/git_graph_atom.dart';
@@ -74,7 +74,7 @@ class _GitScreenState extends SourceConsumerState<GitScreen> {
   );
 
   Widget buildRepository({
-    required DashboardConfigDto config,
+    required DashboardConfigEntity config,
     required RepositoryModel? repository,
   }) {
     if (repository == null) {

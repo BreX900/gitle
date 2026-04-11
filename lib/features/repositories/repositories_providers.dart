@@ -11,7 +11,7 @@ import 'package:gitle/common/instances.dart';
 import 'package:gitle/features/dashboard/dashboard_providers.dart';
 import 'package:gitle/features/git/git_dto.dart';
 import 'package:gitle/features/git/git_extensions.dart';
-import 'package:gitle/features/repositories/repository_dto.dart';
+import 'package:gitle/features/repositories/repository_entity.dart';
 import 'package:gitle/features/repositories/repository_model.dart';
 import 'package:mek/mek.dart';
 import 'package:mekart/mekart.dart';
@@ -24,12 +24,12 @@ class InvalidGitDirFailure implements Exception {
 }
 
 extension RepositoriesBin on BinSession {
-  BinStore<IMap<String, RepositorySettingsDto>> get repositories => BinStore(
+  BinStore<IMap<String, RepositoryConfigEntity>> get repositories => BinStore(
     session: this,
     name: Instances.resolveBinName('repositories_v4'),
-    deserializer: RepositorySettingsDto.fromBin,
-    serializer: RepositorySettingsDto.toBin,
-    fallbackData: RepositorySettingsDto.initialBin,
+    deserializer: RepositoryConfigEntity.fromBin,
+    serializer: RepositoryConfigEntity.toBin,
+    fallbackData: RepositoryConfigEntity.initialBin,
   );
 }
 
@@ -61,7 +61,7 @@ abstract class RepositoriesProviders {
     print('current ${ref.isFirstBuild} ${ref.isReload} ${ref.isRefresh}');
 
     final settings = await ref.watch(
-      all.selectAsync((value) => value[gitDir.path] ?? const RepositorySettingsDto()),
+      all.selectAsync((value) => value[gitDir.path] ?? const RepositoryConfigEntity()),
     );
 
     // ref.onDispose(Directory(path)
@@ -105,7 +105,7 @@ abstract class RepositoriesProviders {
         ),
       );
 
-      await tx.repositories.set(repositoryPath, const RepositorySettingsDto());
+      await tx.repositories.set(repositoryPath, const RepositoryConfigEntity());
       await tx.dashboard.write(dashboard);
     });
   }
@@ -156,11 +156,10 @@ abstract class RepositoriesProviders {
   static Future<void> toggleBranchesProtection(MutationRef ref, {required bool isEnabled}) async {
     final gitDir = await ref.read(currentGitDir.future);
     final repository = await ref.read(current.future);
-    final settings = repository!.settings.change(
-      (c) => c
-        ..protectedBranches = isEnabled
-            ? const IListConst(['master', 'develop', 'main'])
-            : const IListConst([]),
+    final settings = repository!.settings.copyWith(
+      protectedBranches: isEnabled
+          ? const IListConst(['master', 'develop', 'main'])
+          : const IListConst([]),
     );
 
     await Instances.bin.repositories.set(gitDir!.path, settings);
@@ -169,7 +168,7 @@ abstract class RepositoriesProviders {
   static Future<RepositoryModel> _read(
     String gitDirPath, {
     required Iterable<String> referencesNames,
-    required RepositorySettingsDto settings,
+    required RepositoryConfigEntity settings,
     required bool isRebaseInProgress,
   }) async {
     final gitDir = await GitDir.fromExisting(gitDirPath);

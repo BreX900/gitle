@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:gitle/features/dashboard/dashboard_config_entity.dart';
 import 'package:gitle/features/dashboard/dashboard_providers.dart';
 import 'package:gitle/features/repositories/repositories_providers.dart';
-import 'package:gitle/features/repositories/repository_dto.dart';
 import 'package:gitle/git/widgets/input_dialog.dart';
 import 'package:mek/mek.dart';
 import 'package:path/path.dart' as path_;
@@ -10,7 +10,7 @@ import 'package:path/path.dart' as path_;
 const double _kTabHeight = 46.0 + 2.0;
 
 class RepositoriesTabBarScene extends StatelessWidget implements PreferredSizeWidget {
-  final DashboardConfigDto config;
+  final DashboardConfigEntity config;
 
   const RepositoriesTabBarScene({super.key, required this.config});
 
