@@ -48,4 +48,9 @@ abstract final class CodeMagicProviders {
       await Instances.bin.repositories.set(gitDir.path, settings);
     });
   }
+
+  static Future<void> cancelBuild(MutationRef ref, String buildId) async {
+    await CodeMagicApi.instance.cancelBuild(buildId);
+    ref.invalidate(builds);
+  }
 }

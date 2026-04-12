@@ -198,10 +198,7 @@ abstract class GitProviders {
     }
     if (codeMagicJob != null) {
       for (final workflowId in codeMagicJob.workflowIds) {
-        await CodeMagicApi.instance.startNewBuild(
-          appId: codeMagicJob.appId,
-          workflowId: workflowId,
-        );
+        await CodeMagicApi.instance.startBuild(appId: codeMagicJob.appId, workflowId: workflowId);
         print('Started build for appId: ${codeMagicJob.appId}, workflowId: $workflowId');
       }
     }

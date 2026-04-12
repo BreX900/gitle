@@ -15,19 +15,19 @@ mixin CodeMagicNotificationsManager on NotificationsManagerCore {
 
   final _pendingAppIds = <String>{};
 
-  Stream<BuildsResponse> watchCodeMagicBuilds() async* {
-    while (true) {
-      lg.info('${DateTime.now()} Checking CodeMagic builds...');
-      try {
-        yield await _handle();
-      } catch (error, stackTrace) {
-        Zone.current.handleUncaughtError(error, stackTrace);
-      }
+  Stream<BuildsResponse> watchCodeMagicBuilds() {
+    return Stream.multi((controller) async {
+      while (true) {
+        lg.info('${DateTime.now()} Checking CodeMagic builds...');
+        await controller.addStream(_handle().asStream());
+        if (controller.isClosed) return;
 
-      await Future<void>.delayed(
-        _pendingAppIds.isNotEmpty ? const Duration(seconds: 30) : const Duration(minutes: 2),
-      );
-    }
+        await Future<void>.delayed(
+          _pendingAppIds.isNotEmpty ? const Duration(seconds: 30) : const Duration(minutes: 2),
+        );
+        if (controller.isClosed) return;
+      }
+    });
   }
 
   Future<BuildsResponse> _handle() async {

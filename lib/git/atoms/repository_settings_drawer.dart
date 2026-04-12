@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gitle/common/app_utils.dart';
-import 'package:gitle/features/code_magic/code_magic_builds_drawer_view.dart';
+import 'package:gitle/features/code_magic/code_magic_drawer_view.dart';
 import 'package:gitle/features/git_hub/git_hub_notifications_drawer_view.dart';
 import 'package:gitle/features/repositories/repositories_providers.dart';
 import 'package:gitle/features/repositories/repository_model.dart';
@@ -47,7 +47,7 @@ class _RepositorySettingsDrawerState extends SourceConsumerState<RepositorySetti
               child: TabBarView(
                 children: [
                   const GitHubNotificationsDrawerView(),
-                  CodeMagicBuildsDrawerView(config: widget.repository.config.codeMagic),
+                  CodeMagicDrawerView(config: widget.repository.config.codeMagic),
                 ],
               ),
             ),

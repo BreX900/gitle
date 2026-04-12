@@ -51,7 +51,7 @@ class CodeMagicApi {
     return BuildSnapshot.fromJson(build);
   }
 
-  Future<Map<String, dynamic>> startNewBuild({
+  Future<Map<String, dynamic>> startBuild({
     required String appId,
     required String workflowId,
     String? branch,
@@ -68,5 +68,9 @@ class CodeMagicApi {
       },
     );
     return response.data!;
+  }
+
+  Future<void> cancelBuild(String buildId) async {
+    await _client.post<Map<String, dynamic>>('/builds/$buildId/cancel');
   }
 }

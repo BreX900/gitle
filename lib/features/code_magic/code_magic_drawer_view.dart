@@ -6,6 +6,7 @@ import 'package:gitle/features/code_magic/code_magic_dto.dart';
 import 'package:gitle/features/code_magic/code_magic_entities.dart';
 import 'package:gitle/features/code_magic/code_magic_providers.dart';
 import 'package:gitle/features/code_magic/code_magic_workflow_dialog.dart';
+import 'package:gitle/shared/answer_dialog.dart';
 import 'package:gitle/shared/build_async_value_extensions.dart';
 import 'package:mek/mek.dart';
 
@@ -16,22 +17,23 @@ final _provider = FutureProvider.autoDispose((ref) {
   return (appsState.requireValue, buildsState.requireValue);
 });
 
-class CodeMagicBuildsDrawerView extends SourceConsumerStatefulWidget {
+class CodeMagicDrawerView extends SourceConsumerStatefulWidget {
   final CodeMagicConfigEntity config;
 
-  const CodeMagicBuildsDrawerView({super.key, required this.config});
+  const CodeMagicDrawerView({super.key, required this.config});
 
   @override
-  SourceConsumerState<CodeMagicBuildsDrawerView> createState() => _CodeMagicBuildsDrawerViewState();
+  SourceConsumerState<CodeMagicDrawerView> createState() => _CodeMagicBuildsDrawerViewState();
 }
 
-class _CodeMagicBuildsDrawerViewState extends SourceConsumerState<CodeMagicBuildsDrawerView> {
+class _CodeMagicBuildsDrawerViewState extends SourceConsumerState<CodeMagicDrawerView> {
   late final _createJobMutation = ref.mutationV2(CodeMagicProviders.createJob);
   late final _deleteJobMutation = ref.mutationV2(CodeMagicProviders.deleteJob);
+  late final _cancelBuildMutation = ref.mutationV2(CodeMagicProviders.cancelBuild);
 
-  Future<void> _createJob(WidgetRef ref) async {
+  Future<void> _createJob() async {
     final result = await showDialog<CodeMagicJobEntity>(
-      context: ref.context,
+      context: context,
       builder: (context) => const CodeMagicWorkflowDialog(),
     );
     if (result == null) return;
@@ -39,24 +41,34 @@ class _CodeMagicBuildsDrawerViewState extends SourceConsumerState<CodeMagicBuild
     _createJobMutation(result, onError: (error) => AppUtils.showErrorSnackBar(context, error));
   }
 
-  Future<void> _deleteJob(WidgetRef ref, Application application, CodeMagicJobEntity job) async {
+  Future<void> _deleteJob(Application application, CodeMagicJobEntity job) async {
     final canDelete = await showDialog<bool>(
-      context: ref.context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete job?'),
+      context: context,
+      builder: (context) => AnswerDialog.delete(
         content: Text(
           'Application: ${application.name}\n'
           'Workflow ids: ${job.workflowIds.join(',')}',
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
-        ],
       ),
     );
     if (!(canDelete ?? false)) return;
 
     _deleteJobMutation(job, onError: (error) => AppUtils.showErrorSnackBar(context, error));
+  }
+
+  Future<void> _cancelBuild(Application application, Build build) async {
+    final canDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) => AnswerDialog.delete(
+        content: Text(
+          'Application: ${application.name}\n'
+          '${build.tag ?? build.branch ?? '?'} - Workflow: ${build.workflowId ?? '?'}',
+        ),
+      ),
+    );
+    if (!(canDelete ?? false)) return;
+
+    _cancelBuildMutation(build.id, onError: (error) => AppUtils.showErrorSnackBar(context, error));
   }
 
   Widget _buildContent(
@@ -70,7 +82,7 @@ class _CodeMagicBuildsDrawerViewState extends SourceConsumerState<CodeMagicBuild
       children: [
         ParagraphTile(
           title: const Text('Jobs'),
-          trailing: TextButton(onPressed: () => _createJob(ref), child: const Text('Create')),
+          trailing: TextButton(onPressed: _createJob, child: const Text('Create')),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -84,7 +96,7 @@ class _CodeMagicBuildsDrawerViewState extends SourceConsumerState<CodeMagicBuild
               });
 
               return Chip(
-                onDeleted: !hasPendingBuilds ? () => _deleteJob(ref, applicaiton, job) : null,
+                onDeleted: !hasPendingBuilds ? () => _deleteJob(applicaiton, job) : null,
                 label: Text(
                   textAlign: .center,
                   '${applicaiton.name} > ${job.workflowIds.join(',')}',
@@ -102,7 +114,9 @@ class _CodeMagicBuildsDrawerViewState extends SourceConsumerState<CodeMagicBuild
             itemCount: buildsResponse.builds.length,
             itemBuilder: (context, index) {
               final build = buildsResponse.builds[index];
-              final app = buildsResponse.applications.firstWhere((e) => e.id == build.appId);
+              final application = buildsResponse.applications.firstWhere((e) {
+                return e.id == build.appId;
+              });
 
               return ListTile(
                 leading: Tooltip(
@@ -126,10 +140,16 @@ class _CodeMagicBuildsDrawerViewState extends SourceConsumerState<CodeMagicBuild
                     BuildStatus.finished => const Icon(Icons.check_circle, color: Colors.green),
                   },
                 ),
-                title: Text('${app.name} - Version: ${build.version}'),
+                title: Text('${application.name} - Version: ${build.version}'),
                 subtitle: Text(
                   'From: ${build.tag ?? build.branch ?? '?'} - WorkflowId: ${build.workflowId ?? '-'}',
                 ),
+                trailing: build.status.isPending
+                    ? IconButton(
+                        onPressed: () => _cancelBuild(application, build),
+                        icon: const Icon(Icons.delete),
+                      )
+                    : null,
               );
             },
           ),
