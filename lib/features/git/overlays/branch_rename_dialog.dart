@@ -1,32 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:git/git.dart';
 import 'package:gitle/common/app_utils.dart';
-import 'package:gitle/common/branch_utils.dart';
-import 'package:gitle/features/git/git_dto.dart';
+import 'package:gitle/features/git/branch_utils.dart';
 import 'package:gitle/features/git/git_providers.dart';
-import 'package:gitle/git/widgets/sha_text.dart';
 import 'package:mek/mek.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 
-class BranchCreateDialog extends SourceConsumerStatefulWidget with TypedWidgetMixin<void> {
+class BranchRenameDialog extends SourceConsumerStatefulWidget with TypedWidgetMixin<void> {
   final GitDir gitDir;
-  final Sha startPoint;
+  final String branchName;
 
-  const BranchCreateDialog({super.key, required this.gitDir, required this.startPoint});
+  const BranchRenameDialog({super.key, required this.gitDir, required this.branchName});
 
   @override
-  SourceConsumerState<BranchCreateDialog> createState() => _BranchCreateDialogState();
+  SourceConsumerState<BranchRenameDialog> createState() => _BranchRenameDialogState();
 }
 
-class _BranchCreateDialogState extends SourceConsumerState<BranchCreateDialog> {
+class _BranchRenameDialogState extends SourceConsumerState<BranchRenameDialog> {
   final _typeFb = FormControlTypedOptional<BranchType>();
-  final _nameFb = FormControlTyped<String>(
+  final _newNameFb = FormControlTyped<String>(
     initialValue: '',
     validators: [ValidatorsTyped.required()],
   );
-  final _checkoutFb = FormControlTyped(initialValue: false);
 
-  late final _form = FormArray<void>([_typeFb, _nameFb, _checkoutFb]);
+  late final _form = FormArray<void>([_typeFb, _newNameFb]);
+
+  @override
+  void initState() {
+    super.initState();
+    final values = BranchType.from(widget.branchName);
+    _typeFb.updateValue(values.$1);
+    _newNameFb.updateValue(values.$2);
+  }
 
   @override
   void dispose() {
@@ -34,19 +39,18 @@ class _BranchCreateDialogState extends SourceConsumerState<BranchCreateDialog> {
     super.dispose();
   }
 
-  late final _createBranchMutation = ref.mutationV2((ref, None _) {
-    return GitProviders.createBranch(
+  late final _renameBranchMutation = ref.mutationV2((ref, None _) async {
+    return await GitProviders.renameBranch(
       ref,
       gitDir: widget.gitDir,
-      branchName: _resolveBranchName(),
-      startPoint: widget.startPoint,
-      checkout: _checkoutFb.value,
+      currentName: widget.branchName,
+      newName: _resolveBranchName(),
     );
   });
 
-  void _createBranch() {
+  void _renameBranch() {
     _form.markAsDisabled();
-    _createBranchMutation(
+    _renameBranchMutation(
       none,
       onError: (error) {
         _form.markAsEnabled();
@@ -56,18 +60,21 @@ class _BranchCreateDialogState extends SourceConsumerState<BranchCreateDialog> {
     );
   }
 
-  String _resolveBranchName() => _typeFb.value.toName(_nameFb.value);
+  String _resolveBranchName() => _typeFb.value.toName(_newNameFb.value);
 
   @override
   Widget build(BuildContext context) {
-    final isIdle = !ref.watchIsMutating([_createBranchMutation]);
-    final createBranch = _form.handleSubmit(_createBranch);
+    final isIdle = !ref.watchIsMutating([_renameBranchMutation]);
+    final isFormDirty = ref.watchSource(_form.source.dirty);
+    final renameBranch = _form.handleSubmit(_renameBranch);
+
+    print(isFormDirty);
 
     return AlertDialog(
       title: Row(
         children: [
-          const Text('Create branch at commit '),
-          ShaText(widget.startPoint, style: const TextStyle(fontWeight: FontWeight.bold)),
+          const Text('Enter the new name for branch '),
+          Text(widget.branchName, style: const TextStyle(fontWeight: FontWeight.bold)),
           const Text(':'),
         ],
       ),
@@ -76,7 +83,7 @@ class _BranchCreateDialogState extends SourceConsumerState<BranchCreateDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ReactiveSegmentedButton<BranchType>(
+            ReactiveSegmentedButton(
               formControl: _typeFb,
               emptySelectionAllowed: true,
               showSelectedIcon: false,
@@ -85,13 +92,12 @@ class _BranchCreateDialogState extends SourceConsumerState<BranchCreateDialog> {
               }).toList(),
             ),
             ReactiveTextField(
-              formControl: _nameFb,
+              formControl: _newNameFb,
               minLines: 1,
               maxLines: 10,
               inputFormatters: [BranchUtils.textFormatter],
-              decoration: const InputDecoration(labelText: 'Name'),
+              decoration: const InputDecoration(labelText: 'New Name'),
             ),
-            ReactiveSwitchListTile(formControl: _checkoutFb, title: const Text('Checkout')),
           ],
         ),
       ),
@@ -100,7 +106,10 @@ class _BranchCreateDialogState extends SourceConsumerState<BranchCreateDialog> {
           onPressed: isIdle ? () => Navigator.of(context).pop() : null,
           child: const Text('Cancel'),
         ),
-        ElevatedButton(onPressed: isIdle ? createBranch : null, child: const Text('Create')),
+        ElevatedButton(
+          onPressed: isIdle && isFormDirty ? renameBranch : null,
+          child: const Text('Rename'),
+        ),
       ],
     );
   }

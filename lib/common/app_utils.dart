@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:gitle/common/t_utils.dart';
 import 'package:gitle/features/git/git_extensions.dart';
+import 'package:gitle/shared/t_utils.dart';
 import 'package:mek/mek.dart';
 
 abstract final class AppUtils {

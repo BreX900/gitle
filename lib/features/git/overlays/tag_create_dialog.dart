@@ -2,14 +2,14 @@ import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:flutter/material.dart';
 import 'package:git/git.dart';
 import 'package:gitle/common/app_utils.dart';
-import 'package:gitle/common/branch_utils.dart';
 import 'package:gitle/features/code_magic/code_magic_dto.dart';
 import 'package:gitle/features/code_magic/code_magic_entities.dart';
 import 'package:gitle/features/code_magic/code_magic_providers.dart';
+import 'package:gitle/features/git/branch_utils.dart';
 import 'package:gitle/features/git/git_providers.dart';
 import 'package:gitle/features/repositories/repository_entity.dart';
-import 'package:gitle/git/widgets/sha_text.dart';
 import 'package:gitle/shared/build_async_value_extensions.dart';
+import 'package:gitle/shared/sha_text.dart';
 import 'package:mek/mek.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 

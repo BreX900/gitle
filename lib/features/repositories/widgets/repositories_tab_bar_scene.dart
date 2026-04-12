@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gitle/features/dashboard/dashboard_config_entity.dart';
 import 'package:gitle/features/dashboard/dashboard_providers.dart';
 import 'package:gitle/features/repositories/repositories_providers.dart';
-import 'package:gitle/git/widgets/input_dialog.dart';
+import 'package:gitle/shared/input_dialog.dart';
 import 'package:mek/mek.dart';
 import 'package:path/path.dart' as path_;
 

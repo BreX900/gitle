@@ -3,7 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:github/github.dart';
-import 'package:gitle/common/github.dart';
+import 'package:gitle/common/doubled_map.dart';
 import 'package:gitle/features/code_magic/code_magic_service.dart';
 import 'package:gitle/features/git_hub/git_hub_api_extensions.dart';
 import 'package:gitle/features/git_hub/github_dto.dart';

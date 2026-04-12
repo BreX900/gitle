@@ -4,9 +4,9 @@ import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gitle/common/app_utils.dart';
+import 'package:gitle/features/git/screens/git_logs_screen.dart';
+import 'package:gitle/features/git/screens/git_settings_screen.dart';
 import 'package:gitle/features/repositories/repositories_providers.dart';
-import 'package:gitle/git/git_logs_screen.dart';
-import 'package:gitle/git/git_settings_screen.dart';
 import 'package:mek/mek.dart';
 import 'package:path/path.dart' as p;
 

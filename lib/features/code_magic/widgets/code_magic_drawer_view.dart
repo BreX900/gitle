@@ -5,7 +5,7 @@ import 'package:gitle/common/app_utils.dart';
 import 'package:gitle/features/code_magic/code_magic_dto.dart';
 import 'package:gitle/features/code_magic/code_magic_entities.dart';
 import 'package:gitle/features/code_magic/code_magic_providers.dart';
-import 'package:gitle/features/code_magic/code_magic_workflow_dialog.dart';
+import 'package:gitle/features/code_magic/widgets/code_magic_workflow_dialog.dart';
 import 'package:gitle/shared/answer_dialog.dart';
 import 'package:gitle/shared/build_async_value_extensions.dart';
 import 'package:mek/mek.dart';

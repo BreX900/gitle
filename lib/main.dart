@@ -6,7 +6,7 @@ import 'package:flutter/material.dart' hide Notification;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gitle/common/instances.dart';
 import 'package:gitle/features/notifications/notifications_manager.dart';
-import 'package:gitle/git/gitle_app.dart';
+import 'package:gitle/gitle_app.dart';
 import 'package:logging/logging.dart';
 import 'package:mek/mek.dart';
 import 'package:window_manager/window_manager.dart';

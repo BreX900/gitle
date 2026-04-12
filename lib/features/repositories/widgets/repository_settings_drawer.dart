@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gitle/common/app_utils.dart';
-import 'package:gitle/features/code_magic/code_magic_drawer_view.dart';
-import 'package:gitle/features/git_hub/git_hub_notifications_drawer_view.dart';
+import 'package:gitle/features/code_magic/widgets/code_magic_drawer_view.dart';
+import 'package:gitle/features/git_hub/widgets/git_hub_notifications_drawer_view.dart';
 import 'package:gitle/features/repositories/repositories_providers.dart';
 import 'package:gitle/features/repositories/repository_model.dart';
 import 'package:mek/mek.dart';
