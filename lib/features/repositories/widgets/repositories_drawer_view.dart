@@ -5,19 +5,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gitle/common/app_utils.dart';
 import 'package:gitle/features/git/screens/git_logs_screen.dart';
-import 'package:gitle/features/git/screens/git_settings_screen.dart';
 import 'package:gitle/features/repositories/repositories_providers.dart';
+import 'package:gitle/shared/build_async_value_extensions.dart';
 import 'package:mek/mek.dart';
 import 'package:path/path.dart' as p;
 
-class RepositoriesDrawerAtom extends SourceConsumerStatefulWidget {
-  const RepositoriesDrawerAtom({super.key});
+class RepositoriesDrawerView extends SourceConsumerStatefulWidget {
+  const RepositoriesDrawerView({super.key});
 
   @override
-  SourceConsumerState<RepositoriesDrawerAtom> createState() => _RepositoriesDrawerAtomState();
+  SourceConsumerState<RepositoriesDrawerView> createState() => _RepositoriesDrawerViewState();
 }
 
-class _RepositoriesDrawerAtomState extends SourceConsumerState<RepositoriesDrawerAtom> {
+class _RepositoriesDrawerViewState extends SourceConsumerState<RepositoriesDrawerView> {
   late final _addRepository = ref.mutation(
     RepositoriesProviders.add,
     onError: (_, error) => AppUtils.showErrorSnackBar(context, error),
@@ -46,6 +46,7 @@ class _RepositoriesDrawerAtomState extends SourceConsumerState<RepositoriesDrawe
     return ListView.builder(
       key: const PageStorageKey<String>('repositories'),
       primary: false,
+      padding: const .only(top: 8.0),
       itemCount: repositories.length,
       itemBuilder: (context, index) {
         final prevRepositoryPath = index > 0 ? repositories[index - 1] : null;
@@ -94,10 +95,6 @@ class _RepositoriesDrawerAtomState extends SourceConsumerState<RepositoriesDrawe
 
     return Column(
       children: [
-        ConstrainedBox(
-          constraints: const BoxConstraints(minWidth: double.infinity, minHeight: kToolbarHeight),
-          child: const CloseButton(),
-        ),
         Expanded(child: _buildRepositories(repositories)),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -117,13 +114,6 @@ class _RepositoriesDrawerAtomState extends SourceConsumerState<RepositoriesDrawe
                 child: const Icon(Icons.add),
               ),
             ),
-            IconButton(
-              onPressed: () {
-                Scaffold.of(context).closeDrawer();
-                unawaited(context.nav.push(const GitSettingsScreen()));
-              },
-              icon: const Icon(Icons.settings),
-            ),
           ],
         ),
       ],
@@ -134,11 +124,8 @@ class _RepositoriesDrawerAtomState extends SourceConsumerState<RepositoriesDrawe
   Widget build(BuildContext context) {
     final repositoriesState = ref.watch(RepositoriesProviders.all);
 
-    return Drawer(
-      width: 512.0,
-      child: repositoriesState.whenOrNull(
-        data: (repositories) => _buildContent(repositories.keys.toIList()),
-      ),
+    return repositoriesState.buildView(
+      data: (repositories) => _buildContent(repositories.keys.toIList()),
     );
   }
 }

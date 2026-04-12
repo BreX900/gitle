@@ -15,10 +15,10 @@ class GitleApp extends SourceConsumerStatefulWidget {
   const GitleApp({super.key});
 
   @override
-  SourceConsumerState<GitleApp> createState() => _MyAppState();
+  SourceConsumerState<GitleApp> createState() => _GitleAppState();
 }
 
-class _MyAppState extends SourceConsumerState<GitleApp> with WindowListener {
+class _GitleAppState extends SourceConsumerState<GitleApp> with WindowListener {
   StreamSubscription? _subscription;
 
   @override
