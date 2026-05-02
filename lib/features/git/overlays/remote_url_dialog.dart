@@ -1,22 +1,25 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gitle/common/app_utils.dart';
 import 'package:gitle/features/git/git_extensions.dart';
 import 'package:gitle/features/repositories/repository_model.dart';
 import 'package:mek/mek.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 
-class RemoteUrlDialog extends SourceConsumerStatefulWidget with TypedWidgetMixin<void> {
+class RemoteUrlDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void> {
   final RepositoryModel repository;
 
   const RemoteUrlDialog({super.key, required this.repository});
 
   @override
-  SourceConsumerState<RemoteUrlDialog> createState() => _RemoteUrlDialogState();
+  ConsumerState<RemoteUrlDialog> createState() => _RemoteUrlDialogState();
 }
 
-class _RemoteUrlDialogState extends SourceConsumerState<RemoteUrlDialog> {
+class _RemoteUrlDialogState extends ConsumerState<RemoteUrlDialog> {
+  late final _mutation = MutationController(ref);
+
   final _urlFieldBloc = FormControlTyped(initialValue: '');
 
   @override
@@ -28,6 +31,7 @@ class _RemoteUrlDialogState extends SourceConsumerState<RemoteUrlDialog> {
   @override
   void dispose() {
     _urlFieldBloc.dispose();
+    _mutation.dispose();
     super.dispose();
   }
 
@@ -40,26 +44,27 @@ class _RemoteUrlDialogState extends SourceConsumerState<RemoteUrlDialog> {
     _urlFieldBloc.updateValue(remoteUrl.stdout as String);
   }
 
-  late final _updateRemoteOriginUrlMutation = ref.mutationV2((ref, None _) async {
-    await widget.repository.gitDir.runEffect(['remote', 'set-url', 'origin', _urlFieldBloc.value]);
-  });
-
   void _updateRemoteOriginUrl() {
     _urlFieldBloc.markAsDisabled();
-    _updateRemoteOriginUrlMutation(
-      none,
-      onError: (error) {
+    _mutation(
+      (ref) async => await widget.repository.gitDir.runEffect([
+        'remote',
+        'set-url',
+        'origin',
+        _urlFieldBloc.value,
+      ]),
+      onError: (error, stackTrace) {
         _urlFieldBloc.markAsEnabled();
         AppUtils.showErrorSnackBar(context, error);
       },
-      onSuccess: (_) => context.nav.pop(),
+      onSuccess: (_) => Navigator.pop(context),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDataIdle = !ref.watchIsMutating([_updateRemoteOriginUrlMutation]);
-    final isFormDirty = ref.watchSource(_urlFieldBloc.source.dirty);
+    final isDataIdle = !ref.watch(_mutation.provider.isPending);
+    final isFormDirty = ref.watch(_urlFieldBloc.provider.dirty);
 
     final updateRemoteOriginUrl = _urlFieldBloc.handleSubmit(_updateRemoteOriginUrl);
 

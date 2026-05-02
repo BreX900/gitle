@@ -5,30 +5,41 @@ import 'package:gitle/features/git/git_extensions.dart';
 import 'package:gitle/features/repositories/repositories_providers.dart';
 import 'package:gitle/features/repositories/repository_model.dart';
 import 'package:mek/mek.dart';
+import 'package:mekart/mekart.dart';
 
 abstract class GitProviders {
   static Future<void> checkout(
-    MutationRef ref,
-    ({RepositoryModel repository, String commitOrBranch, String? newBranchName}) args,
-  ) async {
+    MutationRef ref, {
+    required RepositoryModel repository,
+    required String commitOrBranch,
+    required String? newBranchName,
+  }) async {
     try {
-      await args.repository.gitDir.checkout(args.commitOrBranch, newBranchName: args.newBranchName);
+      await repository.gitDir.checkout(commitOrBranch, newBranchName: newBranchName);
     } finally {
       ref.invalidate(RepositoriesProviders.current);
     }
   }
 
-  static Future<void> reset(MutationRef ref, ({RepositoryModel repository, int count}) args) async {
+  static Future<void> reset(
+    MutationRef ref, {
+    required RepositoryModel repository,
+    required int count,
+  }) async {
     try {
-      await args.repository.gitDir.reset(count: args.count);
+      await repository.gitDir.reset(count: count);
     } finally {
       ref.invalidate(RepositoriesProviders.current);
     }
   }
 
-  static Future<String?> rebase(MutationRef ref, ({GitDir gitDir, String branchName}) args) async {
+  static Future<String?> rebase(
+    MutationRef ref, {
+    required GitDir gitDir,
+    required String branchName,
+  }) async {
     try {
-      return await args.gitDir.rebase(args.branchName);
+      return await gitDir.rebase(branchName);
     } finally {
       ref.invalidate(RepositoriesProviders.current);
     }
@@ -161,9 +172,13 @@ abstract class GitProviders {
     }
   }
 
-  static Future<void> pull(MutationRef ref, ({GitDir gitDir, String remoteBranchName}) args) async {
+  static Future<void> pull(
+    MutationRef ref, {
+    required GitDir gitDir,
+    required String remoteBranchName,
+  }) async {
     try {
-      await args.gitDir.pull(args.remoteBranchName);
+      await gitDir.pull(remoteBranchName);
     } finally {
       ref.invalidate(RepositoriesProviders.current);
     }
@@ -191,14 +206,19 @@ abstract class GitProviders {
     required CodeMagicJobEntity? codeMagicJob,
   }) async {
     try {
-      await gitDir.createAnnotatedTag(name, commit: commitSha, message: message);
+      await gitDir.createAnnotatedTag(name, commit: commitSha, message: message?.nullIfEmpty);
       await gitDir.push(toOrigin: true, referenceName: name);
     } finally {
       ref.invalidate(RepositoriesProviders.current);
     }
     if (codeMagicJob != null) {
       for (final workflowId in codeMagicJob.workflowIds) {
-        await CodeMagicApi.instance.startBuild(appId: codeMagicJob.appId, workflowId: workflowId);
+        await CodeMagicApi.instance.startBuild(
+          appId: codeMagicJob.appId,
+          workflowId: workflowId,
+          tag: name,
+          branch: null,
+        );
         print('Started build for appId: ${codeMagicJob.appId}, workflowId: $workflowId');
       }
     }

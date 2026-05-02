@@ -16,17 +16,23 @@ final _provider = FutureProvider.autoDispose((ref) {
   return buildsState.requireValue;
 });
 
-class CodeMagicDrawerView extends SourceConsumerStatefulWidget {
+class CodeMagicDrawerView extends ConsumerStatefulWidget {
   final CodeMagicConfigEntity config;
 
   const CodeMagicDrawerView({super.key, required this.config});
 
   @override
-  SourceConsumerState<CodeMagicDrawerView> createState() => _CodeMagicDrawerViewState();
+  ConsumerState<CodeMagicDrawerView> createState() => _CodeMagicDrawerViewState();
 }
 
-class _CodeMagicDrawerViewState extends SourceConsumerState<CodeMagicDrawerView> {
-  late final _cancelBuildMutation = ref.mutationV2(CodeMagicProviders.cancelBuild);
+class _CodeMagicDrawerViewState extends ConsumerState<CodeMagicDrawerView> {
+  late final _mutation = MutationController(ref);
+
+  @override
+  void dispose() {
+    _mutation.dispose();
+    super.dispose();
+  }
 
   Future<void> _cancelBuild(Application application, Build build) async {
     final canDelete = await showDialog<bool>(
@@ -40,7 +46,10 @@ class _CodeMagicDrawerViewState extends SourceConsumerState<CodeMagicDrawerView>
     );
     if (!(canDelete ?? false)) return;
 
-    _cancelBuildMutation(build.id, onError: (error) => AppUtils.showErrorSnackBar(context, error));
+    _mutation(
+      (ref) => CodeMagicProviders.cancelBuild(ref, build.id),
+      onError: (error, stackTrace) => AppUtils.showErrorSnackBar(context, error),
+    );
   }
 
   Widget _buildContent({required BuildsResponse buildsResponse}) {

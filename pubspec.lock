@@ -742,11 +742,10 @@ packages:
   rivertion:
     dependency: transitive
     description:
-      name: rivertion
-      sha256: fa89c50e08061e7f813eb50be9273af1124983c0cdfe73f04995f0cb073b32db
-      url: "https://pub.dev"
-    source: hosted
-    version: "4.3.0"
+      path: "../../packages/rivertion"
+      relative: true
+    source: path
+    version: "4.2.2"
   rxdart:
     dependency: "direct main"
     description:

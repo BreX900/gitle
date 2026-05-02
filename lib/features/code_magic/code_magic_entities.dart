@@ -16,8 +16,9 @@ class CodeMagicConfigEntity with _$CodeMagicConfigEntity {
   Map<String, dynamic> toJson() => _$CodeMagicConfigEntityToJson(this);
 }
 
+@DataClass()
 @JsonSerializable(createToJson: true, createFactory: true)
-class CodeMagicJobEntity {
+class CodeMagicJobEntity with _$CodeMagicJobEntity {
   final String appId;
   final IList<String> workflowIds;
 

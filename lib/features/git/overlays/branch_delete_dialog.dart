@@ -1,21 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:git/git.dart';
 import 'package:gitle/common/app_utils.dart';
 import 'package:gitle/features/git/git_providers.dart';
 import 'package:mek/mek.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 
-class BranchDeleteDialog extends SourceConsumerStatefulWidget with TypedWidgetMixin<void> {
+class BranchDeleteDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void> {
   final GitDir gitDir;
   final String branchName;
 
   const BranchDeleteDialog({super.key, required this.gitDir, required this.branchName});
 
   @override
-  SourceConsumerState<BranchDeleteDialog> createState() => _BranchDeleteDialogState();
+  ConsumerState<BranchDeleteDialog> createState() => _BranchDeleteDialogState();
 }
 
-class _BranchDeleteDialogState extends SourceConsumerState<BranchDeleteDialog> {
+class _BranchDeleteDialogState extends ConsumerState<BranchDeleteDialog> {
+  late final _mutation = MutationController(ref);
+
   final _forceFb = FormControlTyped(initialValue: false);
   final _remotesFb = FormControlTyped(initialValue: false);
 
@@ -24,34 +27,31 @@ class _BranchDeleteDialogState extends SourceConsumerState<BranchDeleteDialog> {
   @override
   void dispose() {
     _form.dispose();
+    _mutation.dispose();
     super.dispose();
   }
 
-  late final _deleteBranchMutation = ref.mutationV2((ref, None _) {
-    return GitProviders.deleteBranch(
-      ref,
-      gitDir: widget.gitDir,
-      branchName: widget.branchName,
-      force: _forceFb.value,
-      remote: _remotesFb.value,
-    );
-  });
-
   void _deleteBranch() {
     _form.markAsDisabled();
-    _deleteBranchMutation(
-      none,
-      onError: (error) {
+    _mutation(
+      (ref) async => await GitProviders.deleteBranch(
+        ref,
+        gitDir: widget.gitDir,
+        branchName: widget.branchName,
+        force: _forceFb.value,
+        remote: _remotesFb.value,
+      ),
+      onError: (error, stackTrace) {
         _form.markAsEnabled();
         AppUtils.showErrorSnackBar(context, error);
       },
-      onSuccess: (__) => context.nav.pop(),
+      onSuccess: (__) => Navigator.pop(context),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final isIdle = !ref.watchIsMutating([_deleteBranchMutation]);
+    final isIdle = !ref.watch(_mutation.provider.isPending);
     final deleteBranch = _form.handleSubmit(_deleteBranch);
 
     return AlertDialog(

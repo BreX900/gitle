@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:git/git.dart';
 import 'package:gitle/common/app_utils.dart';
 import 'package:gitle/features/git/git_dto.dart';
@@ -21,49 +22,75 @@ import 'package:gitle/shared/sha_text.dart';
 import 'package:intl/intl.dart';
 import 'package:mek/mek.dart';
 
-class GitGraphAtom extends SourceConsumerStatefulWidget {
+class GitGraphAtom extends ConsumerStatefulWidget {
   final RepositoryModel repository;
 
   const GitGraphAtom({super.key, required this.repository});
 
   @override
-  SourceConsumerState<GitGraphAtom> createState() => _GitGraphAtomState();
+  ConsumerState<GitGraphAtom> createState() => _GitGraphAtomState();
 }
 
-class _GitGraphAtomState extends SourceConsumerState<GitGraphAtom> {
-  late final _checkout = ref.mutation(
-    GitProviders.checkout,
-    onError: (_, error) => AppUtils.showErrorSnackBar(context, error),
-  );
-  late final _rebase = ref.mutation(
-    GitProviders.rebase,
-    onError: (_, error) => AppUtils.showErrorSnackBar(context, error),
-    onSuccess: (_, message) => ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message ?? 'Rebase completed!'))),
-  );
-  late final _cherryPick = ref.mutation(
-    (ref, String commitSha) async {
-      return await GitProviders.cherryPick(ref, widget.repository.gitDir, commitSha);
-    },
-    onError: (_, error) => AppUtils.showErrorSnackBar(context, error),
-    onSuccess: (_, message) => ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message ?? 'Rebase completed!'))),
-  );
-  late final _fetch = ref.mutation((ref, (String, String) __) async {
-    final (remote, local) = __;
-    await GitProviders.fetch(
-      ref,
-      widget.repository.gitDir,
-      remoteBranchName: remote,
-      localBranch: local,
+class _GitGraphAtomState extends ConsumerState<GitGraphAtom> {
+  late final _mutation = MutationController(ref);
+
+  @override
+  void dispose() {
+    _mutation.dispose();
+    super.dispose();
+  }
+
+  Future<void> _checkout({required String commitOrBranch, required String? newBranchName}) async {
+    _mutation(
+      (ref) async => await GitProviders.checkout(
+        ref,
+        repository: widget.repository,
+        commitOrBranch: commitOrBranch,
+        newBranchName: newBranchName,
+      ),
+      onError: (error, stackTrace) => AppUtils.showErrorSnackBar(context, error),
     );
-  }, onError: (_, error) => AppUtils.showErrorSnackBar(context, error));
-  late final _reset = ref.mutation(
-    GitProviders.reset,
-    onError: (_, error) => AppUtils.showErrorSnackBar(context, error),
-  );
+  }
+
+  Future<void> _rebase({required String branchName}) async {
+    _mutation(
+      (ref) async =>
+          await GitProviders.rebase(ref, gitDir: widget.repository.gitDir, branchName: branchName),
+      onError: (error, stackTrace) => AppUtils.showErrorSnackBar(context, error),
+      onSuccess: (message) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message ?? 'Rebase completed!'))),
+    );
+  }
+
+  Future<void> _cherryPick(String commitSha) async {
+    _mutation(
+      (ref) async => await GitProviders.cherryPick(ref, widget.repository.gitDir, commitSha),
+      onError: (error, stackTrace) => AppUtils.showErrorSnackBar(context, error),
+      onSuccess: (message) => ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message ?? 'Cherry pick completed!'))),
+    );
+  }
+
+  Future<void> _fetch({required String remote, required String local}) async {
+    _mutation(
+      (ref) async => await GitProviders.fetch(
+        ref,
+        widget.repository.gitDir,
+        remoteBranchName: remote,
+        localBranch: local,
+      ),
+      onError: (error, stackTrace) => AppUtils.showErrorSnackBar(context, error),
+    );
+  }
+
+  Future<void> _reset({required int count}) async {
+    _mutation(
+      (ref) async => await GitProviders.reset(ref, repository: widget.repository, count: count),
+      onError: (error, stackTrace) => AppUtils.showErrorSnackBar(context, error),
+    );
+  }
 
   Future<void> _showTagCreateDialog(GitDir gitDir, Sha commit) async {
     await showTypedDialog(
@@ -179,7 +206,7 @@ class _GitGraphAtomState extends SourceConsumerState<GitGraphAtom> {
           ),
         PopupMenuItemTile(
           enabled: deep > 0,
-          onTap: () => _reset((repository: widget.repository, count: deep)),
+          onTap: () => _reset(count: deep),
           leading: const Icon(Icons.delete_outline),
           title: const Text('Reset'),
           subtitle: Text('reset HEAD~$deep --soft'),
@@ -244,11 +271,10 @@ class _GitGraphAtomState extends SourceConsumerState<GitGraphAtom> {
       items: [
         if (!hasHead)
           PopupMenuItemTile(
-            onTap: () => _checkout((
-              repository: widget.repository,
+            onTap: () => _checkout(
               commitOrBranch: commit.name,
               newBranchName: commit.isRemote ? commit.toBranchName() : null,
-            )),
+            ),
             leading: const Icon(Icons.read_more),
             title: const Text('Checkout Branch'),
             subtitle: Text(
@@ -271,7 +297,7 @@ class _GitGraphAtomState extends SourceConsumerState<GitGraphAtom> {
           ),
         if (!hasHead)
           PopupMenuItemTile(
-            onTap: () => _rebase((gitDir: widget.repository.gitDir, branchName: commit.name)),
+            onTap: () => _rebase(branchName: commit.name),
             leading: const Icon(Icons.compare_arrows),
             title: const Text('Rebase current branch on Branch'),
             subtitle: Text('rebase ${commit.name}'),
@@ -297,7 +323,7 @@ class _GitGraphAtomState extends SourceConsumerState<GitGraphAtom> {
         if (upstream != null && !hasHead) ...[
           const PopupMenuDivider(),
           PopupMenuItemTile(
-            onTap: () => _fetch((upstream.toBranchName(), commit.name)),
+            onTap: () => _fetch(remote: upstream.toBranchName(), local: commit.name),
             leading: const Icon(Icons.download_outlined),
             title: const Text('Fetch'),
             subtitle: Text('fetch origin ${upstream.toBranchName()}:${commit.name}'),
@@ -323,7 +349,7 @@ class _GitGraphAtomState extends SourceConsumerState<GitGraphAtom> {
   Widget build(BuildContext context) {
     final dateFormat = DateFormat.Hm('it').add_yMd();
 
-    final isIdle = !ref.watchIsMutating([_checkout, _rebase, _rebase, _cherryPick, _fetch]);
+    final isIdle = !ref.watch(_mutation.provider.isPending);
 
     final head = widget.repository.currentBranch;
     final marks = widget.repository.marks;
@@ -353,11 +379,7 @@ class _GitGraphAtomState extends SourceConsumerState<GitGraphAtom> {
                     if (local != null)
                       _MarkView(
                         onDoubleTap: isIdle && !mark.hasHead
-                            ? () => _checkout((
-                                repository: widget.repository,
-                                commitOrBranch: local.name,
-                                newBranchName: null,
-                              ))
+                            ? () => _checkout(commitOrBranch: local.name, newBranchName: null)
                             : null,
                         onSecondaryTapUp: isIdle
                             ? (details) => unawaited(
@@ -375,11 +397,10 @@ class _GitGraphAtomState extends SourceConsumerState<GitGraphAtom> {
                     if (remote != null)
                       _MarkView(
                         onDoubleTap: isIdle && !mark.hasHead
-                            ? () => _checkout((
-                                repository: widget.repository,
+                            ? () => _checkout(
                                 commitOrBranch: remote.name,
                                 newBranchName: remote.toBranchName(),
-                              ))
+                              )
                             : null,
                         onSecondaryTapUp: isIdle
                             ? (details) => remote.isTag

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:git/git.dart';
 import 'package:gitle/common/app_utils.dart';
 import 'package:gitle/features/git/git_extensions.dart';
@@ -21,17 +22,19 @@ enum _PushType {
   }
 }
 
-class FormCommitAtom extends SourceConsumerStatefulWidget {
+class FormCommitAtom extends ConsumerStatefulWidget {
   final GitDir gitDir;
   final ValueGetter<List<String>>? filePaths;
 
   const FormCommitAtom({super.key, required this.gitDir, this.filePaths});
 
   @override
-  SourceConsumerState<FormCommitAtom> createState() => _FormCommitAtomState();
+  ConsumerState<FormCommitAtom> createState() => _FormCommitAtomState();
 }
 
-class _FormCommitAtomState extends SourceConsumerState<FormCommitAtom> {
+class _FormCommitAtomState extends ConsumerState<FormCommitAtom> {
+  late final _mutation = MutationController(ref);
+
   final _messageFb = FormControlTyped(initialValue: '');
   final _amendFb = FormControlTyped(initialValue: false);
   final _pushFb = FormControlTypedOptional<_PushType>();
@@ -51,31 +54,34 @@ class _FormCommitAtomState extends SourceConsumerState<FormCommitAtom> {
   @override
   void dispose() {
     _form.dispose();
+    _mutation.dispose();
     super.dispose();
   }
 
-  late final _commitPush = ref.mutation(
-    (ref, arg) async {
-      final branch = await widget.gitDir.currentBranch();
-      final repository = await ref.read(RepositoriesProviders.current.future);
-      if (repository!.config.protectedBranches.contains(branch.branchName)) {
-        throw StateError('Cant push to ${branch.branchName}!');
-      }
+  void _commitPush() {
+    _mutation(
+      (ref) async {
+        final branch = await widget.gitDir.currentBranch();
+        final repository = await ref.read(RepositoriesProviders.current.future);
+        if (repository!.config.protectedBranches.contains(branch.branchName)) {
+          throw StateError('Cant push to ${branch.branchName}!');
+        }
 
-      await GitProviders.commitPush(
-        ref,
-        widget.gitDir,
-        amend: _amendFb.value,
-        message: _messageFb.value,
-        filePaths: widget.filePaths?.call() ?? [],
-        push: _pushFb.value != null,
-        setUpstream: _pushFb.value == _PushType.setUpstream,
-        pushForce: _pushForceTypeFb.value,
-      );
-    },
-    onError: (_, error) => AppUtils.showErrorSnackBar(context, error),
-    onSuccess: (_, __) => _form.reset(),
-  );
+        await GitProviders.commitPush(
+          ref,
+          widget.gitDir,
+          amend: _amendFb.value,
+          message: _messageFb.value,
+          filePaths: widget.filePaths?.call() ?? [],
+          push: _pushFb.value != null,
+          setUpstream: _pushFb.value == _PushType.setUpstream,
+          pushForce: _pushForceTypeFb.value,
+        );
+      },
+      onError: (error, stackTrace) => AppUtils.showErrorSnackBar(context, error),
+      onSuccess: (_) => _form.reset(),
+    );
+  }
 
   Future<void> _amendListener(bool amend) async {
     if (!amend) return;
@@ -105,14 +111,14 @@ class _FormCommitAtomState extends SourceConsumerState<FormCommitAtom> {
 
   @override
   Widget build(BuildContext context) {
-    final hasPush = !ref.watchSource(_pushFb.source.value.isNull);
-    final isAmend = ref.watchSource(_amendFb.source.value) ?? false;
+    final hasPush = !ref.watch(_pushFb.provider.value.isNull);
+    final isAmend = ref.watch(_amendFb.provider.value) ?? false;
 
-    final error = ref.watchSource(_commitPush.source.select((state) => state.errorOrNull));
+    final error = ref.watch(_mutation.provider.select((state) => state.errorOrNull));
 
     final repository = ref.watch(RepositoriesProviders.current).requireValue!;
 
-    final isIdle = !ref.watchIsMutating([_commitPush]);
+    final isIdle = !ref.watch(_mutation.provider.isPending);
 
     final content = Column(
       children: [
@@ -182,7 +188,7 @@ class _FormCommitAtomState extends SourceConsumerState<FormCommitAtom> {
               children: [
                 FilledButton(
                   onPressed: isIdle && (!repository.isWorkingTreeClean || isAmend)
-                      ? () => _commitPush(null)
+                      ? _commitPush
                       : null,
                   child: hasPush ? const Text('Commit/Push') : const Text('Commit'),
                 ),

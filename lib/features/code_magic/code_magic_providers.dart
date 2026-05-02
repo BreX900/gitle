@@ -45,7 +45,7 @@ abstract final class CodeMagicProviders {
         ),
       );
 
-      await Instances.bin.repositories.set(gitDir.path, settings);
+      await tx.repositories.set(gitDir.path, settings);
     });
   }
 

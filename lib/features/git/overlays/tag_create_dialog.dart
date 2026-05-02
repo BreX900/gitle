@@ -1,5 +1,6 @@
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:git/git.dart';
 import 'package:gitle/common/app_utils.dart';
 import 'package:gitle/features/code_magic/code_magic_dto.dart';
@@ -13,7 +14,7 @@ import 'package:gitle/shared/sha_text.dart';
 import 'package:mek/mek.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 
-class TagCreateDialog extends SourceConsumerStatefulWidget with TypedWidgetMixin<void> {
+class TagCreateDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void> {
   final RepositoryConfigEntity config;
   final GitDir gitDir;
   final String startPoint;
@@ -26,10 +27,12 @@ class TagCreateDialog extends SourceConsumerStatefulWidget with TypedWidgetMixin
   });
 
   @override
-  SourceConsumerState<TagCreateDialog> createState() => _TagCreateDialogState();
+  ConsumerState<TagCreateDialog> createState() => _TagCreateDialogState();
 }
 
-class _TagCreateDialogState extends SourceConsumerState<TagCreateDialog> {
+class _TagCreateDialogState extends ConsumerState<TagCreateDialog> {
+  late final _mutation = MutationController(ref);
+
   final _nameFb = FormControlTyped<String>(
     initialValue: '',
     validators: [ValidatorsTyped.required()],
@@ -49,30 +52,27 @@ class _TagCreateDialogState extends SourceConsumerState<TagCreateDialog> {
   @override
   void dispose() {
     _form.dispose();
+    _mutation.dispose();
     super.dispose();
   }
-
-  late final _createTagMutation = ref.mutationV2((ref, None _) async {
-    await GitProviders.createTag(
-      ref,
-      gitDir: widget.gitDir,
-      commitSha: widget.startPoint,
-      name: _nameFb.value,
-      message: _messageFb.value,
-      codeMagicJob: _codeMagicJobControl.value,
-    );
-  });
 
   void _createTag() {
     _form.markAsDisabled();
 
-    _createTagMutation(
-      none,
-      onError: (error) {
+    _mutation(
+      (ref) async => await GitProviders.createTag(
+        ref,
+        gitDir: widget.gitDir,
+        commitSha: widget.startPoint,
+        name: _nameFb.value,
+        message: _messageFb.value,
+        codeMagicJob: _codeMagicJobControl.value,
+      ),
+      onError: (error, stackTrace) {
         _form.markAsEnabled();
         AppUtils.showErrorSnackBar(context, error);
       },
-      onSuccess: (_) => context.nav.pop(),
+      onSuccess: (_) => Navigator.pop(context),
     );
   }
 
@@ -120,7 +120,7 @@ class _TagCreateDialogState extends SourceConsumerState<TagCreateDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isIdle = !ref.watchIsMutating([_createTagMutation]);
+    final isIdle = !ref.watch(_mutation.provider.isPending);
     final createTag = _form.handleSubmit(_createTag);
 
     final state = ref.watch(CodeMagicProviders.apps);

@@ -1,21 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:git/git.dart';
 import 'package:gitle/common/app_utils.dart';
 import 'package:gitle/features/git/git_providers.dart';
 import 'package:mek/mek.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 
-class TagDeleteDialog extends SourceConsumerStatefulWidget with TypedWidgetMixin<void> {
+class TagDeleteDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void> {
   final GitDir gitDir;
   final String name;
 
   const TagDeleteDialog({super.key, required this.gitDir, required this.name});
 
   @override
-  SourceConsumerState<TagDeleteDialog> createState() => _TagDeleteDialogState();
+  ConsumerState<TagDeleteDialog> createState() => _TagDeleteDialogState();
 }
 
-class _TagDeleteDialogState extends SourceConsumerState<TagDeleteDialog> {
+class _TagDeleteDialogState extends ConsumerState<TagDeleteDialog> {
+  late final _mutation = MutationController(ref);
+
   final _remotesFb = FormControlTyped(initialValue: false);
 
   late final _form = FormArray([_remotesFb]);
@@ -23,30 +26,27 @@ class _TagDeleteDialogState extends SourceConsumerState<TagDeleteDialog> {
   @override
   void dispose() {
     _form.dispose();
+    _mutation.dispose();
     super.dispose();
   }
 
-  late final _deleteBranchMutation = ref.mutationV2((ref, None _) {
-    return GitProviders.deleteTag(
-      ref,
-      gitDir: widget.gitDir,
-      name: widget.name,
-      remote: _remotesFb.value,
-    );
-  });
-
-  void _deleteBranch() {
-    _deleteBranchMutation(
-      none,
-      onError: (error) => AppUtils.showErrorSnackBar(context, error),
-      onSuccess: (_) => context.nav.pop(),
+  void _deleteTag() {
+    _mutation(
+      (ref) async => await GitProviders.deleteTag(
+        ref,
+        gitDir: widget.gitDir,
+        name: widget.name,
+        remote: _remotesFb.value,
+      ),
+      onError: (error, stackTrace) => AppUtils.showErrorSnackBar(context, error),
+      onSuccess: (_) => Navigator.pop(context),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final isIdle = !ref.watchIsMutating([_deleteBranchMutation]);
-    final deleteBranch = _form.handleSubmit(_deleteBranch);
+    final isIdle = !ref.watch(_mutation.provider.isPending);
+    final deleteTag = _form.handleSubmit(_deleteTag);
 
     return AlertDialog(
       title: Text(
@@ -71,7 +71,7 @@ class _TagDeleteDialogState extends SourceConsumerState<TagDeleteDialog> {
           onPressed: isIdle ? () => Navigator.of(context).pop() : null,
           child: const Text('Cancel'),
         ),
-        ElevatedButton(onPressed: isIdle ? deleteBranch : null, child: const Text('Delete')),
+        ElevatedButton(onPressed: isIdle ? deleteTag : null, child: const Text('Delete')),
       ],
     );
   }

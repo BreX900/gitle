@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:git/git.dart';
 import 'package:gitle/common/app_utils.dart';
 import 'package:gitle/features/git/branch_utils.dart';
@@ -6,17 +7,19 @@ import 'package:gitle/features/git/git_providers.dart';
 import 'package:mek/mek.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 
-class BranchRenameDialog extends SourceConsumerStatefulWidget with TypedWidgetMixin<void> {
+class BranchRenameDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void> {
   final GitDir gitDir;
   final String branchName;
 
   const BranchRenameDialog({super.key, required this.gitDir, required this.branchName});
 
   @override
-  SourceConsumerState<BranchRenameDialog> createState() => _BranchRenameDialogState();
+  ConsumerState<BranchRenameDialog> createState() => _BranchRenameDialogState();
 }
 
-class _BranchRenameDialogState extends SourceConsumerState<BranchRenameDialog> {
+class _BranchRenameDialogState extends ConsumerState<BranchRenameDialog> {
+  late final _mutation = MutationController(ref);
+
   final _typeFb = FormControlTypedOptional<BranchType>();
   final _newNameFb = FormControlTyped<String>(
     initialValue: '',
@@ -36,23 +39,20 @@ class _BranchRenameDialogState extends SourceConsumerState<BranchRenameDialog> {
   @override
   void dispose() {
     _form.dispose();
+    _mutation.dispose();
     super.dispose();
   }
 
-  late final _renameBranchMutation = ref.mutationV2((ref, None _) async {
-    return await GitProviders.renameBranch(
-      ref,
-      gitDir: widget.gitDir,
-      currentName: widget.branchName,
-      newName: _resolveBranchName(),
-    );
-  });
-
   void _renameBranch() {
     _form.markAsDisabled();
-    _renameBranchMutation(
-      none,
-      onError: (error) {
+    _mutation(
+      (ref) async => await GitProviders.renameBranch(
+        ref,
+        gitDir: widget.gitDir,
+        currentName: widget.branchName,
+        newName: _resolveBranchName(),
+      ),
+      onError: (error, stackTrace) {
         _form.markAsEnabled();
         AppUtils.showErrorSnackBar(context, error);
       },
@@ -64,11 +64,9 @@ class _BranchRenameDialogState extends SourceConsumerState<BranchRenameDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isIdle = !ref.watchIsMutating([_renameBranchMutation]);
-    final isFormDirty = ref.watchSource(_form.source.dirty);
+    final isIdle = !ref.watch(_mutation.provider.isPending);
+    final isFormDirty = ref.watch(_form.provider.dirty);
     final renameBranch = _form.handleSubmit(_renameBranch);
-
-    print(isFormDirty);
 
     return AlertDialog(
       title: Row(

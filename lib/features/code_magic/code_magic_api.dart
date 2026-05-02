@@ -54,8 +54,8 @@ class CodeMagicApi {
   Future<Map<String, dynamic>> startBuild({
     required String appId,
     required String workflowId,
-    String? branch,
-    String? tag,
+    required String? branch,
+    required String? tag,
   }) async {
     assert(branch != null || tag != null);
     final response = await _client.post<Map<String, dynamic>>(

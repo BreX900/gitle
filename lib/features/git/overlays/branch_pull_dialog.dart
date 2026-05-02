@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:git/git.dart';
 import 'package:gitle/common/app_utils.dart';
 import 'package:gitle/features/git/git_providers.dart';
 import 'package:mek/mek.dart';
 
-class BranchPullDialog extends SourceConsumerStatefulWidget with TypedWidgetMixin<void> {
+class BranchPullDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void> {
   final GitDir gitDir;
   final String localBranch;
   final String remoteBranchName;
@@ -17,19 +18,33 @@ class BranchPullDialog extends SourceConsumerStatefulWidget with TypedWidgetMixi
   });
 
   @override
-  SourceConsumerState<BranchPullDialog> createState() => _BranchPullDialogState();
+  ConsumerState<BranchPullDialog> createState() => _BranchPullDialogState();
 }
 
-class _BranchPullDialogState extends SourceConsumerState<BranchPullDialog> {
-  late final _pullBranch = ref.mutation(
-    GitProviders.pull,
-    onError: (_, error) => AppUtils.showErrorSnackBar(context, error),
-    onSuccess: (_, __) => context.nav.pop(),
-  );
+class _BranchPullDialogState extends ConsumerState<BranchPullDialog> {
+  late final _mutation = MutationController(ref);
+
+  @override
+  void dispose() {
+    _mutation.dispose();
+    super.dispose();
+  }
+
+  void _pullBranch() {
+    _mutation(
+      (ref) async => await GitProviders.pull(
+        ref,
+        gitDir: widget.gitDir,
+        remoteBranchName: widget.remoteBranchName,
+      ),
+      onError: (error, stackTrace) => AppUtils.showErrorSnackBar(context, error),
+      onSuccess: (_) => Navigator.pop(context),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final isIdle = !ref.watchIsMutating([_pullBranch]);
+    final isIdle = !ref.watch(_mutation.provider.isPending);
 
     return AlertDialog(
       title: Text.rich(
@@ -54,13 +69,7 @@ class _BranchPullDialogState extends SourceConsumerState<BranchPullDialog> {
           onPressed: isIdle ? () => Navigator.of(context).pop() : null,
           child: const Text('Cancel'),
         ),
-        ElevatedButton(
-          onPressed: isIdle
-              ? () =>
-                    _pullBranch((gitDir: widget.gitDir, remoteBranchName: widget.remoteBranchName))
-              : null,
-          child: const Text('Pull'),
-        ),
+        ElevatedButton(onPressed: isIdle ? _pullBranch : null, child: const Text('Pull')),
       ],
     );
   }

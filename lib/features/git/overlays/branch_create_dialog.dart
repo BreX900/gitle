@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:git/git.dart';
 import 'package:gitle/common/app_utils.dart';
 import 'package:gitle/features/git/branch_utils.dart';
@@ -8,17 +9,19 @@ import 'package:gitle/shared/sha_text.dart';
 import 'package:mek/mek.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 
-class BranchCreateDialog extends SourceConsumerStatefulWidget with TypedWidgetMixin<void> {
+class BranchCreateDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void> {
   final GitDir gitDir;
   final Sha startPoint;
 
   const BranchCreateDialog({super.key, required this.gitDir, required this.startPoint});
 
   @override
-  SourceConsumerState<BranchCreateDialog> createState() => _BranchCreateDialogState();
+  ConsumerState<BranchCreateDialog> createState() => _BranchCreateDialogState();
 }
 
-class _BranchCreateDialogState extends SourceConsumerState<BranchCreateDialog> {
+class _BranchCreateDialogState extends ConsumerState<BranchCreateDialog> {
+  late final _mutation = MutationController(ref);
+
   final _typeFb = FormControlTypedOptional<BranchType>();
   final _nameFb = FormControlTyped<String>(
     initialValue: '',
@@ -30,25 +33,22 @@ class _BranchCreateDialogState extends SourceConsumerState<BranchCreateDialog> {
 
   @override
   void dispose() {
+    _mutation.dispose();
     _form.dispose();
     super.dispose();
   }
 
-  late final _createBranchMutation = ref.mutationV2((ref, None _) {
-    return GitProviders.createBranch(
-      ref,
-      gitDir: widget.gitDir,
-      branchName: _resolveBranchName(),
-      startPoint: widget.startPoint,
-      checkout: _checkoutFb.value,
-    );
-  });
-
   void _createBranch() {
     _form.markAsDisabled();
-    _createBranchMutation(
-      none,
-      onError: (error) {
+    _mutation(
+      (ref) async => await GitProviders.createBranch(
+        ref,
+        gitDir: widget.gitDir,
+        branchName: _resolveBranchName(),
+        startPoint: widget.startPoint,
+        checkout: _checkoutFb.value,
+      ),
+      onError: (error, stackTrace) {
         _form.markAsEnabled();
         AppUtils.showErrorSnackBar(context, error);
       },
@@ -60,7 +60,7 @@ class _BranchCreateDialogState extends SourceConsumerState<BranchCreateDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isIdle = !ref.watchIsMutating([_createBranchMutation]);
+    final isIdle = !ref.watch(_mutation.provider.isPending);
     final createBranch = _form.handleSubmit(_createBranch);
 
     return AlertDialog(

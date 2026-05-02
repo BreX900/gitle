@@ -2,10 +2,10 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:collection/collection.dart';
+import 'package:flutter/foundation.dart';
 import 'package:git/git.dart';
 import 'package:gitle/common/logger.dart';
 import 'package:gitle/features/git/git_dto.dart';
-import 'package:mek/mek.dart';
 import 'package:mekart/mekart.dart';
 
 enum PushForce { enabledWithLease, enabled }
@@ -18,8 +18,8 @@ extension GitDirExtensions on GitDir {
     r'^(?<H>[ *]) (?<R>[^ ]+) +(?<C>[^ ]+)( \[(?<U>[^\]]+)])? (?<M>.+)$',
   );
 
-  static final _outputController = SourceController(<CommandLogDto>[]);
-  static Source<List<CommandLogDto>> get logsSource => _outputController.source;
+  static final _outputController = ValueNotifier(<CommandLogDto>[]);
+  static ValueListenable<List<CommandLogDto>> get logsSource => _outputController;
 
   Future<List<CommitReference>> lsRemotes({bool heads = false, bool tags = false}) async {
     final result = await runEffect(['ls-remote', if (heads) '--heads', if (tags) '--tags']);
@@ -368,7 +368,7 @@ extension GitDirExtensions on GitDir {
       message: result.exitCode != 0 ? result.stderr : result.stdout,
     );
     lg.fine(commandResult);
-    _outputController.state = [commandResult, ..._outputController.state];
+    _outputController.value = [commandResult, ..._outputController.value];
     if (result.exitCode != 0) _throwFailedProcess(result, 'git', args);
 
     return result.stdout;

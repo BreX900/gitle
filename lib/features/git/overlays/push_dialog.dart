@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:git/git.dart';
 import 'package:gitle/common/app_utils.dart';
 import 'package:gitle/features/git/git_extensions.dart';
@@ -6,17 +7,18 @@ import 'package:gitle/features/git/git_providers.dart';
 import 'package:mek/mek.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 
-class PushDialog extends SourceConsumerStatefulWidget with TypedWidgetMixin<void> {
+class PushDialog extends ConsumerStatefulWidget with TypedWidgetMixin<void> {
   final GitDir gitDir;
   final String branchName;
 
   const PushDialog({super.key, required this.gitDir, required this.branchName});
 
   @override
-  SourceConsumerState<PushDialog> createState() => _PushDialogState();
+  ConsumerState<PushDialog> createState() => _PushDialogState();
 }
 
-class _PushDialogState extends SourceConsumerState<PushDialog> {
+class _PushDialogState extends ConsumerState<PushDialog> {
+  late final _mutation = MutationController(ref);
   final _pushWithUpstreamFb = FormControlTyped<bool>(initialValue: false);
   final _pushForceFb = FormControlTypedOptional<PushForce>();
 
@@ -25,33 +27,30 @@ class _PushDialogState extends SourceConsumerState<PushDialog> {
   @override
   void dispose() {
     _form.dispose();
+    _mutation.dispose();
     super.dispose();
   }
 
-  late final _pushMutation = ref.mutationV2((ref, None _) async {
-    await GitProviders.push(
-      ref,
-      gitDir: widget.gitDir,
-      force: _pushForceFb.value,
-      upstream: _pushWithUpstreamFb.value ? widget.branchName : null,
-    );
-  });
-
   void _push() {
     _form.markAsDisabled();
-    _pushMutation(
-      none,
-      onError: (error) {
+    _mutation(
+      (ref) async => await GitProviders.push(
+        ref,
+        gitDir: widget.gitDir,
+        force: _pushForceFb.value,
+        upstream: _pushWithUpstreamFb.value ? widget.branchName : null,
+      ),
+      onError: (error, stackTrace) {
         _form.markAsEnabled();
         AppUtils.showErrorSnackBar(context, error);
       },
-      onSuccess: (_) => context.nav.pop(),
+      onSuccess: (_) => Navigator.pop(context),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final isIdle = !ref.watchIsMutating([_pushMutation]);
+    final isIdle = !ref.watch(_mutation.provider.isPending);
     final push = _form.handleSubmit(_push);
 
     return AlertDialog(

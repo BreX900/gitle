@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gitle/features/code_magic/code_magic_providers.dart';
 import 'package:gitle/features/git/screens/git_screen.dart';
 import 'package:gitle/features/git_hub/git_hub_providers.dart';
@@ -11,14 +12,14 @@ import 'package:mek/mek.dart';
 import 'package:multi_split_view/multi_split_view.dart';
 import 'package:window_manager/window_manager.dart';
 
-class GitleApp extends SourceConsumerStatefulWidget {
+class GitleApp extends ConsumerStatefulWidget {
   const GitleApp({super.key});
 
   @override
-  SourceConsumerState<GitleApp> createState() => _GitleAppState();
+  ConsumerState<GitleApp> createState() => _GitleAppState();
 }
 
-class _GitleAppState extends SourceConsumerState<GitleApp> with WindowListener {
+class _GitleAppState extends ConsumerState<GitleApp> with WindowListener {
   StreamSubscription? _subscription;
 
   @override

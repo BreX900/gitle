@@ -10,22 +10,35 @@ import 'package:gitle/shared/build_async_value_extensions.dart';
 import 'package:mek/mek.dart';
 import 'package:path/path.dart' as p;
 
-class RepositoriesDrawerView extends SourceConsumerStatefulWidget {
+class RepositoriesDrawerView extends ConsumerStatefulWidget {
   const RepositoriesDrawerView({super.key});
 
   @override
-  SourceConsumerState<RepositoriesDrawerView> createState() => _RepositoriesDrawerViewState();
+  ConsumerState<RepositoriesDrawerView> createState() => _RepositoriesDrawerViewState();
 }
 
-class _RepositoriesDrawerViewState extends SourceConsumerState<RepositoriesDrawerView> {
-  late final _addRepository = ref.mutation(
-    RepositoriesProviders.add,
-    onError: (_, error) => AppUtils.showErrorSnackBar(context, error),
-  );
-  late final _removeRepository = ref.mutation(
-    RepositoriesProviders.remove,
-    onError: (_, error) => AppUtils.showErrorSnackBar(context, error),
-  );
+class _RepositoriesDrawerViewState extends ConsumerState<RepositoriesDrawerView> {
+  late final _mutation = MutationController(ref);
+
+  @override
+  void dispose() {
+    _mutation.dispose();
+    super.dispose();
+  }
+
+  void _addRepository() {
+    _mutation(
+      (ref) async => await RepositoriesProviders.add(ref, null),
+      onError: (error, stackTrace) => AppUtils.showErrorSnackBar(context, error),
+    );
+  }
+
+  void _removeRepository(String repositoryPath) {
+    _mutation(
+      (ref) async => await RepositoriesProviders.remove(ref, repositoryPath),
+      onError: (error, stackTrace) => AppUtils.showErrorSnackBar(context, error),
+    );
+  }
 
   Future<void> _selectRepository(String repositoryPath) async {
     Scaffold.of(context).closeDrawer();
@@ -33,7 +46,7 @@ class _RepositoriesDrawerViewState extends SourceConsumerState<RepositoriesDrawe
   }
 
   Widget _buildRepositories(IList<String> repositories) {
-    final isIdle = !ref.watchIsMutating([_addRepository, _removeRepository]);
+    final isIdle = !ref.watch(_mutation.provider.isPending);
     final repository = ref.watch(
       RepositoriesProviders.current.select((state) {
         return state.value?.gitDir.path;
@@ -91,7 +104,7 @@ class _RepositoriesDrawerViewState extends SourceConsumerState<RepositoriesDrawe
   }
 
   Widget _buildContent(IList<String> repositories) {
-    final isIdle = !ref.watchIsMutating([_addRepository, _removeRepository]);
+    final isIdle = !ref.watch(_mutation.provider.isPending);
 
     return Column(
       children: [
@@ -110,7 +123,7 @@ class _RepositoriesDrawerViewState extends SourceConsumerState<RepositoriesDrawe
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: FloatingActionButton(
-                onPressed: isIdle ? () => _addRepository(null) : null,
+                onPressed: isIdle ? _addRepository : null,
                 child: const Icon(Icons.add),
               ),
             ),

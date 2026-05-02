@@ -19,21 +19,24 @@ final _provider = FutureProvider.autoDispose((ref) {
   return (appsState.requireValue, buildsState.requireValue);
 });
 
-class CodeMagicRepositoryDrawerView extends SourceConsumerStatefulWidget {
+class CodeMagicRepositoryDrawerView extends ConsumerStatefulWidget {
   final CodeMagicConfigEntity config;
 
   const CodeMagicRepositoryDrawerView({super.key, required this.config});
 
   @override
-  SourceConsumerState<CodeMagicRepositoryDrawerView> createState() =>
+  ConsumerState<CodeMagicRepositoryDrawerView> createState() =>
       _CodeMagicRepositoryDrawerViewState();
 }
 
-class _CodeMagicRepositoryDrawerViewState
-    extends SourceConsumerState<CodeMagicRepositoryDrawerView> {
-  late final _createJobMutation = ref.mutationV2(CodeMagicProviders.createJob);
-  late final _deleteJobMutation = ref.mutationV2(CodeMagicProviders.deleteJob);
-  late final _cancelBuildMutation = ref.mutationV2(CodeMagicProviders.cancelBuild);
+class _CodeMagicRepositoryDrawerViewState extends ConsumerState<CodeMagicRepositoryDrawerView> {
+  late final _mutation = MutationController(ref);
+
+  @override
+  void dispose() {
+    _mutation.dispose();
+    super.dispose();
+  }
 
   Future<void> _createJob() async {
     final result = await showDialog<CodeMagicJobEntity>(
@@ -42,7 +45,10 @@ class _CodeMagicRepositoryDrawerViewState
     );
     if (result == null) return;
 
-    _createJobMutation(result, onError: (error) => AppUtils.showErrorSnackBar(context, error));
+    _mutation(
+      (ref) => CodeMagicProviders.createJob(ref, result),
+      onError: (error, stackTrace) => AppUtils.showErrorSnackBar(context, error),
+    );
   }
 
   Future<void> _deleteJob(Application application, CodeMagicJobEntity job) async {
@@ -57,7 +63,10 @@ class _CodeMagicRepositoryDrawerViewState
     );
     if (!(canDelete ?? false)) return;
 
-    _deleteJobMutation(job, onError: (error) => AppUtils.showErrorSnackBar(context, error));
+    _mutation(
+      (ref) => CodeMagicProviders.deleteJob(ref, job),
+      onError: (error, stackTrace) => AppUtils.showErrorSnackBar(context, error),
+    );
   }
 
   Future<void> _cancelBuild(Application application, Build build) async {
@@ -72,7 +81,10 @@ class _CodeMagicRepositoryDrawerViewState
     );
     if (!(canDelete ?? false)) return;
 
-    _cancelBuildMutation(build.id, onError: (error) => AppUtils.showErrorSnackBar(context, error));
+    _mutation(
+      (ref) => CodeMagicProviders.cancelBuild(ref, build.id),
+      onError: (error, stackTrace) => AppUtils.showErrorSnackBar(context, error),
+    );
   }
 
   Widget _buildContent(
@@ -97,6 +109,8 @@ class _CodeMagicRepositoryDrawerViewState
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8.0),
           child: Wrap(
+            spacing: 4.0,
+            runSpacing: 4.0,
             children: widget.config.jobs.map((job) {
               final application = apps.firstWhere((e) => e.id == job.appId);
               final hasPendingBuilds = builds.any((e) {

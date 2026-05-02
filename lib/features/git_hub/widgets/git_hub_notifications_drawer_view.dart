@@ -1,32 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gitle/common/app_utils.dart';
 import 'package:gitle/features/git_hub/git_hub_providers.dart';
 import 'package:gitle/shared/build_async_value_extensions.dart';
 import 'package:mek/mek.dart';
 
-class GitHubNotificationsDrawerView extends SourceConsumerStatefulWidget {
+class GitHubNotificationsDrawerView extends ConsumerStatefulWidget {
   const GitHubNotificationsDrawerView({super.key});
 
   @override
-  SourceConsumerState<GitHubNotificationsDrawerView> createState() =>
+  ConsumerState<GitHubNotificationsDrawerView> createState() =>
       _GitHubNotificationsDrawerViewState();
 }
 
-class _GitHubNotificationsDrawerViewState
-    extends SourceConsumerState<GitHubNotificationsDrawerView> {
-  late final _markAsRead = ref.mutation(
-    GitHubProviders.markAsRead,
-    onError: (_, error) => AppUtils.showErrorSnackBar(context, error),
-  );
+class _GitHubNotificationsDrawerViewState extends ConsumerState<GitHubNotificationsDrawerView> {
+  late final _mutation = MutationController(ref);
 
-  late final _markAllAsRead = ref.mutation(
-    GitHubProviders.markAllAsRead,
-    onError: (_, error) => AppUtils.showErrorSnackBar(context, error),
-  );
+  @override
+  void dispose() {
+    _mutation.dispose();
+    super.dispose();
+  }
+
+  void _markAsRead(String id) {
+    _mutation(
+      (ref) async => await GitHubProviders.markAsRead(ref, id),
+      onError: (error, stackTrace) => AppUtils.showErrorSnackBar(context, error),
+    );
+  }
+
+  void _markAllAsRead() {
+    _mutation(
+      (ref) async => await GitHubProviders.markAllAsRead(ref, none),
+      onError: (error, stackTrace) => AppUtils.showErrorSnackBar(context, error),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final notifications = ref.watch(GitHubProviders.notifications);
+    final isIdle = !ref.watch(_mutation.provider.isPending);
 
     return Column(
       crossAxisAlignment: .end,
@@ -34,7 +47,7 @@ class _GitHubNotificationsDrawerViewState
         ParagraphTile(
           title: const Text('Notifications'),
           trailing: TextButton(
-            onPressed: () => _markAllAsRead(none),
+            onPressed: isIdle ? _markAllAsRead : null,
             child: const Text('Mark All As Read'),
           ),
         ),
@@ -58,7 +71,7 @@ class _GitHubNotificationsDrawerViewState
                     ),
                     subtitle: Text(remoteNotification.subject!.title!),
                     trailing: IconButton(
-                      onPressed: () => _markAsRead(remoteNotification.id!),
+                      onPressed: isIdle ? () => _markAsRead(remoteNotification.id!) : null,
                       icon: const Icon(Icons.check),
                     ),
                   );

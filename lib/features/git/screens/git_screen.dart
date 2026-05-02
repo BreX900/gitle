@@ -28,47 +28,49 @@ final _screenProvider = FutureProvider.autoDispose((ref) {
   );
 });
 
-class GitScreen extends SourceConsumerStatefulWidget {
+class GitScreen extends ConsumerStatefulWidget {
   const GitScreen({super.key});
 
   @override
-  SourceConsumerState<GitScreen> createState() => _GitScreenState();
+  ConsumerState<GitScreen> createState() => _GitScreenState();
 }
 
-class _GitScreenState extends SourceConsumerState<GitScreen> {
+class _GitScreenState extends ConsumerState<GitScreen> {
+  late final _mutation = MutationController(ref);
+
   final _referenceNames = FormControlTyped(initialValue: const ISet<String>.empty());
 
   @override
   void dispose() {
     _referenceNames.dispose();
+    _mutation.dispose();
     super.dispose();
   }
 
   void _refresh() => ref.invalidateWithAncestors(RepositoriesProviders.current);
 
-  late final _fetch = ref.mutation((ref, (GitDir, {bool prune}) __) async {
-    final (gitDir, :prune) = __;
+  void _fetch(GitDir gitDir, {required bool prune}) => _mutation((ref) async {
     await GitProviders.fetch(ref, gitDir, prune: prune);
-  }, onError: (_, error) => AppUtils.showErrorSnackBar(context, error));
+  }, onError: (error, stackTrace) => AppUtils.showErrorSnackBar(context, error));
 
-  late final _rebaseContinue = ref.mutation(
-    GitProviders.rebaseContinue,
-    onError: (_, error) => AppUtils.showErrorSnackBar(context, error),
-    onSuccess: (_, message) =>
+  void _rebaseContinue(GitDir gitDir) => _mutation(
+    (ref) async => await GitProviders.rebaseContinue(ref, gitDir),
+    onError: (error, stackTrace) => AppUtils.showErrorSnackBar(context, error),
+    onSuccess: (message) =>
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message))),
   );
 
-  late final _rebaseAbort = ref.mutation(
-    GitProviders.rebaseAbort,
-    onError: (_, error) => AppUtils.showErrorSnackBar(context, error),
-    onSuccess: (_, message) =>
+  void _rebaseAbort(GitDir gitDir) => _mutation(
+    (ref) async => await GitProviders.rebaseAbort(ref, gitDir),
+    onError: (error, stackTrace) => AppUtils.showErrorSnackBar(context, error),
+    onSuccess: (message) =>
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message))),
   );
 
-  late final _removeRepository = ref.mutation(
-    RepositoriesProviders.remove,
-    onError: (_, error) => AppUtils.showErrorSnackBar(context, error),
-    onSuccess: (_, message) => ScaffoldMessenger.of(
+  void _removeRepository(String dirPath) => _mutation(
+    (ref) async => await RepositoriesProviders.remove(ref, dirPath),
+    onError: (error, stackTrace) => AppUtils.showErrorSnackBar(context, error),
+    onSuccess: (message) => ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Removed repository!'))),
   );
@@ -100,7 +102,7 @@ class _GitScreenState extends SourceConsumerState<GitScreen> {
     final isLoading = state.isLoading;
     final repository = state.value?.$2;
 
-    final isGitIdle = !ref.watchIsMutating([_fetch, _rebaseContinue]);
+    final isGitIdle = !ref.watch(_mutation.provider.isPending);
 
     Widget? branchesDropdown;
     if (repository != null) {
@@ -192,13 +194,13 @@ class _GitScreenState extends SourceConsumerState<GitScreen> {
             if (repository != null)
               IconButton(
                 tooltip: 'fetch  --tags --all',
-                onPressed: isGitIdle ? () => _fetch((repository.gitDir, prune: false)) : null,
+                onPressed: isGitIdle ? () => _fetch(repository.gitDir, prune: false) : null,
                 icon: const Icon(Icons.sync_outlined),
               ),
             if (repository != null)
               IconButton(
                 tooltip: 'fetch  --tags --all --prune',
-                onPressed: isGitIdle ? () => _fetch((repository.gitDir, prune: true)) : null,
+                onPressed: isGitIdle ? () => _fetch(repository.gitDir, prune: true) : null,
                 icon: const Icon(Icons.cloud_sync_outlined),
               ),
             const EndDrawerButton(),
