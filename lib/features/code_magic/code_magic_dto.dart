@@ -39,7 +39,7 @@ class Build {
   final String? workflowId;
   final String? fileWorkflowId;
 
-  final Commit commit;
+  final Commit? commit;
   final String? branch;
   final String? tag;
 
@@ -82,6 +82,7 @@ enum BuildStatus {
   skipped,
   fetching,
   building,
+  timeout,
   publishing,
   canceled,
   finishing,
@@ -94,6 +95,7 @@ enum BuildStatus {
     BuildStatus.skipped => false,
     BuildStatus.fetching => true,
     BuildStatus.building => true,
+    BuildStatus.timeout => false,
     BuildStatus.publishing => true,
     BuildStatus.canceled => false,
     BuildStatus.finishing => true,

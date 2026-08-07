@@ -2,10 +2,12 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:collection/collection.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/legacy.dart';
+import 'package:flutter_riverpod/misc.dart';
 import 'package:git/git.dart';
 import 'package:gitle/common/logger.dart';
 import 'package:gitle/features/git/git_dto.dart';
+import 'package:mek/mek.dart';
 import 'package:mekart/mekart.dart';
 
 enum PushForce { enabledWithLease, enabled }
@@ -18,8 +20,33 @@ extension GitDirExtensions on GitDir {
     r'^(?<H>[ *]) (?<R>[^ ]+) +(?<C>[^ ]+)( \[(?<U>[^\]]+)])? (?<M>.+)$',
   );
 
-  static final _outputController = ValueNotifier(<CommandLogDto>[]);
-  static ValueListenable<List<CommandLogDto>> get logsSource => _outputController;
+  static final _outputController = StateController(<CommandLogDto>[]);
+  static ProviderListenable<List<CommandLogDto>> get logsSource => _outputController.provider;
+
+  Future<List<CommitReference>> showRefExtended({
+    bool heads = false,
+    bool tags = false,
+    bool dereference = false,
+  }) async {
+    final args = [
+      'show-ref',
+      if (heads) '--heads',
+      if (tags) '--tags',
+      if (dereference) '--dereference',
+    ];
+
+    final pr = await runCommand(args, throwOnError: false);
+    if (pr.exitCode == 1) {
+      // no heads present, return empty collection
+      return [];
+    }
+
+    if (pr.exitCode != 0) {
+      throw ProcessException('git', args, pr.stderr as String, pr.exitCode);
+    }
+
+    return CommitReference.fromShowRefOutput(pr.stdout as String);
+  }
 
   Future<List<CommitReference>> lsRemotes({bool heads = false, bool tags = false}) async {
     final result = await runEffect(['ls-remote', if (heads) '--heads', if (tags) '--tags']);
@@ -245,7 +272,6 @@ extension GitDirExtensions on GitDir {
   /// https://git-scm.com/book/en/v2/Git-Basics-Tagging
   /// https://git-scm.com/docs/git-tag
   Future<void> createAnnotatedTag(String name, {Sha? commit, String? message}) async {
-    // ignore: parameter_assignments
     message = message?.trim();
     await runEffect([
       'tag',
@@ -368,7 +394,7 @@ extension GitDirExtensions on GitDir {
       message: result.exitCode != 0 ? result.stderr : result.stdout,
     );
     lg.fine(commandResult);
-    _outputController.value = [commandResult, ..._outputController.value];
+    _outputController.state = [commandResult, ..._outputController.state];
     if (result.exitCode != 0) _throwFailedProcess(result, 'git', args);
 
     return result.stdout;
@@ -397,6 +423,7 @@ extension NameCommitReference on CommitReference {
   String get name => Mark.parseName(reference);
   String toBranchName() => name.replaceFirst('origin/', '');
   // String toRemoteName() => name.startsWith('origin/') ? name : 'origin/$name';
+  bool get isObject => Mark.matchIsObject(reference);
   bool get isTag => Mark.matchIsTag(reference);
   bool get isLocal => Mark.matchIsLocal(reference);
   bool get isRemote => Mark.matchIsRemote(reference);

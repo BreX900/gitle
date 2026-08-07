@@ -17,6 +17,7 @@ mixin CodeMagicNotificationsManager on NotificationsManagerCore {
 
   Stream<BuildsResponse> watchCodeMagicBuilds() {
     return Stream.multi((controller) async {
+      print('Listening CodeMagic Builds');
       while (true) {
         lg.info('${DateTime.now()} Checking CodeMagic builds...');
         await controller.addStream(_handle().asStream());

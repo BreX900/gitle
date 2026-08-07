@@ -132,7 +132,9 @@ class _TagCreateDialogState extends ConsumerState<TagCreateDialog> {
           ShaText(widget.startPoint, style: const TextStyle(fontWeight: FontWeight.bold)),
         ],
       ),
-      content: state.buildView(data: (apps) => _buildContent(applications: apps)),
+      content: IntrinsicHeight(
+        child: state.buildView(data: (apps) => _buildContent(applications: apps)),
+      ),
       actions: [
         TextButton(
           onPressed: isIdle ? () => Navigator.of(context).pop() : null,

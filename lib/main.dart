@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
@@ -12,6 +13,8 @@ import 'package:mek/mek.dart';
 import 'package:window_manager/window_manager.dart';
 
 void main() async {
+  print(Directory.current.path);
+
   WidgetsFlutterBinding.ensureInitialized();
 
   Logger.root.reportRecords();

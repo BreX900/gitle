@@ -9,7 +9,7 @@ abstract final class CodeMagicUtils {
     } else if (build.branch case final branch?) {
       return 'Branch: $branch';
     }
-    return 'Commit: ${build.commit.hash.substring(0, 8)}';
+    return 'Commit: ${build.commit!.hash.substring(0, 8)}';
   }
 
   static Widget buildStatusIcon(BuildStatus status) {
@@ -20,6 +20,7 @@ abstract final class CodeMagicUtils {
         BuildStatus.preparing => const Icon(Icons.build, color: Colors.yellow),
         BuildStatus.skipped => const Icon(Icons.skip_next, color: Colors.grey),
         BuildStatus.fetching => const Icon(Icons.download, color: Colors.yellow),
+        BuildStatus.timeout => const Icon(Icons.timer_off_outlined, color: Colors.red),
         BuildStatus.building => const CircularProgressIndicator(
           constraints: .tightFor(width: 20.0, height: 20.0),
           strokeWidth: 1.5,

@@ -11,8 +11,7 @@ class CodeMagicBuildListTile extends StatelessWidget {
   final Build _build;
   final Widget? trailing;
 
-  const CodeMagicBuildListTile({super.key, required Build build, required this.trailing})
-    : _build = build;
+  const CodeMagicBuildListTile({super.key, required this._build, required this.trailing});
 
   @override
   Widget build(BuildContext context) {

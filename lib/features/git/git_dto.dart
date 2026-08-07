@@ -153,20 +153,24 @@ class Mark with _$Mark {
 
   static String parseName(String reference) => reference.replaceFirst(RegExp('refs/[^/]+/'), '');
 
-  static bool matchIsTag(String reference) => reference.startsWith('refs/tags/');
-  static bool matchIsLocal(String reference) => reference.startsWith('refs/heads/');
-  static bool matchIsRemote(String reference) => reference.startsWith('refs/remotes/');
+  static bool matchIsObject(String reference) => reference.endsWith('^{}');
+  static bool matchIsTag(String reference) =>
+      reference.startsWith('refs/tags/') && !matchIsObject(reference);
+  static bool matchIsLocal(String reference) =>
+      reference.startsWith('refs/heads/') && !matchIsObject(reference);
+  static bool matchIsRemote(String reference) =>
+      reference.startsWith('refs/remotes/') && !matchIsObject(reference);
 
-  static List<Mark> from({
+  static Iterable<Mark> from({
     required Iterable<CommitReference> references,
     required Iterable<BranchReferenceWithUpstream> branches,
-  }) {
+  }) sync* {
+    final objects = references.where((element) => element.isObject).toList();
+    final tags = references.where((element) => element.isTag);
     final remotes = references.where((element) => element.isRemote).toList();
     final locals = references.where((element) => element.isLocal);
 
     final pickedRemotes = <CommitReference>[];
-
-    final marks = <Mark>[];
 
     for (final local in locals) {
       var hasHead = false;
@@ -187,18 +191,24 @@ class Mark with _$Mark {
         }
       }
 
-      marks.add(Mark(hasHead: hasHead, local: local, remote: remote));
+      yield Mark(hasHead: hasHead, local: local, remote: remote);
     }
 
     for (final remote in remotes) {
       if (pickedRemotes.contains(remote)) continue;
-      marks.add(Mark(hasHead: false, remote: remote, local: null));
+
+      yield Mark(hasHead: false, remote: remote, local: null);
     }
 
-    for (final tag in references.where((element) => element.isTag)) {
-      marks.add(Mark(hasHead: false, remote: tag, local: null));
-    }
+    for (final tag in tags) {
+      final objectReference = '${tag.reference}^{}';
+      final object = objects.firstWhereOrNull((e) => e.reference == objectReference);
 
-    return marks;
+      yield Mark(
+        hasHead: false,
+        remote: CommitReference(object?.sha ?? tag.sha, tag.reference),
+        local: null,
+      );
+    }
   }
 }

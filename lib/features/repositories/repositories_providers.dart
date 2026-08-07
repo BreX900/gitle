@@ -173,10 +173,9 @@ abstract class RepositoriesProviders {
     final gitDir = await GitDir.fromExisting(gitDirPath);
     final data = await (
       gitDir.currentBranch(),
-      gitDir.showRef(), // head: true
+      gitDir.showRefExtended(dereference: true),
       gitDir.logs(tags: true, paths: referencesNames, maxCount: 512),
       gitDir.status(),
-      //gitDir.lsRemotes(heads: true).benchmark('lsRemotes'), // , tags: true
       gitDir.stashList(),
       gitDir.branchUpstreams(),
     ).wait;
@@ -191,7 +190,7 @@ abstract class RepositoriesProviders {
       isRebaseInProgress: isRebaseInProgress,
       workingTree: data.$4.lockUnsafe,
       stashes: data.$5.lockUnsafe,
-      marks: Mark.from(references: data.$2, branches: data.$6).lockUnsafe,
+      marks: Mark.from(references: data.$2, branches: data.$6).toIList(),
       config: settings,
     );
   }
