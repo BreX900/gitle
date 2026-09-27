@@ -164,6 +164,14 @@ abstract class RepositoriesProviders {
     await Instances.bin.repositories.set(gitDir!.path, settings);
   }
 
+  static Future<void> updateCommitScopes(MutationRef ref, {required IList<String> scopes}) async {
+    final gitDir = await ref.read(currentGitDir.future);
+    final repository = await ref.read(current.future);
+    final settings = repository!.config.copyWith(commitScopes: scopes);
+
+    await Instances.bin.repositories.set(gitDir!.path, settings);
+  }
+
   static Future<RepositoryModel> _read(
     String gitDirPath, {
     required Iterable<String> referencesNames,

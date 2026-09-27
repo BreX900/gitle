@@ -130,16 +130,37 @@ abstract class GitProviders {
     }
   }
 
+  static (String, String?, String)? splitCommitMessage(String line) {
+    final regExp = RegExp(r'^(\w+)(\(\w+\))?: (.+)');
+    final match = regExp.firstMatch(line);
+    if (match == null) return null;
+
+    return (match.group(1)!, match.group(2), match.group(3)!);
+  }
+
   static Future<void> commitPush(
     MutationRef ref,
     GitDir gitDir, {
     bool amend = false,
+    String? scope,
     required String message,
     List<String> filePaths = const [],
     bool push = false,
     PushForce? pushForce,
     bool setUpstream = false,
   }) async {
+    if (scope != null) {
+      message = message
+          .split('\n')
+          .map((text) {
+            final groups = splitCommitMessage(text);
+            if (groups == null) return text;
+
+            return '${groups.$1}${groups.$2 ?? '($scope)'}: ${groups.$3}';
+          })
+          .join('\n');
+    }
+
     try {
       await _commit(gitDir, amend: amend, message: message, filePaths: filePaths);
       if (push) {

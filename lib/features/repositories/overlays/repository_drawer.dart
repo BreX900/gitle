@@ -1,3 +1,4 @@
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gitle/common/app_utils.dart';
@@ -6,6 +7,7 @@ import 'package:gitle/features/repositories/repositories_providers.dart';
 import 'package:gitle/features/repositories/repository_model.dart';
 import 'package:gitle/shared/default_tab_controller_storage.dart';
 import 'package:mek/mek.dart';
+import 'package:reactive_forms/reactive_forms.dart';
 
 class RepositoryDrawer extends ConsumerStatefulWidget {
   final RepositoryModel repository;
@@ -19,8 +21,11 @@ class RepositoryDrawer extends ConsumerStatefulWidget {
 class _RepositoryDrawerState extends ConsumerState<RepositoryDrawer> {
   late final _mutation = MutationController(ref);
 
+  final _commitScopesControl = FormControl<String>();
+
   @override
   void dispose() {
+    _commitScopesControl.dispose();
     _mutation.dispose();
     super.dispose();
   }
@@ -29,6 +34,16 @@ class _RepositoryDrawerState extends ConsumerState<RepositoryDrawer> {
     _mutation(
       (ref) async =>
           await RepositoriesProviders.toggleBranchesProtection(ref, isEnabled: isEnabled),
+      onError: (error, stackTrace) => AppUtils.showErrorSnackBar(context, error),
+    );
+  }
+
+  void _updateCommitScopes() {
+    _mutation(
+      (ref) async => await RepositoriesProviders.updateCommitScopes(
+        ref,
+        scopes: _commitScopesControl.value?.split(', ').lockUnsafe ?? const IList.empty(),
+      ),
       onError: (error, stackTrace) => AppUtils.showErrorSnackBar(context, error),
     );
   }
@@ -57,6 +72,16 @@ class _RepositoryDrawerState extends ConsumerState<RepositoryDrawer> {
                 onChanged: isIdle ? _toggleBranchProtection : null,
                 title: const Text('Enable branches protection?'),
                 subtitle: const Text('master, develop, main'),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: ReactiveTypedTextField(
+                  formControl: _commitScopesControl,
+                  decoration: InputDecoration(
+                    labelText: 'Commit scopes',
+                    suffixIcon: ReactiveSaveButton(onSubmit: isIdle ? _updateCommitScopes : null),
+                  ),
+                ),
               ),
 
               const Divider(),

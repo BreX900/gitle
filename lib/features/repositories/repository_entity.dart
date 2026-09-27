@@ -14,12 +14,14 @@ class RepositoryConfigEntity with _$RepositoryConfigEntity {
   );
 
   final IList<String> protectedBranches;
+  final IList<String> commitScopes;
   final CodeMagicConfigEntity codeMagic;
 
   bool get hasBranchProtection => protectedBranches.isNotEmpty;
 
   const RepositoryConfigEntity({
-    this.protectedBranches = const IListConst([]),
+    this.protectedBranches = const IList.empty(),
+    this.commitScopes = const IList.empty(),
     this.codeMagic = const CodeMagicConfigEntity(),
   });
 

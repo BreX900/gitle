@@ -35,24 +35,32 @@ class FormCommitAtom extends ConsumerStatefulWidget {
 class _FormCommitAtomState extends ConsumerState<FormCommitAtom> {
   late final _mutation = MutationController(ref);
 
-  final _messageFb = FormControlTyped(initialValue: '');
-  final _amendFb = FormControlTyped(initialValue: false);
-  final _pushFb = FormControlTypedOptional<_PushType>();
-  final _pushForceTypeFb = FormControlTypedOptional<PushForce>();
+  final _messageControl = FormControlTyped(initialValue: '');
+  final _amendControl = FormControlTyped(initialValue: false);
+  final _pushTypeControl = FormControlTypedOptional<_PushType>();
+  final _pushForceTypeControl = FormControlTypedOptional<PushForce>();
+  final _scopeControl = FormControlTypedOptional<String>();
 
-  late final _form = FormArray<void>([_messageFb, _amendFb, _pushFb, _pushForceTypeFb]);
+  late final _form = FormArray<void>([
+    _messageControl,
+    _amendControl,
+    _pushTypeControl,
+    _pushForceTypeControl,
+    // Do not add _scopeControl to not reset on submit
+  ]);
 
   @override
   void initState() {
     super.initState();
-    _amendFb.valueChanges.listen(_amendListener);
-    _pushFb.valueChanges.listen((value) {
-      if (value == null) _pushForceTypeFb.reset();
+    _amendControl.valueChanges.listen(_amendListener);
+    _pushTypeControl.valueChanges.listen((value) {
+      if (value == null) _pushForceTypeControl.reset();
     });
   }
 
   @override
   void dispose() {
+    _scopeControl.dispose();
     _form.dispose();
     _mutation.dispose();
     super.dispose();
@@ -70,12 +78,13 @@ class _FormCommitAtomState extends ConsumerState<FormCommitAtom> {
         await GitProviders.commitPush(
           ref,
           widget.gitDir,
-          amend: _amendFb.value,
-          message: _messageFb.value,
+          amend: _amendControl.value,
+          scope: _scopeControl.value,
+          message: _messageControl.value,
           filePaths: widget.filePaths?.call() ?? [],
-          push: _pushFb.value != null,
-          setUpstream: _pushFb.value == _PushType.setUpstream,
-          pushForce: _pushForceTypeFb.value,
+          push: _pushTypeControl.value != null,
+          setUpstream: _pushTypeControl.value == _PushType.setUpstream,
+          pushForce: _pushForceTypeControl.value,
         );
       },
       onError: (error, stackTrace) => AppUtils.showErrorSnackBar(context, error),
@@ -88,11 +97,11 @@ class _FormCommitAtomState extends ConsumerState<FormCommitAtom> {
     final data = (await ref.read(RepositoriesProviders.current.future))!;
     final log = data.commits.firstWhere((e) => e.commit == data.currentBranch.sha);
 
-    if (_messageFb.value.isNotEmpty) {
+    if (_messageControl.value.isNotEmpty) {
       final canReplace = await _showReplaceMessageDialog();
       if (!canReplace) return;
     }
-    _messageFb.updateValue(log.message.join('\n'));
+    _messageControl.updateValue(log.message.join('\n'));
   }
 
   Future<bool> _showReplaceMessageDialog() async {
@@ -111,8 +120,8 @@ class _FormCommitAtomState extends ConsumerState<FormCommitAtom> {
 
   @override
   Widget build(BuildContext context) {
-    final hasPush = !ref.watch(_pushFb.provider.value.isNull);
-    final isAmend = ref.watch(_amendFb.provider.value) ?? false;
+    final hasPush = !ref.watch(_pushTypeControl.provider.value.isNull);
+    final isAmend = ref.watch(_amendControl.provider.value) ?? false;
 
     final error = ref.watch(_mutation.provider.select((state) => state.errorOrNull));
 
@@ -122,10 +131,24 @@ class _FormCommitAtomState extends ConsumerState<FormCommitAtom> {
 
     final content = Column(
       children: [
+        if (repository.config.commitScopes.isNotEmpty)
+          Padding(
+            padding: const .symmetric(horizontal: 16.0),
+            child: ReactiveDropdownField<String>(
+              formControl: _scopeControl,
+              decoration: const InputDecoration(
+                labelText: 'Scope',
+                suffixIcon: ReactiveClearButton(),
+              ),
+              items: repository.config.commitScopes.map((scope) {
+                return DropdownMenuItem(value: scope, child: Text(scope));
+              }).toList(),
+            ),
+          ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           child: ReactiveTextField(
-            formControl: _messageFb,
+            formControl: _messageControl,
             minLines: 1,
             maxLines: 10,
             decoration: InputDecoration(
@@ -135,10 +158,10 @@ class _FormCommitAtomState extends ConsumerState<FormCommitAtom> {
             ),
           ),
         ),
-        ReactiveSwitchListTile(formControl: _amendFb, title: const Text('Amend last commit')),
+        ReactiveSwitchListTile(formControl: _amendControl, title: const Text('Amend last commit')),
         const Divider(),
         ReactiveFormField<_PushType, _PushType>(
-          formControl: _pushFb,
+          formControl: _pushTypeControl,
           builder: (field) => RadioGroup<_PushType>(
             groupValue: field.value,
             onChanged: field.didChange,
@@ -157,7 +180,7 @@ class _FormCommitAtomState extends ConsumerState<FormCommitAtom> {
         ),
         if (hasPush)
           ReactiveFormField<PushForce, PushForce>(
-            formControl: _pushForceTypeFb,
+            formControl: _pushForceTypeControl,
             builder: (field) => RadioGroup<PushForce>(
               groupValue: field.value,
               onChanged: field.didChange,
