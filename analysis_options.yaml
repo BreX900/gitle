@@ -25,6 +25,11 @@ linter:
   # `// ignore_for_file: name_of_lint` syntax on the line or in the file
   # producing the lint.
   rules:
+analyzer:
+  exclude:
+    - build/**
+    - windows/**
+    - macos/**
 #    implicit_reopen: true
 #    invalid_case_patterns: true
 

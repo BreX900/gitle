@@ -120,7 +120,7 @@ class NotificationsManager extends NotificationsManagerCore with CodeMagicNotifi
     if (_notificationIds.containsKey(remoteNotification.id)) return;
     if (!_checkShow(remoteNotification.subject)) return;
 
-    print('_> _onReceiveRemoteNotification ${jsonEncode(remoteNotification)}');
+    // print('_> _onReceiveRemoteNotification ${jsonEncode(remoteNotification)}');
     await _notificationsMacOsClient.show(
       id: _notificationIds.putIfAbsent(remoteNotification.id!, generateNotificationId),
       title: '${remoteNotification.repository!.name}: ${remoteNotification.subject!.type!}',

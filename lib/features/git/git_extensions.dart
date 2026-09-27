@@ -331,6 +331,7 @@ extension GitDirExtensions on GitDir {
   //   return CommitReference.fromShowRefOutput(pr.stdout as String);
   // }
 
+  /// https://git-scm.com/docs/git-log
   Future<List<LogDto>> logs({
     bool tags = false,
     Iterable<String> paths = const [],
@@ -342,7 +343,7 @@ extension GitDirExtensions on GitDir {
       '--date-order',
       if (tags) '--tags',
       if (maxCount != null) '--max-count=$maxCount',
-      if (paths.isEmpty) '--all' else ...paths,
+      if (paths.isEmpty) ...['--tags', '--branches', '--remotes'] else ...paths,
       // '--reverse',
       // if (branches.isNotEmpty) '--branches=${branches.join(',')}',
       // '--show-pulls',
