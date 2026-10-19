@@ -24,10 +24,28 @@ class _RepositoryDrawerState extends ConsumerState<RepositoryDrawer> {
   final _commitScopesControl = FormControl<String>();
 
   @override
+  void initState() {
+    super.initState();
+    _initForm();
+  }
+
+  @override
+  void didUpdateWidget(covariant RepositoryDrawer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.repository != oldWidget.repository) {
+      _initForm();
+    }
+  }
+
+  @override
   void dispose() {
     _commitScopesControl.dispose();
     _mutation.dispose();
     super.dispose();
+  }
+
+  void _initForm() {
+    _commitScopesControl.value = widget.repository.config.commitScopes.join(', ');
   }
 
   void _toggleBranchProtection(bool isEnabled) {

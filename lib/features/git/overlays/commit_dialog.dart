@@ -133,7 +133,7 @@ class _FormCommitAtomState extends ConsumerState<FormCommitAtom> {
       children: [
         if (repository.config.commitScopes.isNotEmpty)
           Padding(
-            padding: const .symmetric(horizontal: 16.0),
+            padding: const .symmetric(horizontal: 16.0, vertical: 4.0),
             child: ReactiveDropdownField<String>(
               formControl: _scopeControl,
               decoration: const InputDecoration(
@@ -146,7 +146,7 @@ class _FormCommitAtomState extends ConsumerState<FormCommitAtom> {
             ),
           ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
           child: ReactiveTextField(
             formControl: _messageControl,
             minLines: 1,
@@ -158,8 +158,8 @@ class _FormCommitAtomState extends ConsumerState<FormCommitAtom> {
             ),
           ),
         ),
+        const Divider(height: 24.0),
         ReactiveSwitchListTile(formControl: _amendControl, title: const Text('Amend last commit')),
-        const Divider(),
         ReactiveFormField<_PushType, _PushType>(
           formControl: _pushTypeControl,
           builder: (field) => RadioGroup<_PushType>(
@@ -200,12 +200,13 @@ class _FormCommitAtomState extends ConsumerState<FormCommitAtom> {
       ],
     );
     return HarmonicSingleChildScrollView(
+      padding: const .symmetric(vertical: 8.0),
       child: Column(
         mainAxisAlignment: .spaceBetween,
         children: [
           content,
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(8.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [

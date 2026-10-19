@@ -116,7 +116,7 @@ class _RepositoriesDrawerViewState extends ConsumerState<RepositoriesDrawerView>
               tooltip: 'Logs',
               onPressed: () {
                 Scaffold.of(context).closeDrawer();
-                unawaited(context.nav.push(const GitLogsScreen()));
+                context.nav.push(const GitLogsScreen());
               },
               icon: const Icon(Icons.bug_report_outlined),
             ),
